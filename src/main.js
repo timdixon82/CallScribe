@@ -1,5 +1,6 @@
 import './style.css';
 import './tabs.css';
+import './layout.css';
 import { MODELS, findModel } from './models.js';
 import { AudioPipeline } from './audio.js';
 import { deleteSegments, getModel, getSegments, getSetting, putModel, putSegment, putSession, putSetting, removeModel } from './store.js';
@@ -59,14 +60,16 @@ async function populateMicrophones() {
 async function renderModels() {
   ui['model-list'].replaceChildren();
   for (const model of MODELS) {
-    const record = await getModel(model.id); const article = document.createElement('article'); article.className = 'model-card';
-    const heading = document.createElement('h3'); heading.textContent = `${model.name}${model.default ? ' (default)' : ''}`;
-    const details = document.createElement('p'); details.textContent = `${model.description} Language: ${model.language}. Expected resource use: ${model.resource}. ${record?.ready ? `Downloaded and verified ${record.device ? `using ${record.device}` : ''}.` : record?.failure ? `Previous attempt failed: ${record.failure}` : 'Not downloaded.'}`;
+    const record = await getModel(model.id); const row = document.createElement('tr');
+    const name = document.createElement('th'); name.scope = 'row'; name.textContent = `${model.name}${model.default ? ' (default)' : ''}`;
+    const language = document.createElement('td'); language.textContent = model.language;
+    const details = document.createElement('td'); details.textContent = record?.ready ? `Ready${record.device ? ` (${record.device})` : ''}` : record?.failure ? `Failed: ${record.failure}` : 'Not downloaded';
+    const actions = document.createElement('td');
     const button = document.createElement('button'); button.type = 'button'; button.textContent = record?.ready ? (activeModel === model.id ? 'Active model' : 'Select model') : record?.failure ? 'Retry download' : (model.default ? 'Download Moonshine Base' : 'Download model'); button.disabled = activeModel === model.id;
     button.addEventListener('click', () => loadModel(model, Boolean(record?.ready)));
-    article.append(heading, details, button);
-    if (record?.ready) { const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove model'; remove.addEventListener('click', () => requestDelete(model)); article.append(remove); }
-    ui['model-list'].append(article);
+    actions.append(button);
+    if (record?.ready) { const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove model'; remove.addEventListener('click', () => requestDelete(model)); actions.append(remove); }
+    row.append(name, language, details, actions); ui['model-list'].append(row);
   }
 }
 
@@ -103,7 +106,7 @@ async function failDownload(message) { if (downloadTarget) await putModel({ id: 
 ui['retry-download'].addEventListener('click', () => downloadTarget && loadModel(downloadTarget, false));
 
 async function enableMic() {
-  try { const id = ui['microphone-select'].value; const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: true }, video: false }); await addPipeline('microphone', stream); ui['microphone-status'].textContent = 'Microphone enabled.'; }
+  try { const id = ui['microphone-select'].value; const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }, video: false }); await addPipeline('microphone', stream); ui['microphone-status'].textContent = 'Microphone enabled with browser noise suppression, echo cancellation, automatic gain, and local voice filtering.'; }
   catch (error) { ui['microphone-status'].textContent = `Microphone unavailable: ${error.message}`; }
 }
 async function shareSystemAudio() {

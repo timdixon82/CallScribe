@@ -16,12 +16,13 @@
         <p id="privacy-note">Audio and transcripts stay in this browser. Network access is used only for model downloads that you request, or the initial Moonshine Base download.</p>
         <p id="app-status" role="status">Checking model availability.</p>
       </header>
+      <section class="session-toolbar" aria-labelledby="session-heading"><h2 id="session-heading">Session controls</h2><p id="session-status" role="status">No active session.</p><div class="button-row"><button id="start-session" type="button" disabled>Start transcription</button><button id="pause-session" type="button" disabled>Pause transcription</button><button id="stop-session" type="button" disabled>Stop transcription</button><button id="new-session" type="button">New session</button></div></section>
       <div class="app-tabs" role="tablist" aria-label="Application sections"><button id="setup-tab" type="button" role="tab" aria-selected="true" aria-controls="setup-panel">Setup</button><button id="transcript-tab" type="button" role="tab" aria-selected="false" aria-controls="transcript-panel" tabindex="-1">Transcript</button><button id="diagnostics-tab" type="button" role="tab" aria-selected="false" aria-controls="diagnostics-panel" tabindex="-1">Diagnostics</button></div>
       <div id="setup-panel" role="tabpanel" aria-labelledby="setup-tab">
       <section aria-labelledby="model-heading">
         <h2 id="model-heading">Models and offline readiness</h2>
         <p id="storage-note">Downloaded models use browser-managed storage. Clearing this site's data may remove them.</p>
-        <div id="model-list" aria-describedby="storage-note"></div>
+        <div class="table-scroll"><table aria-describedby="storage-note"><caption>Available models</caption><thead><tr><th scope="col">Model</th><th scope="col">Language</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead><tbody id="model-list"></tbody></table></div>
         <section id="download-region" hidden aria-labelledby="download-heading">
           <h3 id="download-heading">Model download</h3><p id="download-label">No download in progress.</p>
           <progress id="download-progress" aria-describedby="download-detail" value="0" max="100">0%</progress>
@@ -33,10 +34,6 @@
         <h2 id="source-heading">Audio sources</h2>
         <div class="control-group"><label for="microphone-select">Microphone</label><select id="microphone-select"><option value="">Default microphone</option></select><button id="enable-microphone" type="button">Enable microphone</button><output id="microphone-status">Microphone not enabled.</output></div>
         <div class="control-group"><p>Computer playback is available only when the browser supplies an audio track after you choose a share surface. In the browser sharing dialogue, select a surface with audio and enable the browser's audio-sharing option when available.</p><button id="share-system-audio" type="button">Share computer audio</button><output id="system-audio-status">Computer audio not shared.</output></div>
-      </section>
-      <section aria-labelledby="session-heading">
-        <h2 id="session-heading">Session controls</h2><p id="session-status" role="status">No active session.</p>
-        <div class="button-row"><button id="start-session" type="button" disabled>Start transcription</button><button id="pause-session" type="button" disabled>Pause transcription</button><button id="stop-session" type="button" disabled>Stop transcription</button><button id="new-session" type="button">New session</button></div>
       </section>
       </div>
       <section id="transcript-panel" role="tabpanel" aria-labelledby="transcript-tab" hidden>

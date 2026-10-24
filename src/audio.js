@@ -8,7 +8,12 @@ export class AudioPipeline {
     await this.context.audioWorklet.addModule(new URL('./audio-worklet.js', import.meta.url));
     this.node = new AudioWorkletNode(this.context, 'capture-processor');
     this.node.port.onmessage = ({ data }) => this.receive(new Float32Array(data));
-    this.context.createMediaStreamSource(this.stream).connect(this.node);
+    const source = this.context.createMediaStreamSource(this.stream);
+    // Speech-focused local preprocessing: remove low room rumble and stabilise levels.
+    this.highPass = this.context.createBiquadFilter(); this.highPass.type = 'highpass'; this.highPass.frequency.value = 90;
+    this.lowPass = this.context.createBiquadFilter(); this.lowPass.type = 'lowpass'; this.lowPass.frequency.value = 7600;
+    this.compressor = this.context.createDynamicsCompressor(); this.compressor.threshold.value = -30; this.compressor.knee.value = 24; this.compressor.ratio.value = 4; this.compressor.attack.value = 0.003; this.compressor.release.value = 0.25;
+    source.connect(this.highPass).connect(this.lowPass).connect(this.compressor).connect(this.node);
     this.node.connect(this.context.destination);
     this.stream.getAudioTracks().forEach((track) => { track.onended = () => this.stop(); });
     this.running = true;
@@ -29,7 +34,7 @@ export class AudioPipeline {
   }
   stop() {
     if (!this.running) return;
-    this.flush(); this.running = false; this.node?.disconnect(); this.context?.close();
+    this.flush(); this.running = false; this.node?.disconnect(); this.highPass?.disconnect(); this.lowPass?.disconnect(); this.compressor?.disconnect(); this.context?.close();
     this.stream.getTracks().forEach((track) => track.stop()); this.onStopped?.(this.source);
   }
 }

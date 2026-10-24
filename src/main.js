@@ -29,10 +29,11 @@ async function initialise() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
   navigator.storage?.persist?.().catch(() => {});
   selectedModel = await getSetting('selectedModel') || 'moonshine-base';
-  await populateMicrophones(); await requestMicrophoneOnLaunch(); await renderModels(); await refreshDiagnostics();
+  await populateMicrophones(); await renderModels(); await refreshDiagnostics();
   const model = findModel(selectedModel) || findModel('moonshine-base');
   const record = await getModel(model.id);
   if (record?.ready) loadModel(model, true); else if (model.default && !navigator.onLine) failDownload('Moonshine Base is not downloaded and the browser is offline. Connect to the internet and select Retry download.'); else loadModel(model, false);
+  requestMicrophoneOnLaunch();
 }
 
 async function requestMicrophoneOnLaunch() {
@@ -41,7 +42,7 @@ async function requestMicrophoneOnLaunch() {
     const permission = await navigator.permissions?.query?.({ name: 'microphone' });
     if (permission?.state === 'denied') { ui['microphone-status'].textContent = 'Microphone permission is blocked. Use the browser site controls to allow it, then select Enable microphone.'; return; }
     await enableMic();
-  } catch { ui['microphone-status'].textContent = 'Select Enable microphone to grant microphone permission.'; }
+  } catch { await enableMic(); }
 }
 
 function applyTheme(theme) {

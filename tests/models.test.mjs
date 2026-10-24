@@ -27,3 +27,10 @@ test('launch always provisions Moonshine Base before restoring an optional model
   assert.match(app, /defaultRecord\?\.ready && savedModel && savedRecord\?\.ready \? savedModel : defaultModel/);
   assert.match(app, /ui\['start-session'\]\.disabled = true/);
 });
+
+test('voice-control setup uses the matching DOM IDs and cannot block launch', async () => {
+  const app = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  assert.match(app, /highPass: 'high-pass'/);
+  assert.match(app, /lowPass: 'low-pass'/);
+  assert.match(app, /const id = controlIds\[key\]/);
+});

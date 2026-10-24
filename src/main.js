@@ -74,7 +74,8 @@ tabs.forEach((tab, index) => {
 });
 
 function updateVoiceControls() {
-  for (const [key, value] of Object.entries(voiceProcessing)) { const id = key === 'threshold' ? 'compressor-threshold' : key === 'ratio' ? 'compressor-ratio' : key; $(id).value = value; $(`${id}-value`).textContent = key === 'ratio' ? `${value}:1` : `${value} ${key === 'threshold' ? 'dB' : 'Hz'}`; }
+  const controlIds = { highPass: 'high-pass', lowPass: 'low-pass', threshold: 'compressor-threshold', ratio: 'compressor-ratio' };
+  for (const [key, value] of Object.entries(voiceProcessing)) { const id = controlIds[key]; $(id).value = value; $(`${id}-value`).textContent = key === 'ratio' ? `${value}:1` : `${value} ${key === 'threshold' ? 'dB' : 'Hz'}`; }
 }
 for (const [key, id] of Object.entries({ highPass: 'high-pass', lowPass: 'low-pass', threshold: 'compressor-threshold', ratio: 'compressor-ratio' })) $(id).addEventListener('input', ({ target }) => { voiceProcessing[key] = Number(target.value); localStorage.setItem('localBrowserTranscriberVoiceProcessing', JSON.stringify(voiceProcessing)); updateVoiceControls(); pipelines.get('microphone')?.setVoiceProcessing(voiceProcessing); });
 $('reset-voice-processing').addEventListener('click', () => { voiceProcessing = { ...DEFAULT_VOICE }; localStorage.setItem('localBrowserTranscriberVoiceProcessing', JSON.stringify(voiceProcessing)); updateVoiceControls(); pipelines.get('microphone')?.setVoiceProcessing(voiceProcessing); });

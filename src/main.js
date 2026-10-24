@@ -7,7 +7,7 @@ import { AudioPipeline } from './audio.js';
 import { deleteSegments, getModel, getSegments, getSessions, getSetting, putModel, putSegment, putSession, putSetting, removeModel, removeSession } from './store.js';
 
 const $ = (id) => document.getElementById(id);
-const ui = Object.fromEntries(['app-status', 'active-model', 'model-list', 'download-announcements', 'microphone-select', 'enable-microphone', 'microphone-status', 'transcription-language', 'language-status', 'share-system-audio', 'system-audio-status', 'session-name', 'start-session', 'pause-session', 'stop-session', 'new-session', 'session-status', 'saved-session-list', 'transcript-list', 'empty-transcript', 'transcript-search', 'announce-mode', 'transcript-announcements', 'clear-transcript', 'delete-dialog', 'delete-heading', 'delete-message', 'confirm-delete', 'diagnostics'].map((id) => [id, $(id)]));
+const ui = Object.fromEntries(['app-status', 'active-model', 'model-download-status', 'model-download-progress', 'model-download-detail', 'model-list', 'download-announcements', 'microphone-select', 'enable-microphone', 'microphone-status', 'language-control', 'transcription-language', 'language-status', 'share-system-audio', 'system-audio-status', 'session-name', 'start-session', 'pause-session', 'stop-session', 'new-session', 'session-status', 'saved-session-list', 'transcript-list', 'empty-transcript', 'transcript-search', 'announce-mode', 'transcript-announcements', 'clear-transcript', 'delete-dialog', 'delete-heading', 'delete-message', 'confirm-delete', 'diagnostics'].map((id) => [id, $(id)]));
 const worker = new Worker(new URL('./transcriber.worker.js', import.meta.url), { type: 'module' });
 let selectedModel; let activeModel; let selectedLanguage; let downloadTarget; let pendingDelete; let session; let segments = []; let paused = false; let downloadState; let downloadAttempt = 0;
 const pipelines = new Map(); const downloadFiles = new Map();
@@ -21,6 +21,7 @@ function formatTime(time) { return new Date(time).toLocaleTimeString([], { hour:
 function formatDateTime(time) { return new Date(time).toLocaleString([], { dateStyle: 'medium', timeStyle: 'medium' }); }
 function defaultSessionName(time = new Date()) { const month = time.toLocaleString('en-GB', { month: 'short' }); return `Call ${time.getFullYear()}-${month}-${String(time.getDate()).padStart(2, '0')} ${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`; }
 function safeText(value) { return String(value ?? ''); }
+function setModelDownloadStatus(detail, loaded = 0, total = 0) { ui['model-download-detail'].textContent = detail; ui['model-download-progress'].style.visibility = total || downloadState ? 'visible' : 'hidden'; if (total) { ui['model-download-progress'].max = total; ui['model-download-progress'].value = loaded; } else { ui['model-download-progress'].removeAttribute('value'); ui['model-download-progress'].removeAttribute('max'); } }
 
 async function initialise() {
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
@@ -30,12 +31,16 @@ async function initialise() {
   updateVoiceControls();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
   navigator.storage?.persist?.().catch(() => {});
-  selectedModel = await getSetting('selectedModel') || 'moonshine-base'; selectedLanguage = await getSetting('transcriptionLanguage') || 'auto'; ui['transcription-language'].value = selectedLanguage;
+  const savedModelId = await getSetting('selectedModel'); selectedLanguage = await getSetting('transcriptionLanguage') || 'auto'; ui['transcription-language'].value = selectedLanguage;
   ui['session-name'].value = defaultSessionName();
+  ui['start-session'].disabled = true; ui['language-control'].hidden = true; setModelDownloadStatus('Checking whether Moonshine Base is already available.');
   await populateMicrophones(); await renderModels(); await renderSavedSessions(); await refreshDiagnostics();
-  const model = findModel(selectedModel) || findModel('moonshine-base');
-  const record = await getModel(model.id);
-  if (record?.ready) loadModel(model, true); else if (model.default && !navigator.onLine) failDownload('Moonshine Base is not downloaded and the browser is offline. Connect to the internet and select Retry download.'); else loadModel(model, false);
+  const defaultModel = findModel('moonshine-base'); const defaultRecord = await getModel(defaultModel.id); const savedModel = findModel(savedModelId); const savedRecord = savedModel ? await getModel(savedModel.id) : undefined;
+  // Moonshine Base is always provisioned first. A previously selected optional model
+  // is restored only after the required default is confirmed available.
+  const model = defaultRecord?.ready && savedModel && savedRecord?.ready ? savedModel : defaultModel; selectedModel = model.id;
+  const record = model.id === defaultModel.id ? defaultRecord : savedRecord;
+  if (record?.ready) loadModel(model, true); else if (!navigator.onLine) failDownload(`${model.name} is not downloaded and the browser is offline. Connect to the internet and select Retry download.`); else loadModel(model, false);
   requestMicrophoneOnLaunch();
 }
 
@@ -103,7 +108,7 @@ async function renderModels() {
 
 async function loadModel(model, localOnly, attempt = 0) {
   if (!localOnly && !navigator.onLine) return failDownload(`${model.name} is not downloaded and the browser is offline.`);
-  downloadTarget = model; downloadAttempt = attempt; downloadFiles.clear(); downloadState = { modelId: model.id, phase: localOnly ? 'verifying' : 'downloading', detail: localOnly ? 'Verifying cached files' : attempt ? 'Retrying download' : 'Preparing download', loaded: 0, total: 0, localOnly }; ui['active-model'].textContent = `Selected model: ${model.name} — ${downloadState.detail}.`; await renderModels();
+  activeModel = undefined; ui['start-session'].disabled = true; ui['language-control'].hidden = true; downloadTarget = model; downloadAttempt = attempt; downloadFiles.clear(); downloadState = { modelId: model.id, phase: localOnly ? 'verifying' : 'downloading', detail: localOnly ? 'Verifying cached files' : attempt ? 'Retrying download' : 'Preparing download', loaded: 0, total: 0, localOnly }; ui['active-model'].textContent = `Selected model: ${model.name} — ${downloadState.detail}.`; setModelDownloadStatus(`${model.name}: ${downloadState.detail}`); await renderModels();
   setStatus(`${localOnly ? 'Verifying' : 'Downloading'} ${model.name}. Transcription controls are unavailable.`);
   const record = await getModel(model.id); worker.postMessage({ type: 'load', model, localOnly, preferredDevice: localOnly ? record?.device : undefined });
 }
@@ -114,21 +119,22 @@ function updateDownload(data) {
   const values = [...downloadFiles.values()]; const known = values.every((item) => item.total > 0); const loaded = values.reduce((sum, item) => sum + item.loaded, 0); const total = values.reduce((sum, item) => sum + item.total, 0);
   if (known && total) { const percent = Math.min(100, Math.round(loaded / total * 100)); downloadState = { ...downloadState, loaded, total, detail: `Downloading ${percent}% (${bytes(loaded)} of ${bytes(total)})` }; if (percent % 10 === 0) ui['download-announcements'].textContent = `${downloadTarget.name} download ${percent}% complete.`; }
   else downloadState = { ...downloadState, loaded, total: 0, detail: `Downloading ${bytes(loaded)}; total is not reported yet` };
+  setModelDownloadStatus(`${downloadTarget.name}: ${downloadState.detail}`, loaded, total);
   renderModels();
 }
 
 worker.onmessage = async ({ data }) => {
   if (data.type === 'progress') return updateDownload(data.data);
-  if (data.type === 'model-status') { downloadState = { ...downloadState, detail: data.status }; renderModels(); return; }
+  if (data.type === 'model-status') { downloadState = { ...downloadState, detail: data.status }; setModelDownloadStatus(`${downloadTarget.name}: ${data.status}`, downloadState.loaded, downloadState.total); renderModels(); return; }
   if (data.type === 'model-ready') {
     activeModel = data.modelId; await putModel({ id: activeModel, ready: true, device: data.device, verifiedAt: Date.now() }); await putSetting('selectedModel', activeModel); selectedModel = activeModel;
-    downloadState = undefined; const current = findModel(activeModel); ui['active-model'].textContent = `Selected model: ${current.name}, ready using ${data.device}.`; ui['language-status'].textContent = current.language === 'English' ? 'Moonshine supports English only.' : 'Whisper supports the selected language or auto-detection.'; ui['transcription-language'].disabled = current.language === 'English'; ui['download-announcements'].textContent = `${current.name} is ready for transcription.`; setStatus(`${current.name} is ready. All transcription remains local.`); ui['start-session'].disabled = false; await renderModels(); refreshDiagnostics(); return;
+    downloadState = undefined; const current = findModel(activeModel); ui['active-model'].textContent = `Selected model: ${current.name}, ready using ${data.device}.`; setModelDownloadStatus(`${current.name} is ready for transcription.`); ui['language-control'].hidden = current.language === 'English'; ui['language-status'].textContent = 'Whisper supports the selected language or auto-detection.'; ui['download-announcements'].textContent = `${current.name} is ready for transcription.`; setStatus(`${current.name} is ready. All transcription remains local.`); ui['start-session'].disabled = false; await renderModels(); refreshDiagnostics(); return;
   }
   if (data.type === 'segment') return addSegment(data);
   if (data.type === 'error') return failDownload(data.message);
 };
 
-async function failDownload(message) { if (downloadTarget && !downloadState?.localOnly && downloadAttempt === 0) return loadModel(downloadTarget, false, 1); if (downloadTarget) await putModel({ id: downloadTarget.id, ready: false, failure: message, failedAt: Date.now() }); downloadState = downloadTarget ? { ...downloadState, phase: 'failed', detail: `Failed: ${message}` } : undefined; setStatus(`Model failed: ${message}`); ui['download-announcements'].textContent = `Model download failed. Use the Retry download button in the model row.`; ui['start-session'].disabled = !activeModel; renderModels(); }
+async function failDownload(message) { if (downloadTarget && downloadState?.localOnly && navigator.onLine) { await removeModel(downloadTarget.id); return loadModel(downloadTarget, false, 0); } if (downloadTarget && !downloadState?.localOnly && downloadAttempt === 0) return loadModel(downloadTarget, false, 1); if (downloadTarget) await putModel({ id: downloadTarget.id, ready: false, failure: message, failedAt: Date.now() }); downloadState = downloadTarget ? { ...downloadState, phase: 'failed', detail: `Failed: ${message}` } : undefined; setModelDownloadStatus(downloadState?.detail || `Failed: ${message}`); setStatus(`Model failed: ${message}`); ui['download-announcements'].textContent = `Model download failed. Use the Retry download button in the model row.`; ui['start-session'].disabled = true; ui['language-control'].hidden = true; renderModels(); }
 
 async function enableMic() {
   try { const id = ui['microphone-select'].value; const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }, video: false }); await addPipeline('microphone', stream); ui['microphone-status'].textContent = 'Microphone enabled with browser noise suppression, echo cancellation, automatic gain, and local voice filtering.'; }

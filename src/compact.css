@@ -1,5 +1,11 @@
 .top-sources { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; margin-block: .75rem; }
 .top-sources > div { min-width: min(100%, 20rem); }
+.model-download-status { min-height: 5.25rem; margin-block: .75rem; }
+.model-download-status label { display: block; font-weight: 700; }
+.model-download-status progress { margin-block: .35rem; }
+.session-start { margin-top: .75rem; }
+.session-start label { display: block; font-weight: 700; }
+.session-start input { width: min(100%, 32rem); }
 [hidden] { display: none !important; }
 .voice-settings { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 2fr); gap: .5rem 1rem; max-width: 50rem; align-items: center; }
 .voice-settings button { grid-column: 1 / -1; justify-self: start; }

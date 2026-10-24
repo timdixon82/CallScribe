@@ -20,3 +20,10 @@ test('worker permits cached-only model loads', async () => {
   assert.match(worker, /env\.useBrowserCache\s*=\s*true/);
   assert.match(worker, /env\.allowLocalModels\s*=\s*true/);
 });
+
+test('launch always provisions Moonshine Base before restoring an optional model', async () => {
+  const app = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  assert.match(app, /const defaultModel = findModel\('moonshine-base'\)/);
+  assert.match(app, /defaultRecord\?\.ready && savedModel && savedRecord\?\.ready \? savedModel : defaultModel/);
+  assert.match(app, /ui\['start-session'\]\.disabled = true/);
+});

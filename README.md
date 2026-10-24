@@ -1,19 +1,26 @@
-# Local Call Transcriber
+# Local Browser Transcriber
 
-Local Call Transcriber will be a privacy-first tool for transcribing calls on the user's own device.
+Local Browser Transcriber is a static, privacy-first browser application for capturing microphone and browser-supported computer audio, then transcribing it locally.
 
-## Project status
+## Local development
 
-The project has been scaffolded from Tim Dixon's Agent Team template. Product requirements, supported platforms, and the implementation approach have not yet been decided.
+Install the project dependencies, then start Vite:
 
-## Privacy intention
+```text
+npm install
+npm run dev
+```
 
-The intended direction is local processing: call audio and transcripts should stay on the user's device unless the user explicitly chooses otherwise. This is an intention, not a claim about a completed product.
+Open the localhost address printed by Vite. Do not open `index.html` directly with a `file:` address: Vite must process the application modules, and browser media permissions require localhost or HTTPS.
 
-## Development
+## Production build
 
-The repository includes the team configuration, project documentation skeleton, continuous-integration workflows, and a GitHub Pages deployment workflow. The initial `index.html` is a temporary accessible landing page.
+```text
+npm run build
+```
 
-## Licence
+The static production application is written to `dist/`. GitHub Pages deploys that directory after a push to `main`.
 
-Licence terms have not yet been selected.
+## Validation status
+
+This MVP is not release-approved. See `docs/technical-validation.md`, `docs/manual-test-procedure.md`, and `docs/known-limitations.md` for the completed checks and required macOS and Windows hardware validation.

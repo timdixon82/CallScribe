@@ -3,21 +3,48 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Local Call Transcriber project setup page.">
-    <title>Local Call Transcriber</title>
-    <style>
-      :root { color-scheme: light dark; }
-      body { font-family: system-ui, sans-serif; line-height: 1.6; margin: 0; }
-      main { max-width: 44rem; margin: 0 auto; padding: 2rem 1.25rem; }
-      a { color: LinkText; }
-    </style>
+    <meta name="description" content="A local-only browser transcriber for microphone and browser-supported computer audio.">
+    <meta name="theme-color" content="#12355b">
+    <title>Local Browser Transcriber</title>
   </head>
   <body>
+    <a class="skip-link" href="#transcript-heading">Skip to transcript</a>
+    <header class="app-header"><div class="app-header-inner"><p class="app-brand">Local Browser Transcriber</p><div class="theme-control"><label for="theme-select">Theme</label><select id="theme-select"><option value="system">System setting</option><option value="light">Light</option><option value="dark">Dark</option><option value="muted-light">Muted light</option><option value="muted-dark">Muted dark</option></select></div></div></header>
     <main>
-      <h1>Local Call Transcriber</h1>
-      <p>This project is being set up.</p>
-      <p>Its aim is a privacy-first call-transcription tool that processes audio locally where possible. Product requirements and supported platforms are still to be decided.</p>
-      <p><a href="https://github.com/timdixon82/Local-Call-Transcriber">View the project repository on GitHub</a></p>
+      <header>
+        <h1>Transcribe locally</h1>
+        <p id="privacy-note">Audio and transcripts stay in this browser. Network access is used only for model downloads that you request, or the initial Moonshine Base download.</p>
+        <p id="app-status" role="status">Checking model availability.</p>
+      </header>
+      <section aria-labelledby="model-heading">
+        <h2 id="model-heading">Models and offline readiness</h2>
+        <p id="storage-note">Downloaded models use browser-managed storage. Clearing this site's data may remove them.</p>
+        <div id="model-list" aria-describedby="storage-note"></div>
+        <section id="download-region" hidden aria-labelledby="download-heading">
+          <h3 id="download-heading">Model download</h3><p id="download-label">No download in progress.</p>
+          <progress id="download-progress" aria-describedby="download-detail" value="0" max="100">0%</progress>
+          <p id="download-detail">Waiting.</p><p id="download-announcements" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+          <button id="retry-download" type="button" hidden>Retry download</button>
+        </section>
+      </section>
+      <section aria-labelledby="source-heading">
+        <h2 id="source-heading">Audio sources</h2>
+        <div class="control-group"><label for="microphone-select">Microphone</label><select id="microphone-select"><option value="">Default microphone</option></select><button id="enable-microphone" type="button">Enable microphone</button><output id="microphone-status">Microphone not enabled.</output></div>
+        <div class="control-group"><p>Computer playback is available only when the browser supplies an audio track after you choose a share surface. In the browser sharing dialogue, select a surface with audio and enable the browser's audio-sharing option when available.</p><button id="share-system-audio" type="button">Share computer audio</button><output id="system-audio-status">Computer audio not shared.</output></div>
+      </section>
+      <section aria-labelledby="session-heading">
+        <h2 id="session-heading">Session controls</h2><p id="session-status" role="status">No active session.</p>
+        <div class="button-row"><button id="start-session" type="button" disabled>Start transcription</button><button id="pause-session" type="button" disabled>Pause transcription</button><button id="stop-session" type="button" disabled>Stop transcription</button><button id="new-session" type="button">New session</button></div>
+      </section>
+      <section aria-labelledby="transcript-heading">
+        <h2 id="transcript-heading">Transcript</h2>
+        <div class="control-group inline-controls"><label for="transcript-search">Search transcript</label><input id="transcript-search" type="search"><label for="announce-mode">Announce new transcript text</label><select id="announce-mode"><option value="none">Do not announce</option><option value="complete" selected>Completed segments only</option><option value="notice">Concise notification only</option></select></div>
+        <p id="transcript-announcements" class="sr-only" aria-live="polite" aria-atomic="true"></p><ol id="transcript-list" aria-live="off"></ol><p id="empty-transcript">No transcript segments yet.</p>
+        <div class="button-row"><button id="clear-transcript" type="button">Clear transcript</button><button id="export-txt" type="button">Export TXT</button><button id="export-json" type="button">Export JSON</button><button id="export-srt" type="button">Export SRT</button><button id="export-vtt" type="button">Export VTT</button></div>
+      </section>
+      <section aria-labelledby="diagnostics-heading"><h2 id="diagnostics-heading">Diagnostics</h2><dl id="diagnostics"></dl><button id="export-diagnostics" type="button">Export diagnostics</button></section>
     </main>
+    <dialog id="delete-dialog" aria-labelledby="delete-heading"><h2 id="delete-heading">Remove downloaded model?</h2><p id="delete-message"></p><form method="dialog"><button value="cancel">Cancel</button><button id="confirm-delete" value="confirm">Remove model</button></form></dialog>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

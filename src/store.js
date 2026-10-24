@@ -1,5 +1,5 @@
 const DB_NAME = 'local-browser-transcriber';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -7,11 +7,11 @@ function openDb() {
     request.onerror = () => reject(request.error);
     request.onupgradeneeded = () => {
       const db = request.result;
-      db.createObjectStore('models', { keyPath: 'id' });
-      db.createObjectStore('sessions', { keyPath: 'id' });
-      const segments = db.createObjectStore('segments', { keyPath: 'id' });
-      segments.createIndex('sessionId', 'sessionId');
-      db.createObjectStore('settings', { keyPath: 'key' });
+      if (!db.objectStoreNames.contains('models')) db.createObjectStore('models', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('sessions')) db.createObjectStore('sessions', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('segments')) { const segments = db.createObjectStore('segments', { keyPath: 'id' }); segments.createIndex('sessionId', 'sessionId'); }
+      if (!db.objectStoreNames.contains('screenshots')) { const screenshots = db.createObjectStore('screenshots', { keyPath: 'id' }); screenshots.createIndex('sessionId', 'sessionId'); }
+      if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
     };
     request.onsuccess = () => resolve(request.result);
   });
@@ -48,4 +48,18 @@ export const getSegments = async (sessionId) => {
 export const deleteSegments = async (sessionId) => {
   const items = await getSegments(sessionId);
   return Promise.all(items.map((item) => run('segments', 'readwrite', (store) => store.delete(item.id))));
+};
+export const putScreenshot = (value) => run('screenshots', 'readwrite', (store) => store.put(value));
+export const getScreenshot = (id) => run('screenshots', 'readonly', (store) => store.get(id));
+export const getScreenshots = async (sessionId) => {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction('screenshots', 'readonly').objectStore('screenshots').index('sessionId').getAll(sessionId);
+    request.onsuccess = () => { db.close(); resolve(request.result); };
+    request.onerror = () => { db.close(); reject(request.error); };
+  });
+};
+export const deleteScreenshots = async (sessionId) => {
+  const items = await getScreenshots(sessionId);
+  return Promise.all(items.map((item) => run('screenshots', 'readwrite', (store) => store.delete(item.id))));
 };

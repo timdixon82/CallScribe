@@ -56,3 +56,17 @@ test('audio processing has an explicit toggle and settings shortcut', async () =
   assert.match(page, /id="toggle-audio-processing"/);
   assert.match(page, /id="audio-processing-settings"/);
 });
+
+test('screen capture supports manual, periodic, and screen-change screenshots', async () => {
+  const [app, page, store] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../src/store.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /captureScreenshot\('Manual screenshot'\)/);
+  assert.match(app, /screenshotMode === 'periodic'/);
+  assert.match(app, /detectScreenChange/);
+  assert.match(page, /value="periodic"/);
+  assert.match(page, /value="changes"/);
+  assert.match(store, /createObjectStore\('screenshots'/);
+});

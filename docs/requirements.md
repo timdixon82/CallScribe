@@ -4,15 +4,15 @@ This document records the requirements for Local Call Transcriber. It is produce
 
 ## Background
 
-Describe why this project exists and what problem it solves.
+Local Call Transcriber is being established as a privacy-first call-transcription project. Its user needs, supported platforms, and technical approach have not yet been agreed.
 
 ## User stories
 
-List user stories in the form "As a [user], I want [goal] so that [reason]." Number each one.
+To be defined during discovery.
 
 ## Functional requirements
 
-List each functional requirement as a numbered statement. Group by area where useful.
+To be defined during discovery.
 
 ## Non-functional requirements
 
@@ -30,12 +30,12 @@ Record any specific performance targets here.
 
 ### Data protection
 
-Record any UK GDPR obligations here. If the project handles no personal data, state that explicitly.
+The setup page handles no personal data. The product may process sensitive call audio and transcripts, so its data-protection requirements must be established before implementation.
 
 ## Out of scope
 
-List anything explicitly not required in this phase.
+The product implementation is out of scope for this setup phase.
 
 ## Definition of done
 
-List the criteria that must hold before this project is considered complete and ready for release.
+This setup phase is complete when the repository is public, the local scaffold is available, and GitHub Pages is configured to deploy the setup page.

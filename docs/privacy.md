@@ -4,19 +4,21 @@ This document records the privacy posture for Local Call Transcriber. It is prod
 
 ## Analytics
 
-Describe the analytics tool in use (for example, GoatCounter, Plausible, or none), what data it collects, and whether it uses cookies or local storage.
+None. The setup page has no analytics, cookies, or local storage.
 
 ## Data collection statement
 
-State what personal data, if any, this project collects, processes, or stores. If the project collects no personal data, state that explicitly.
+The current setup page collects, processes, and stores no personal data.
+
+The planned product is expected to handle highly sensitive call audio and transcripts. Its data flows, retention policy, and any optional third-party processing must be agreed and documented before product development begins.
 
 ## Third-party services
 
-List every third-party service the project calls or embeds, with a note on what data each receives and why it is needed. Examples: a font CDN, an analytics provider, an authentication provider.
+GitHub Pages serves the public setup page. It receives ordinary web-server request data needed to deliver the page. The page has no embedded third-party services.
 
 ## UK GDPR obligations
 
-Record any obligations that arise from the UK General Data Protection Regulation (UK GDPR). If no personal data is processed, state that explicitly and no further sections are required.
+The current setup page does not itself process personal data. UK GDPR assessment is required before the product processes call audio, transcripts, account data, or any other personal data.
 
 ### Lawful basis
 

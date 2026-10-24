@@ -1,4 +1,5 @@
 import './style.css';
+import './tabs.css';
 import { MODELS, findModel } from './models.js';
 import { AudioPipeline } from './audio.js';
 import { deleteSegments, getModel, getSegments, getSetting, putModel, putSegment, putSession, putSetting, removeModel } from './store.js';
@@ -37,6 +38,16 @@ $('theme-select').addEventListener('change', ({ target }) => {
   applyTheme(target.value);
 });
 
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function activateTab(tab, focus = false) {
+  tabs.forEach((item) => { const selected = item === tab; item.setAttribute('aria-selected', String(selected)); item.tabIndex = selected ? 0 : -1; $(item.getAttribute('aria-controls')).hidden = !selected; });
+  if (focus) tab.focus();
+}
+tabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => activateTab(tab));
+  tab.addEventListener('keydown', (event) => { const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End']; if (!keys.includes(event.key)) return; event.preventDefault(); const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) + tabs.length) % tabs.length; activateTab(tabs[next], true); });
+});
+
 async function populateMicrophones() {
   if (!navigator.mediaDevices?.enumerateDevices) return;
   const devices = await navigator.mediaDevices.enumerateDevices();
@@ -50,8 +61,8 @@ async function renderModels() {
   for (const model of MODELS) {
     const record = await getModel(model.id); const article = document.createElement('article'); article.className = 'model-card';
     const heading = document.createElement('h3'); heading.textContent = `${model.name}${model.default ? ' (default)' : ''}`;
-    const details = document.createElement('p'); details.textContent = `${model.description} Language: ${model.language}. Expected resource use: ${model.resource}. ${record?.ready ? `Downloaded and verified ${record.device ? `using ${record.device}` : ''}.` : 'Not downloaded.'}`;
-    const button = document.createElement('button'); button.type = 'button'; button.textContent = record?.ready ? (activeModel === model.id ? 'Active model' : 'Select model') : (model.default ? 'Download Moonshine Base' : 'Download model'); button.disabled = activeModel === model.id;
+    const details = document.createElement('p'); details.textContent = `${model.description} Language: ${model.language}. Expected resource use: ${model.resource}. ${record?.ready ? `Downloaded and verified ${record.device ? `using ${record.device}` : ''}.` : record?.failure ? `Previous attempt failed: ${record.failure}` : 'Not downloaded.'}`;
+    const button = document.createElement('button'); button.type = 'button'; button.textContent = record?.ready ? (activeModel === model.id ? 'Active model' : 'Select model') : record?.failure ? 'Retry download' : (model.default ? 'Download Moonshine Base' : 'Download model'); button.disabled = activeModel === model.id;
     button.addEventListener('click', () => loadModel(model, Boolean(record?.ready)));
     article.append(heading, details, button);
     if (record?.ready) { const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove model'; remove.addEventListener('click', () => requestDelete(model)); article.append(remove); }
@@ -61,7 +72,7 @@ async function renderModels() {
 
 function loadModel(model, localOnly) {
   if (!localOnly && !navigator.onLine) return failDownload(`${model.name} is not downloaded and the browser is offline.`);
-  downloadTarget = model; ui['download-region'].hidden = false; ui['retry-download'].hidden = true;
+  downloadTarget = model; downloadFiles.clear(); ui['download-region'].hidden = false; ui['retry-download'].hidden = true;
   ui['download-label'].textContent = `${localOnly ? 'Verifying cached' : 'Downloading'} ${model.name}.`;
   ui['download-detail'].textContent = localOnly ? 'Checking cached model files.' : 'Preparing download.';
   ui['download-progress'].removeAttribute('value'); setStatus(`${localOnly ? 'Verifying' : 'Downloading'} ${model.name}. Transcription controls are unavailable.`);
@@ -88,7 +99,7 @@ worker.onmessage = async ({ data }) => {
   if (data.type === 'error') return failDownload(data.message);
 };
 
-function failDownload(message) { setStatus(`Model failed: ${message}`); ui['download-label'].textContent = 'Failed'; ui['download-detail'].textContent = message; ui['download-announcements'].textContent = `Model download failed. ${message}`; ui['retry-download'].hidden = false; ui['start-session'].disabled = !activeModel; }
+async function failDownload(message) { if (downloadTarget) await putModel({ id: downloadTarget.id, ready: false, failure: message, failedAt: Date.now() }); setStatus(`Model failed: ${message}`); ui['download-label'].textContent = 'Failed'; ui['download-detail'].textContent = message; ui['download-announcements'].textContent = `Model download failed. ${message}`; ui['retry-download'].hidden = false; ui['start-session'].disabled = !activeModel; renderModels(); }
 ui['retry-download'].addEventListener('click', () => downloadTarget && loadModel(downloadTarget, false));
 
 async function enableMic() {

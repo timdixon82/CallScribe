@@ -16,6 +16,8 @@
         <p id="privacy-note">Audio and transcripts stay in this browser. Network access is used only for model downloads that you request, or the initial Moonshine Base download.</p>
         <p id="app-status" role="status">Checking model availability.</p>
       </header>
+      <div class="app-tabs" role="tablist" aria-label="Application sections"><button id="setup-tab" type="button" role="tab" aria-selected="true" aria-controls="setup-panel">Setup</button><button id="transcript-tab" type="button" role="tab" aria-selected="false" aria-controls="transcript-panel" tabindex="-1">Transcript</button><button id="diagnostics-tab" type="button" role="tab" aria-selected="false" aria-controls="diagnostics-panel" tabindex="-1">Diagnostics</button></div>
+      <div id="setup-panel" role="tabpanel" aria-labelledby="setup-tab">
       <section aria-labelledby="model-heading">
         <h2 id="model-heading">Models and offline readiness</h2>
         <p id="storage-note">Downloaded models use browser-managed storage. Clearing this site's data may remove them.</p>
@@ -36,13 +38,14 @@
         <h2 id="session-heading">Session controls</h2><p id="session-status" role="status">No active session.</p>
         <div class="button-row"><button id="start-session" type="button" disabled>Start transcription</button><button id="pause-session" type="button" disabled>Pause transcription</button><button id="stop-session" type="button" disabled>Stop transcription</button><button id="new-session" type="button">New session</button></div>
       </section>
-      <section aria-labelledby="transcript-heading">
+      </div>
+      <section id="transcript-panel" role="tabpanel" aria-labelledby="transcript-tab" hidden>
         <h2 id="transcript-heading">Transcript</h2>
         <div class="control-group inline-controls"><label for="transcript-search">Search transcript</label><input id="transcript-search" type="search"><label for="announce-mode">Announce new transcript text</label><select id="announce-mode"><option value="none">Do not announce</option><option value="complete" selected>Completed segments only</option><option value="notice">Concise notification only</option></select></div>
         <p id="transcript-announcements" class="sr-only" aria-live="polite" aria-atomic="true"></p><ol id="transcript-list" aria-live="off"></ol><p id="empty-transcript">No transcript segments yet.</p>
         <div class="button-row"><button id="clear-transcript" type="button">Clear transcript</button><button id="export-txt" type="button">Export TXT</button><button id="export-json" type="button">Export JSON</button><button id="export-srt" type="button">Export SRT</button><button id="export-vtt" type="button">Export VTT</button></div>
       </section>
-      <section aria-labelledby="diagnostics-heading"><h2 id="diagnostics-heading">Diagnostics</h2><dl id="diagnostics"></dl><button id="export-diagnostics" type="button">Export diagnostics</button></section>
+      <section id="diagnostics-panel" role="tabpanel" aria-labelledby="diagnostics-tab" hidden><h2 id="diagnostics-heading">Diagnostics</h2><dl id="diagnostics"></dl><button id="export-diagnostics" type="button">Export diagnostics</button></section>
     </main>
     <dialog id="delete-dialog" aria-labelledby="delete-heading"><h2 id="delete-heading">Remove downloaded model?</h2><p id="delete-message"></p><form method="dialog"><button value="cancel">Cancel</button><button id="confirm-delete" value="confirm">Remove model</button></form></dialog>
     <script type="module" src="/src/main.js"></script>

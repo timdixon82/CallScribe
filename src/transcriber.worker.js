@@ -1,6 +1,10 @@
 import { env, pipeline } from '@huggingface/transformers';
 
 env.useBrowserCache = true;
+// Transformers.js disables cached/local lookups in a browser worker by default.
+// This application deliberately uses Cache Storage for downloaded model files,
+// so cached-only loads must be explicitly permitted.
+env.allowLocalModels = true;
 let transcriber; let activeId;
 const send = (type, detail = {}) => postMessage({ type, ...detail });
 
@@ -27,7 +31,9 @@ self.onmessage = async ({ data }) => {
     if (data.type === 'load') return await load(data.model, data.localOnly, data.preferredDevice);
     if (data.type === 'transcribe') {
       if (!transcriber) throw new Error('No model is ready.');
-      const output = await transcriber(data.audio, { sampling_rate: 16000, return_timestamps: true });
+      const options = { sampling_rate: 16000, return_timestamps: true };
+      if (data.language && data.language !== 'auto') { options.language = data.language; options.task = 'transcribe'; }
+      const output = await transcriber(data.audio, options);
       send('segment', { requestId: data.requestId, source: data.source, capturedAt: data.capturedAt, durationMs: Math.round(data.audio.length / 16), text: output.text?.trim() || '', modelId: activeId });
     }
   } catch (error) { send('error', { operation: data.type, message: error instanceof Error ? error.message : String(error) }); }

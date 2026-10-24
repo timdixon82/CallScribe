@@ -34,6 +34,8 @@ export const removeModel = (id) => run('models', 'readwrite', (store) => store.d
 export const getSetting = async (key) => (await run('settings', 'readonly', (store) => store.get(key)))?.value;
 export const putSetting = (key, value) => run('settings', 'readwrite', (store) => store.put({ key, value }));
 export const putSession = (value) => run('sessions', 'readwrite', (store) => store.put(value));
+export const getSessions = () => run('sessions', 'readonly', (store) => store.getAll());
+export const removeSession = (id) => run('sessions', 'readwrite', (store) => store.delete(id));
 export const putSegment = (value) => run('segments', 'readwrite', (store) => store.put(value));
 export const getSegments = async (sessionId) => {
   const db = await openDb();

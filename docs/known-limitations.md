@@ -17,7 +17,7 @@ This is a static MVP with real browser APIs and a real local Transformers.js Moo
 - Computer audio depends on the browser returning an audio track after the user grants display-sharing permission. The application clearly reports when it is absent and continues to support microphone-only use.
 - Model integrity is established by a successful local-only model load after Cache Storage retrieval. A pinned, independently supplied per-file hash manifest is still required for release-grade cryptographic integrity verification.
 - Each audio pipeline uses short, bounded chunks. If inference is already busy, a later chunk is currently not queued. This avoids unbounded memory growth but needs a benchmarked scheduling policy before the no-speech-loss requirement can be claimed.
-- Saved segments are written incrementally to IndexedDB, but a prior-session browser interface has not yet been implemented.
+- Sessions and segments are written incrementally to IndexedDB and can be reopened, downloaded as text, and deliberately deleted in the browser interface. Persistence across a real browser restart still needs manual verification on macOS and Windows.
 
 ## Model distribution
 

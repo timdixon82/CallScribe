@@ -1,5 +1,6 @@
 .top-sources { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; margin-block: .75rem; }
 .top-sources > div { min-width: min(100%, 20rem); }
+[hidden] { display: none !important; }
 .voice-settings { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 2fr); gap: .5rem 1rem; max-width: 50rem; align-items: center; }
 .voice-settings button { grid-column: 1 / -1; justify-self: start; }
 .transcript-segment { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem .65rem; padding: .35rem 0; border-bottom: 1px solid var(--border); }

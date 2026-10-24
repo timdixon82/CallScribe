@@ -45,3 +45,14 @@ test('source controls expose a pressed state and the compact model picker remain
   assert.match(page, /id="model-select"/);
   assert.match(page, /aria-pressed="false"/);
 });
+
+test('audio processing has an explicit toggle and settings shortcut', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /function setAudioProcessingToggle/);
+  assert.match(app, /audioProcessingEnabled/);
+  assert.match(page, /id="toggle-audio-processing"/);
+  assert.match(page, /id="audio-processing-settings"/);
+});

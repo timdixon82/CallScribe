@@ -9,12 +9,14 @@ export class AudioPipeline {
     this.node = new AudioWorkletNode(this.context, 'capture-processor');
     this.node.port.onmessage = ({ data }) => this.receive(new Float32Array(data));
     const source = this.context.createMediaStreamSource(this.stream);
-    // Speech-focused local preprocessing: remove low room rumble and stabilise levels.
-    this.highPass = this.context.createBiquadFilter(); this.highPass.type = 'highpass';
-    this.lowPass = this.context.createBiquadFilter(); this.lowPass.type = 'lowpass';
-    this.compressor = this.context.createDynamicsCompressor(); this.compressor.knee.value = 24; this.compressor.attack.value = 0.003; this.compressor.release.value = 0.25;
-    this.setVoiceProcessing(this.voiceProcessing || { highPass: 20, lowPass: 20000, threshold: 0, ratio: 1 });
-    source.connect(this.highPass).connect(this.lowPass).connect(this.compressor).connect(this.node);
+    if (this.voiceProcessing) {
+      // Speech-focused local preprocessing: remove low room rumble and stabilise levels.
+      this.highPass = this.context.createBiquadFilter(); this.highPass.type = 'highpass';
+      this.lowPass = this.context.createBiquadFilter(); this.lowPass.type = 'lowpass';
+      this.compressor = this.context.createDynamicsCompressor(); this.compressor.knee.value = 24; this.compressor.attack.value = 0.003; this.compressor.release.value = 0.25;
+      this.setVoiceProcessing(this.voiceProcessing);
+      source.connect(this.highPass).connect(this.lowPass).connect(this.compressor).connect(this.node);
+    } else source.connect(this.node);
     this.node.connect(this.context.destination);
     this.stream.getAudioTracks().forEach((track) => { track.onended = () => this.stop(); });
     this.running = true;

@@ -5,9 +5,9 @@ let transcriber; let activeId;
 const send = (type, detail = {}) => postMessage({ type, ...detail });
 
 function progress(data) { send('progress', { data }); }
-async function load(model, localOnly) {
+async function load(model, localOnly, preferredDevice) {
   send('model-status', { status: localOnly ? 'Verifying cached model' : 'Preparing download', modelId: model.id });
-  let device = self.navigator.gpu ? 'webgpu' : 'wasm';
+  let device = preferredDevice || (self.navigator.gpu ? 'webgpu' : 'wasm');
   try {
     transcriber = await pipeline('automatic-speech-recognition', model.repo, { device, dtype: device === 'webgpu' ? 'q4' : 'q8', local_files_only: localOnly, progress_callback: progress });
   } catch (error) {
@@ -24,7 +24,7 @@ async function load(model, localOnly) {
 
 self.onmessage = async ({ data }) => {
   try {
-    if (data.type === 'load') return await load(data.model, data.localOnly);
+    if (data.type === 'load') return await load(data.model, data.localOnly, data.preferredDevice);
     if (data.type === 'transcribe') {
       if (!transcriber) throw new Error('No model is ready.');
       const output = await transcriber(data.audio, { sampling_rate: 16000, return_timestamps: true });

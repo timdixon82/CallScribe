@@ -1,15 +1,18 @@
 import './style.css';
 import './tabs.css';
 import './layout.css';
+import './compact.css';
 import { MODELS, findModel } from './models.js';
 import { AudioPipeline } from './audio.js';
 import { deleteSegments, getModel, getSegments, getSetting, putModel, putSegment, putSession, putSetting, removeModel } from './store.js';
 
 const $ = (id) => document.getElementById(id);
-const ui = Object.fromEntries(['app-status', 'model-list', 'download-region', 'download-label', 'download-progress', 'download-detail', 'download-announcements', 'retry-download', 'microphone-select', 'enable-microphone', 'microphone-status', 'share-system-audio', 'system-audio-status', 'start-session', 'pause-session', 'stop-session', 'new-session', 'session-status', 'transcript-list', 'empty-transcript', 'transcript-search', 'announce-mode', 'transcript-announcements', 'clear-transcript', 'delete-dialog', 'delete-message', 'confirm-delete', 'diagnostics'].map((id) => [id, $(id)]));
+const ui = Object.fromEntries(['app-status', 'active-model', 'model-list', 'download-announcements', 'microphone-select', 'enable-microphone', 'microphone-status', 'share-system-audio', 'system-audio-status', 'start-session', 'pause-session', 'stop-session', 'new-session', 'session-status', 'transcript-list', 'empty-transcript', 'transcript-search', 'announce-mode', 'transcript-announcements', 'clear-transcript', 'delete-dialog', 'delete-message', 'confirm-delete', 'diagnostics'].map((id) => [id, $(id)]));
 const worker = new Worker(new URL('./transcriber.worker.js', import.meta.url), { type: 'module' });
-let selectedModel; let activeModel; let downloadTarget; let pendingDelete; let session; let segments = []; let paused = false;
+let selectedModel; let activeModel; let downloadTarget; let pendingDelete; let session; let segments = []; let paused = false; let downloadState; let downloadAttempt = 0;
 const pipelines = new Map(); const downloadFiles = new Map();
+const DEFAULT_VOICE = { highPass: 90, lowPass: 7600, threshold: -30, ratio: 4 };
+let voiceProcessing = { ...DEFAULT_VOICE };
 
 function setStatus(message) { ui['app-status'].textContent = message; }
 function setSessionStatus(message) { ui['session-status'].textContent = message; }
@@ -21,13 +24,24 @@ async function initialise() {
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
   $('theme-select').value = theme;
   applyTheme(theme);
+  voiceProcessing = { ...DEFAULT_VOICE, ...JSON.parse(localStorage.getItem('localBrowserTranscriberVoiceProcessing') || '{}') };
+  updateVoiceControls();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
   navigator.storage?.persist?.().catch(() => {});
   selectedModel = await getSetting('selectedModel') || 'moonshine-base';
-  await populateMicrophones(); await renderModels(); await refreshDiagnostics();
+  await populateMicrophones(); await requestMicrophoneOnLaunch(); await renderModels(); await refreshDiagnostics();
   const model = findModel(selectedModel) || findModel('moonshine-base');
   const record = await getModel(model.id);
   if (record?.ready) loadModel(model, true); else if (model.default && !navigator.onLine) failDownload('Moonshine Base is not downloaded and the browser is offline. Connect to the internet and select Retry download.'); else loadModel(model, false);
+}
+
+async function requestMicrophoneOnLaunch() {
+  if (!navigator.mediaDevices?.getUserMedia) return;
+  try {
+    const permission = await navigator.permissions?.query?.({ name: 'microphone' });
+    if (permission?.state === 'denied') { ui['microphone-status'].textContent = 'Microphone permission is blocked. Use the browser site controls to allow it, then select Enable microphone.'; return; }
+    await enableMic();
+  } catch { ui['microphone-status'].textContent = 'Select Enable microphone to grant microphone permission.'; }
 }
 
 function applyTheme(theme) {
@@ -49,6 +63,12 @@ tabs.forEach((tab, index) => {
   tab.addEventListener('keydown', (event) => { const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End']; if (!keys.includes(event.key)) return; event.preventDefault(); const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) + tabs.length) % tabs.length; activateTab(tabs[next], true); });
 });
 
+function updateVoiceControls() {
+  for (const [key, value] of Object.entries(voiceProcessing)) { const id = key === 'threshold' ? 'compressor-threshold' : key === 'ratio' ? 'compressor-ratio' : key; $(id).value = value; $(`${id}-value`).textContent = key === 'ratio' ? `${value}:1` : `${value} ${key === 'threshold' ? 'dB' : 'Hz'}`; }
+}
+for (const [key, id] of Object.entries({ highPass: 'high-pass', lowPass: 'low-pass', threshold: 'compressor-threshold', ratio: 'compressor-ratio' })) $(id).addEventListener('input', ({ target }) => { voiceProcessing[key] = Number(target.value); localStorage.setItem('localBrowserTranscriberVoiceProcessing', JSON.stringify(voiceProcessing)); updateVoiceControls(); pipelines.get('microphone')?.setVoiceProcessing(voiceProcessing); });
+$('reset-voice-processing').addEventListener('click', () => { voiceProcessing = { ...DEFAULT_VOICE }; localStorage.setItem('localBrowserTranscriberVoiceProcessing', JSON.stringify(voiceProcessing)); updateVoiceControls(); pipelines.get('microphone')?.setVoiceProcessing(voiceProcessing); });
+
 async function populateMicrophones() {
   if (!navigator.mediaDevices?.enumerateDevices) return;
   const devices = await navigator.mediaDevices.enumerateDevices();
@@ -63,47 +83,45 @@ async function renderModels() {
     const record = await getModel(model.id); const row = document.createElement('tr');
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = `${model.name}${model.default ? ' (default)' : ''}`;
     const language = document.createElement('td'); language.textContent = model.language;
-    const details = document.createElement('td'); details.textContent = record?.ready ? `Ready${record.device ? ` (${record.device})` : ''}` : record?.failure ? `Failed: ${record.failure}` : 'Not downloaded';
+    const details = document.createElement('td'); details.textContent = downloadState?.modelId === model.id ? downloadState.detail : record?.ready ? `Ready${record.device ? ` (${record.device})` : ''}` : record?.failure ? `Failed: ${record.failure}` : 'Not downloaded';
     const actions = document.createElement('td');
     const button = document.createElement('button'); button.type = 'button'; button.textContent = record?.ready ? (activeModel === model.id ? 'Active model' : 'Select model') : record?.failure ? 'Retry download' : (model.default ? 'Download Moonshine Base' : 'Download model'); button.disabled = activeModel === model.id;
     button.addEventListener('click', () => loadModel(model, Boolean(record?.ready)));
     actions.append(button);
+    if (downloadState?.modelId === model.id && downloadState.phase !== 'failed') { const progress = document.createElement('progress'); progress.setAttribute('aria-label', `${model.name} download progress`); if (downloadState.total) { progress.max = downloadState.total; progress.value = downloadState.loaded; } actions.append(progress); }
     if (record?.ready) { const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove model'; remove.addEventListener('click', () => requestDelete(model)); actions.append(remove); }
     row.append(name, language, details, actions); ui['model-list'].append(row);
   }
 }
 
-function loadModel(model, localOnly) {
+async function loadModel(model, localOnly, attempt = 0) {
   if (!localOnly && !navigator.onLine) return failDownload(`${model.name} is not downloaded and the browser is offline.`);
-  downloadTarget = model; downloadFiles.clear(); ui['download-region'].hidden = false; ui['retry-download'].hidden = true;
-  ui['download-label'].textContent = `${localOnly ? 'Verifying cached' : 'Downloading'} ${model.name}.`;
-  ui['download-detail'].textContent = localOnly ? 'Checking cached model files.' : 'Preparing download.';
-  ui['download-progress'].removeAttribute('value'); setStatus(`${localOnly ? 'Verifying' : 'Downloading'} ${model.name}. Transcription controls are unavailable.`);
-  worker.postMessage({ type: 'load', model, localOnly });
+  downloadTarget = model; downloadAttempt = attempt; downloadFiles.clear(); downloadState = { modelId: model.id, phase: localOnly ? 'verifying' : 'downloading', detail: localOnly ? 'Verifying cached files' : attempt ? 'Retrying download' : 'Preparing download', loaded: 0, total: 0, localOnly }; await renderModels();
+  setStatus(`${localOnly ? 'Verifying' : 'Downloading'} ${model.name}. Transcription controls are unavailable.`);
+  const record = await getModel(model.id); worker.postMessage({ type: 'load', model, localOnly, preferredDevice: localOnly ? record?.device : undefined });
 }
 
 function updateDownload(data) {
   if (data.status === 'initiate') { downloadFiles.set(data.file, { loaded: 0, total: 0 }); }
   if (data.status === 'progress') downloadFiles.set(data.file, { loaded: data.loaded || 0, total: data.total || 0 });
   const values = [...downloadFiles.values()]; const known = values.every((item) => item.total > 0); const loaded = values.reduce((sum, item) => sum + item.loaded, 0); const total = values.reduce((sum, item) => sum + item.total, 0);
-  ui['download-detail'].textContent = `${data.file || 'Model file'}: ${bytes(data.loaded)}${data.total ? ` of ${bytes(data.total)}` : ''}.`;
-  if (known && total) { const percent = Math.min(100, Math.round(loaded / total * 100)); ui['download-progress'].value = percent; ui['download-label'].textContent = `Downloading ${downloadTarget.name}: ${percent}%. ${bytes(loaded)} of ${bytes(total)}.`; if (percent % 10 === 0) ui['download-announcements'].textContent = `${downloadTarget.name} download ${percent}% complete.`; }
-  else { ui['download-progress'].removeAttribute('value'); ui['download-label'].textContent = `Downloading ${downloadTarget.name}. Total download size is not yet known.`; }
+  if (known && total) { const percent = Math.min(100, Math.round(loaded / total * 100)); downloadState = { ...downloadState, loaded, total, detail: `Downloading ${percent}% (${bytes(loaded)} of ${bytes(total)})` }; if (percent % 10 === 0) ui['download-announcements'].textContent = `${downloadTarget.name} download ${percent}% complete.`; }
+  else downloadState = { ...downloadState, loaded, total: 0, detail: `Downloading ${bytes(loaded)}; total is not reported yet` };
+  renderModels();
 }
 
 worker.onmessage = async ({ data }) => {
   if (data.type === 'progress') return updateDownload(data.data);
-  if (data.type === 'model-status') { ui['download-detail'].textContent = data.status; return; }
+  if (data.type === 'model-status') { downloadState = { ...downloadState, detail: data.status }; renderModels(); return; }
   if (data.type === 'model-ready') {
     activeModel = data.modelId; await putModel({ id: activeModel, ready: true, device: data.device, verifiedAt: Date.now() }); await putSetting('selectedModel', activeModel); selectedModel = activeModel;
-    ui['download-progress'].value = 100; ui['download-label'].textContent = `${findModel(activeModel).name} is ready.`; ui['download-detail'].textContent = `Ready using ${data.device}. Cached model files were loaded successfully.`; ui['download-announcements'].textContent = `${findModel(activeModel).name} is ready for transcription.`; setStatus(`${findModel(activeModel).name} is ready. All transcription remains local.`); ui['start-session'].disabled = false; await renderModels(); refreshDiagnostics(); return;
+    downloadState = undefined; ui['active-model'].textContent = `Selected model: ${findModel(activeModel).name}, ready using ${data.device}.`; ui['download-announcements'].textContent = `${findModel(activeModel).name} is ready for transcription.`; setStatus(`${findModel(activeModel).name} is ready. All transcription remains local.`); ui['start-session'].disabled = false; await renderModels(); refreshDiagnostics(); return;
   }
   if (data.type === 'segment') return addSegment(data);
   if (data.type === 'error') return failDownload(data.message);
 };
 
-async function failDownload(message) { if (downloadTarget) await putModel({ id: downloadTarget.id, ready: false, failure: message, failedAt: Date.now() }); setStatus(`Model failed: ${message}`); ui['download-label'].textContent = 'Failed'; ui['download-detail'].textContent = message; ui['download-announcements'].textContent = `Model download failed. ${message}`; ui['retry-download'].hidden = false; ui['start-session'].disabled = !activeModel; renderModels(); }
-ui['retry-download'].addEventListener('click', () => downloadTarget && loadModel(downloadTarget, false));
+async function failDownload(message) { if (downloadTarget && !downloadState?.localOnly && downloadAttempt === 0) return loadModel(downloadTarget, false, 1); if (downloadTarget) await putModel({ id: downloadTarget.id, ready: false, failure: message, failedAt: Date.now() }); downloadState = downloadTarget ? { ...downloadState, phase: 'failed', detail: `Failed: ${message}` } : undefined; setStatus(`Model failed: ${message}`); ui['download-announcements'].textContent = `Model download failed. Use the Retry download button in the model row.`; ui['start-session'].disabled = !activeModel; renderModels(); }
 
 async function enableMic() {
   try { const id = ui['microphone-select'].value; const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }, video: false }); await addPipeline('microphone', stream); ui['microphone-status'].textContent = 'Microphone enabled with browser noise suppression, echo cancellation, automatic gain, and local voice filtering.'; }
@@ -113,14 +131,14 @@ async function shareSystemAudio() {
   try { const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: { suppressLocalAudioPlayback: false }, systemAudio: 'include', selfBrowserSurface: 'exclude', surfaceSwitching: 'include' }); const audioTracks = stream.getAudioTracks(); stream.getVideoTracks().forEach((track) => track.stop()); if (!audioTracks.length) { stream.getTracks().forEach((track) => track.stop()); throw new Error('The browser did not supply an audio track. Try a different share surface and enable its audio option, or continue with the microphone.'); } await addPipeline('system', new MediaStream(audioTracks)); ui['system-audio-status'].textContent = 'Computer audio enabled. The browser supplied an audio track.'; }
   catch (error) { ui['system-audio-status'].textContent = `Computer audio unavailable: ${error.message}`; }
 }
-async function addPipeline(source, stream) { pipelines.get(source)?.stop(); const pipeline = new AudioPipeline({ source, stream, onChunk: transcribe, onStopped: (name) => { pipelines.delete(name); $(name === 'system' ? 'system-audio-status' : 'microphone-status').textContent = `${name === 'system' ? 'Computer audio' : 'Microphone'} capture stopped.`; } }); await pipeline.start(); pipelines.set(source, pipeline); refreshDiagnostics(); }
+async function addPipeline(source, stream) { pipelines.get(source)?.stop(); const pipeline = new AudioPipeline({ source, stream, voiceProcessing: source === 'microphone' ? voiceProcessing : undefined, onChunk: transcribe, onStopped: (name) => { pipelines.delete(name); $(name === 'system' ? 'system-audio-status' : 'microphone-status').textContent = `${name === 'system' ? 'Computer audio' : 'Microphone'} capture stopped.`; } }); await pipeline.start(); pipelines.set(source, pipeline); refreshDiagnostics(); }
 function transcribe(chunk) { if (!session || paused || !activeModel) return; if (worker.busy) return; worker.busy = true; worker.postMessage({ type: 'transcribe', requestId: crypto.randomUUID(), ...chunk }, [chunk.audio.buffer]); }
 async function addSegment(result) { worker.busy = false; if (!result.text || !session) return; const segment = { id: crypto.randomUUID(), sessionId: session.id, sessionStartedAt: session.startedAt, source: result.source, start: result.capturedAt, end: result.capturedAt + result.durationMs, text: result.text, modelId: result.modelId, final: true }; segments.push(segment); segments.sort((a, b) => a.start - b.start); await putSegment(segment); renderTranscript(); const mode = ui['announce-mode'].value; ui['transcript-announcements'].textContent = mode === 'complete' ? `${segment.source === 'system' ? 'Computer audio' : 'Microphone'}: ${segment.text}` : mode === 'notice' ? 'New completed transcript text is available.' : ''; }
 
 async function startSession() { if (!activeModel) return; session = { id: crypto.randomUUID(), startedAt: Date.now(), modelId: activeModel, status: 'recording' }; segments = []; await putSession(session); paused = false; setSessionStatus('Recording and transcribing enabled audio sources.'); ui['start-session'].disabled = true; ui['pause-session'].disabled = false; ui['stop-session'].disabled = false; }
 async function togglePause() { if (!session) return; paused = !paused; session.status = paused ? 'paused' : 'recording'; await putSession(session); ui['pause-session'].textContent = paused ? 'Resume transcription' : 'Pause transcription'; setSessionStatus(paused ? 'Transcription paused. Audio capture continues but is not queued.' : 'Transcription resumed.'); }
 async function stopSession() { if (!session) return; pipelines.forEach((pipeline) => pipeline.stop()); session.status = 'stopped'; session.endedAt = Date.now(); await putSession(session); setSessionStatus('Session stopped. Audio tracks have been released.'); ui['start-session'].disabled = false; ui['pause-session'].disabled = true; ui['stop-session'].disabled = true; session = null; }
-function renderTranscript() { const query = ui['transcript-search'].value.toLowerCase(); ui['transcript-list'].replaceChildren(); segments.filter((segment) => !query || segment.text.toLowerCase().includes(query)).forEach((segment) => { const item = document.createElement('li'); const label = document.createElement('p'); label.textContent = `${formatTime(segment.start)} | ${segment.source === 'system' ? 'Computer audio' : 'Microphone'} | ${segment.modelId}`; const edit = document.createElement('textarea'); edit.value = segment.text; edit.setAttribute('aria-label', `Transcript text from ${segment.source} at ${formatTime(segment.start)}`); edit.addEventListener('change', async () => { segment.text = safeText(edit.value); await putSegment(segment); }); item.append(label, edit); ui['transcript-list'].append(item); }); ui['empty-transcript'].hidden = Boolean(segments.length); }
+function renderTranscript() { const query = ui['transcript-search'].value.toLowerCase(); ui['transcript-list'].replaceChildren(); segments.filter((segment) => !query || segment.text.toLowerCase().includes(query)).forEach((segment) => { const item = document.createElement('li'); item.className = 'transcript-segment'; const label = document.createElement('span'); label.className = 'segment-label'; label.textContent = `${formatTime(segment.start)} | ${segment.source === 'system' ? 'Computer audio' : 'Microphone'}`; const text = document.createElement('span'); text.className = 'segment-text'; text.textContent = segment.text; const editButton = document.createElement('button'); editButton.type = 'button'; editButton.textContent = 'Edit'; const edit = document.createElement('textarea'); edit.hidden = true; edit.value = segment.text; edit.setAttribute('aria-label', `Transcript text from ${segment.source} at ${formatTime(segment.start)}`); editButton.addEventListener('click', () => { edit.hidden = !edit.hidden; if (!edit.hidden) edit.focus(); }); edit.addEventListener('change', async () => { segment.text = safeText(edit.value); text.textContent = segment.text; await putSegment(segment); }); item.append(label, text, editButton, edit); ui['transcript-list'].append(item); }); ui['empty-transcript'].hidden = Boolean(segments.length); }
 ui['transcript-search'].addEventListener('input', renderTranscript);
 ui['enable-microphone'].addEventListener('click', enableMic); ui['share-system-audio'].addEventListener('click', shareSystemAudio); ui['start-session'].addEventListener('click', startSession); ui['pause-session'].addEventListener('click', togglePause); ui['stop-session'].addEventListener('click', stopSession);
 ui['new-session'].addEventListener('click', async () => { if (session) await stopSession(); segments = []; renderTranscript(); setSessionStatus('Ready for a new session.'); });

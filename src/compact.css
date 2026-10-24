@@ -1,5 +1,14 @@
 .top-sources { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; margin-block: .75rem; }
 .top-sources > div { min-width: min(100%, 20rem); }
+.model-picker { display: grid; grid-template-columns: minmax(16rem, 1fr) auto; gap: .25rem .75rem; max-width: 48rem; align-items: end; }
+.model-picker label, .model-picker output { grid-column: 1 / -1; font-weight: 700; }
+.model-picker output { color: var(--muted); font-weight: 600; }
+.model-picker select { min-height: 3rem; margin: 0; }
+.model-picker button { margin: 0; }
+.capture-toggle, .model-picker button { display: inline-flex; align-items: center; gap: .5rem; }
+.capture-toggle svg, .model-picker svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+.capture-toggle[aria-pressed="true"] { background: var(--selected); border-color: var(--focus); }
+.capture-toggle[aria-pressed="true"] .toggle-label::after { content: " (on)"; }
 .model-download-status { min-height: 5.25rem; margin-block: .75rem; }
 .model-download-status label { display: block; font-weight: 700; }
 .model-download-status progress { margin-block: .35rem; }
@@ -14,4 +23,4 @@
 .segment-text { flex: 1 1 20rem; }
 .transcript-segment button { min-height: 2.25rem; padding: .35rem .6rem; margin: 0; }
 .transcript-segment textarea { flex-basis: 100%; min-height: 3rem; }
-@media (max-width: 40rem) { .voice-settings { grid-template-columns: 1fr; } }
+@media (max-width: 40rem) { .voice-settings { grid-template-columns: 1fr; } .model-picker { grid-template-columns: 1fr; } .model-picker label, .model-picker output { grid-column: auto; } }

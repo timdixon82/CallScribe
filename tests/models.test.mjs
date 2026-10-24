@@ -34,3 +34,14 @@ test('voice-control setup uses the matching DOM IDs and cannot block launch', as
   assert.match(app, /lowPass: 'low-pass'/);
   assert.match(app, /const id = controlIds\[key\]/);
 });
+
+test('source controls expose a pressed state and the compact model picker remains available', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /function setCaptureToggle/);
+  assert.match(app, /pipelines\.has\('microphone'\)/);
+  assert.match(page, /id="model-select"/);
+  assert.match(page, /aria-pressed="false"/);
+});

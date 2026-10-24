@@ -7,7 +7,7 @@ import { AudioPipeline } from './audio.js';
 import { deleteSegments, getModel, getSegments, getSessions, getSetting, putModel, putSegment, putSession, putSetting, removeModel, removeSession } from './store.js';
 
 const $ = (id) => document.getElementById(id);
-const ui = Object.fromEntries(['app-status', 'active-model', 'model-download-status', 'model-download-progress', 'model-download-detail', 'model-list', 'download-announcements', 'microphone-select', 'enable-microphone', 'microphone-status', 'language-control', 'transcription-language', 'language-status', 'share-system-audio', 'system-audio-status', 'session-name', 'start-session', 'pause-session', 'stop-session', 'new-session', 'session-status', 'saved-session-list', 'transcript-list', 'empty-transcript', 'transcript-search', 'announce-mode', 'transcript-announcements', 'clear-transcript', 'delete-dialog', 'delete-heading', 'delete-message', 'confirm-delete', 'diagnostics'].map((id) => [id, $(id)]));
+const ui = Object.fromEntries(['app-status', 'active-model', 'model-select', 'model-action', 'model-action-label', 'remove-selected-model', 'model-download-status', 'model-download-progress', 'model-download-detail', 'download-announcements', 'microphone-select', 'enable-microphone', 'microphone-status', 'language-control', 'transcription-language', 'language-status', 'share-system-audio', 'system-audio-status', 'session-name', 'start-session', 'pause-session', 'stop-session', 'new-session', 'session-status', 'saved-session-list', 'transcript-list', 'empty-transcript', 'transcript-search', 'announce-mode', 'transcript-announcements', 'clear-transcript', 'delete-dialog', 'delete-heading', 'delete-message', 'confirm-delete', 'diagnostics'].map((id) => [id, $(id)]));
 const worker = new Worker(new URL('./transcriber.worker.js', import.meta.url), { type: 'module' });
 let selectedModel; let activeModel; let selectedLanguage; let downloadTarget; let pendingDelete; let session; let segments = []; let paused = false; let downloadState; let downloadAttempt = 0;
 const pipelines = new Map(); const downloadFiles = new Map();
@@ -22,6 +22,7 @@ function formatDateTime(time) { return new Date(time).toLocaleString([], { dateS
 function defaultSessionName(time = new Date()) { const month = time.toLocaleString('en-GB', { month: 'short' }); return `Call ${time.getFullYear()}-${month}-${String(time.getDate()).padStart(2, '0')} ${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`; }
 function safeText(value) { return String(value ?? ''); }
 function setModelDownloadStatus(detail, loaded = 0, total = 0) { ui['model-download-detail'].textContent = detail; ui['model-download-progress'].style.visibility = total || downloadState ? 'visible' : 'hidden'; if (total) { ui['model-download-progress'].max = total; ui['model-download-progress'].value = loaded; } else { ui['model-download-progress'].removeAttribute('value'); ui['model-download-progress'].removeAttribute('max'); } }
+function setCaptureToggle(source, enabled, status) { const system = source === 'system'; const button = ui[system ? 'share-system-audio' : 'enable-microphone']; const label = button.querySelector('.toggle-label'); button.setAttribute('aria-pressed', String(enabled)); button.dataset.enabled = String(enabled); label.textContent = enabled ? (system ? 'Stop screen audio' : 'Disable microphone') : (system ? 'Share screen audio' : 'Enable microphone'); ui[system ? 'system-audio-status' : 'microphone-status'].textContent = status; }
 
 async function initialise() {
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
@@ -34,11 +35,12 @@ async function initialise() {
   const savedModelId = await getSetting('selectedModel'); selectedLanguage = await getSetting('transcriptionLanguage') || 'auto'; ui['transcription-language'].value = selectedLanguage;
   ui['session-name'].value = defaultSessionName();
   ui['start-session'].disabled = true; ui['language-control'].hidden = true; setModelDownloadStatus('Checking whether Moonshine Base is already available.');
+  if (!navigator.mediaDevices?.getDisplayMedia) { ui['share-system-audio'].disabled = true; setCaptureToggle('system', false, 'Screen-audio capture is not supported by this browser.'); }
   await populateMicrophones(); await renderModels(); await renderSavedSessions(); await refreshDiagnostics();
   const defaultModel = findModel('moonshine-base'); const defaultRecord = await getModel(defaultModel.id); const savedModel = findModel(savedModelId); const savedRecord = savedModel ? await getModel(savedModel.id) : undefined;
   // Moonshine Base is always provisioned first. A previously selected optional model
   // is restored only after the required default is confirmed available.
-  const model = defaultRecord?.ready && savedModel && savedRecord?.ready ? savedModel : defaultModel; selectedModel = model.id;
+  const model = defaultRecord?.ready && savedModel && savedRecord?.ready ? savedModel : defaultModel; selectedModel = model.id; ui['model-select'].value = selectedModel;
   const record = model.id === defaultModel.id ? defaultRecord : savedRecord;
   if (record?.ready) loadModel(model, true); else if (!navigator.onLine) failDownload(`${model.name} is not downloaded and the browser is offline. Connect to the internet and select Retry download.`); else loadModel(model, false);
   requestMicrophoneOnLaunch();
@@ -58,6 +60,9 @@ function applyTheme(theme) {
   else document.documentElement.dataset.theme = theme;
 }
 $('transcription-language').addEventListener('change', ({ target }) => { selectedLanguage = target.value; putSetting('transcriptionLanguage', selectedLanguage); });
+$('model-select').addEventListener('change', ({ target }) => { selectedModel = target.value; renderModels(); });
+$('model-action').addEventListener('click', async () => { const model = findModel(ui['model-select'].value); const record = await getModel(model.id); loadModel(model, Boolean(record?.ready)); });
+$('remove-selected-model').addEventListener('click', async () => { const model = findModel(ui['model-select'].value); const record = await getModel(model.id); if (record?.ready) requestDelete(model); });
 $('theme-select').addEventListener('change', ({ target }) => {
   localStorage.setItem('localBrowserTranscriberTheme', target.value);
   applyTheme(target.value);
@@ -89,27 +94,17 @@ async function populateMicrophones() {
 }
 
 async function renderModels() {
-  const viewportY = window.scrollY;
-  ui['model-list'].replaceChildren();
+  const chosenId = ui['model-select'].value || selectedModel || 'moonshine-base';
+  ui['model-select'].replaceChildren();
   for (const model of MODELS) {
-    const record = await getModel(model.id); const row = document.createElement('tr');
-    const name = document.createElement('th'); name.scope = 'row'; name.textContent = `${model.name}${model.default ? ' (default)' : ''}`;
-    const language = document.createElement('td'); language.textContent = model.language;
-    const details = document.createElement('td'); details.textContent = downloadState?.modelId === model.id ? downloadState.detail : record?.ready ? `Ready${record.device ? ` (${record.device})` : ''}` : record?.failure ? `Failed: ${record.failure}` : 'Not downloaded';
-    const actions = document.createElement('td');
-    const button = document.createElement('button'); button.type = 'button'; button.textContent = record?.ready ? (activeModel === model.id ? 'Active model' : 'Select model') : record?.failure ? 'Retry download' : (model.default ? 'Download Moonshine Base' : 'Download model'); button.disabled = activeModel === model.id;
-    button.addEventListener('click', () => loadModel(model, Boolean(record?.ready)));
-    actions.append(button);
-    const progress = document.createElement('progress'); progress.setAttribute('aria-label', `${model.name} download progress`); const downloading = downloadState?.modelId === model.id && downloadState.phase !== 'failed'; if (downloading && downloadState.total) { progress.max = downloadState.total; progress.value = downloadState.loaded; } else { progress.style.visibility = 'hidden'; } actions.append(progress);
-    if (record?.ready) { const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove model'; remove.addEventListener('click', () => requestDelete(model)); actions.append(remove); }
-    row.append(name, language, details, actions); ui['model-list'].append(row);
+    const record = await getModel(model.id); const option = document.createElement('option'); option.value = model.id; option.textContent = record?.ready ? `${model.name} — ready` : `${model.name}  ⇩ Download`; option.selected = model.id === chosenId; ui['model-select'].append(option);
   }
-  requestAnimationFrame(() => window.scrollTo({ top: viewportY }));
+  const selected = findModel(ui['model-select'].value); const record = await getModel(selected.id); const busy = downloadState && downloadState.modelId === selected.id && downloadState.phase !== 'failed'; ui['model-action'].disabled = Boolean(busy || activeModel === selected.id); ui['model-action-label'].textContent = busy ? 'Downloading model' : record?.ready ? (activeModel === selected.id ? 'Selected model' : 'Use selected model') : `Download ${selected.name}`; ui['remove-selected-model'].disabled = !record?.ready || activeModel === selected.id;
 }
 
 async function loadModel(model, localOnly, attempt = 0) {
   if (!localOnly && !navigator.onLine) return failDownload(`${model.name} is not downloaded and the browser is offline.`);
-  activeModel = undefined; ui['start-session'].disabled = true; ui['language-control'].hidden = true; downloadTarget = model; downloadAttempt = attempt; downloadFiles.clear(); downloadState = { modelId: model.id, phase: localOnly ? 'verifying' : 'downloading', detail: localOnly ? 'Verifying cached files' : attempt ? 'Retrying download' : 'Preparing download', loaded: 0, total: 0, localOnly }; ui['active-model'].textContent = `Selected model: ${model.name} — ${downloadState.detail}.`; setModelDownloadStatus(`${model.name}: ${downloadState.detail}`); await renderModels();
+  selectedModel = model.id; ui['model-select'].value = model.id; activeModel = undefined; ui['start-session'].disabled = true; ui['language-control'].hidden = true; downloadTarget = model; downloadAttempt = attempt; downloadFiles.clear(); downloadState = { modelId: model.id, phase: localOnly ? 'verifying' : 'downloading', detail: localOnly ? 'Verifying cached files' : attempt ? 'Retrying download' : 'Preparing download', loaded: 0, total: 0, localOnly }; ui['active-model'].textContent = `Selected model: ${model.name} — ${downloadState.detail}.`; setModelDownloadStatus(`${model.name}: ${downloadState.detail}`); await renderModels();
   setStatus(`${localOnly ? 'Verifying' : 'Downloading'} ${model.name}. Transcription controls are unavailable.`);
   const record = await getModel(model.id); worker.postMessage({ type: 'load', model, localOnly, preferredDevice: localOnly ? record?.device : undefined });
 }
@@ -138,14 +133,14 @@ worker.onmessage = async ({ data }) => {
 async function failDownload(message) { if (downloadTarget && downloadState?.localOnly && navigator.onLine) { await removeModel(downloadTarget.id); return loadModel(downloadTarget, false, 0); } if (downloadTarget && !downloadState?.localOnly && downloadAttempt === 0) return loadModel(downloadTarget, false, 1); if (downloadTarget) await putModel({ id: downloadTarget.id, ready: false, failure: message, failedAt: Date.now() }); downloadState = downloadTarget ? { ...downloadState, phase: 'failed', detail: `Failed: ${message}` } : undefined; setModelDownloadStatus(downloadState?.detail || `Failed: ${message}`); setStatus(`Model failed: ${message}`); ui['download-announcements'].textContent = `Model download failed. Use the Retry download button in the model row.`; ui['start-session'].disabled = true; ui['language-control'].hidden = true; renderModels(); }
 
 async function enableMic() {
-  try { const id = ui['microphone-select'].value; const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }, video: false }); await addPipeline('microphone', stream); ui['microphone-status'].textContent = 'Microphone enabled with browser noise suppression, echo cancellation, automatic gain, and local voice filtering.'; }
-  catch (error) { ui['microphone-status'].textContent = `Microphone unavailable: ${error.message}`; }
+  try { const id = ui['microphone-select'].value; const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }, video: false }); await addPipeline('microphone', stream); setCaptureToggle('microphone', true, 'Microphone on. Browser noise suppression and local voice filtering are active.'); }
+  catch (error) { setCaptureToggle('microphone', false, `Microphone unavailable: ${error.message}`); }
 }
 async function shareSystemAudio() {
-  try { const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: { suppressLocalAudioPlayback: false }, systemAudio: 'include', selfBrowserSurface: 'exclude', surfaceSwitching: 'include' }); const audioTracks = stream.getAudioTracks(); stream.getVideoTracks().forEach((track) => track.stop()); if (!audioTracks.length) { stream.getTracks().forEach((track) => track.stop()); throw new Error('The browser did not supply an audio track. Try a different share surface and enable its audio option, or continue with the microphone.'); } await addPipeline('system', new MediaStream(audioTracks)); ui['system-audio-status'].textContent = 'Computer audio enabled. The browser supplied an audio track.'; }
-  catch (error) { ui['system-audio-status'].textContent = `Computer audio unavailable: ${error.message}`; }
+  try { const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: { suppressLocalAudioPlayback: false }, systemAudio: 'include', selfBrowserSurface: 'exclude', surfaceSwitching: 'include' }); const audioTracks = stream.getAudioTracks(); stream.getVideoTracks().forEach((track) => track.stop()); if (!audioTracks.length) { stream.getTracks().forEach((track) => track.stop()); throw new Error('No screen-audio track was supplied. iPhone and iPad browsers commonly cannot provide system audio; use the microphone there.'); } await addPipeline('system', new MediaStream(audioTracks)); setCaptureToggle('system', true, 'Screen audio on. The browser supplied an audio track.'); }
+  catch (error) { setCaptureToggle('system', false, `Screen audio unavailable: ${error.message}`); }
 }
-async function addPipeline(source, stream) { pipelines.get(source)?.stop(); const pipeline = new AudioPipeline({ source, stream, voiceProcessing: source === 'microphone' ? voiceProcessing : undefined, onChunk: transcribe, onStopped: (name) => { pipelines.delete(name); $(name === 'system' ? 'system-audio-status' : 'microphone-status').textContent = `${name === 'system' ? 'Computer audio' : 'Microphone'} capture stopped.`; } }); await pipeline.start(); pipelines.set(source, pipeline); refreshDiagnostics(); }
+async function addPipeline(source, stream) { pipelines.get(source)?.stop(); const pipeline = new AudioPipeline({ source, stream, voiceProcessing: source === 'microphone' ? voiceProcessing : undefined, onChunk: transcribe, onStopped: (name) => { pipelines.delete(name); setCaptureToggle(name, false, `${name === 'system' ? 'Screen audio' : 'Microphone'} off.`); } }); await pipeline.start(); pipelines.set(source, pipeline); refreshDiagnostics(); }
 function transcribe(chunk) { if (!session || paused || !activeModel) return; if (worker.busy) return; worker.busy = true; worker.postMessage({ type: 'transcribe', requestId: crypto.randomUUID(), language: selectedLanguage, ...chunk }, [chunk.audio.buffer]); }
 async function addSegment(result) { worker.busy = false; if (!result.text || !session) return; const segment = { id: crypto.randomUUID(), sessionId: session.id, sessionStartedAt: session.startedAt, source: result.source, start: result.capturedAt, end: result.capturedAt + result.durationMs, text: result.text, modelId: result.modelId, final: true }; segments.push(segment); segments.sort((a, b) => a.start - b.start); await putSegment(segment); renderTranscript(); const mode = ui['announce-mode'].value; ui['transcript-announcements'].textContent = mode === 'complete' ? `${segment.source === 'system' ? 'Computer audio' : 'Microphone'}: ${segment.text}` : mode === 'notice' ? 'New completed transcript text is available.' : ''; }
 
@@ -157,7 +152,7 @@ function renderTranscript() { const query = ui['transcript-search'].value.toLowe
 async function openSavedSession(saved) { if (session) return setSessionStatus('Stop the current session before opening a saved transcript.'); segments = await getSegments(saved.id); segments.sort((a, b) => a.start - b.start); ui['session-name'].value = saved.name || defaultSessionName(new Date(saved.startedAt)); renderTranscript(); setSessionStatus(`Opened saved transcript “${saved.name || 'Untitled call'}”.`); }
 async function renderSavedSessions() { const savedSessions = (await getSessions()).sort((a, b) => b.startedAt - a.startedAt); ui['saved-session-list'].replaceChildren(); for (const saved of savedSessions) { const row = document.createElement('tr'); const name = document.createElement('th'); name.scope = 'row'; name.textContent = saved.name || defaultSessionName(new Date(saved.startedAt)); const started = document.createElement('td'); started.textContent = formatDateTime(saved.startedAt); const status = document.createElement('td'); status.textContent = saved.status || 'saved'; const actions = document.createElement('td'); const open = document.createElement('button'); open.type = 'button'; open.textContent = 'Open'; open.addEventListener('click', () => openSavedSession(saved)); const exportButton = document.createElement('button'); exportButton.type = 'button'; exportButton.textContent = 'Download TXT'; exportButton.addEventListener('click', async () => { const savedSegments = await getSegments(saved.id); download(exportText(savedSegments), `${fileSafeName(saved.name || 'transcript')}.txt`, 'text/plain'); }); const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Delete'; remove.addEventListener('click', () => requestSessionDelete(saved)); actions.append(open, exportButton, remove); row.append(name, started, status, actions); ui['saved-session-list'].append(row); } }
 ui['transcript-search'].addEventListener('input', renderTranscript);
-ui['enable-microphone'].addEventListener('click', enableMic); ui['share-system-audio'].addEventListener('click', shareSystemAudio); ui['start-session'].addEventListener('click', startSession); ui['pause-session'].addEventListener('click', togglePause); ui['stop-session'].addEventListener('click', stopSession);
+ui['enable-microphone'].addEventListener('click', () => pipelines.has('microphone') ? pipelines.get('microphone').stop() : enableMic()); ui['share-system-audio'].addEventListener('click', () => pipelines.has('system') ? pipelines.get('system').stop() : shareSystemAudio()); ui['start-session'].addEventListener('click', startSession); ui['pause-session'].addEventListener('click', togglePause); ui['stop-session'].addEventListener('click', stopSession);
 ui['new-session'].addEventListener('click', async () => { if (session) await stopSession(); segments = []; ui['session-name'].value = defaultSessionName(); renderTranscript(); setSessionStatus('Ready for a new session.'); });
 ui['clear-transcript'].addEventListener('click', async () => { if (session) await deleteSegments(session.id); segments = []; renderTranscript(); });
 function requestDelete(model) { if (session?.modelId === model.id) return setStatus('Stop the active session before removing its model.'); pendingDelete = { type: 'model', value: model }; ui['delete-heading'].textContent = 'Remove downloaded model?'; ui['confirm-delete'].textContent = 'Remove model'; ui['delete-message'].textContent = `Remove ${model.name} from browser-managed model storage? Other models and transcript sessions will be kept.`; ui['delete-dialog'].showModal(); }

@@ -19,7 +19,7 @@ async function initialise() {
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
   $('theme-select').value = theme;
   applyTheme(theme);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
   navigator.storage?.persist?.().catch(() => {});
   selectedModel = await getSetting('selectedModel') || 'moonshine-base';
   await populateMicrophones(); await renderModels(); await refreshDiagnostics();

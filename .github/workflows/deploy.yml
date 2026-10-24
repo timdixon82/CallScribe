@@ -1,0 +1,273 @@
+# Deploy to GitHub Pages.
+# Runs on every push to main and on manual dispatch.
+#
+# THIS IS THE TEAM STANDARD for deploying a static site to GitHub Pages.
+# See docs/patterns/github-pages-deploy.md for the full standard.
+#
+# Activation (one-time, per repo): GitHub > Settings > Pages > Build and
+# deployment > Source > "GitHub Actions" (NOT "Deploy from a branch").
+# Equivalently, set the Pages build_type to "workflow" via the API.
+#
+# Action SHAs are pinned to FULL 40-character commit SHAs. Never use a
+# shortened SHA: GitHub no longer resolves them and the deploy will fail
+# (this caused a silent stale-deploy on the Image Colour Contrast Checker).
+# The version tag is in the trailing comment; update SHAs via Dependabot.
+#
+# ── CHOOSE ONE VARIANT ────────────────────────────────────────────────────────
+#
+# BUNDLED projects: a build step emits an output folder (e.g. dist). This is
+# also the correct job for a bundler-free static-app project that still
+# carries a package.json for tooling only, with no "build" script (e.g.
+# Braille Reference, LLBS Braille Name Generator — each documented in an
+# ADR as no-build). The BUNDLED job handles both automatically: "npm run
+# build --if-present" no-ops when there is no build script, and the upload
+# step falls back to uploading the repository root when no dist/ was
+# produced, so no per-project edit is needed either way.
+#   - Keep the BUNDLED JOB section below (the default).
+#   - Delete or comment out the UNBUNDLED JOB section.
+#
+# UNBUNDLED static projects: files served straight from the repo root, no
+# package.json at all (e.g. SWOT Builder). An "Assemble site" step copies
+# only known runtime paths into _site (index.html, styles/, scripts/,
+# data/, assets/) using a fail-safe ALLOW-list, so nothing outside that
+# list — node_modules, .github, docs, .claude, tests, config files —
+# publishes by default.
+#   - Keep the UNBUNDLED JOB section below.
+#   - Delete or comment out the BUNDLED JOB section.
+#
+# See docs/patterns/github-pages-deploy.md for full guidance, SHAs, and
+# notes on post-merge live-site verification.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deploy at a time. In-progress deploy is cancelled if a new push arrives.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+
+  # ── BUNDLED JOB ─────────────────────────────────────────────────────────────
+  # Use for projects with an npm build step that emits a folder (e.g. dist).
+  # DELETE this job if your project is UNBUNDLED.
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      is_browser_extension: ${{ steps.archetype.outputs.is_browser_extension }}
+      is_wordpress_theme: ${{ steps.archetype.outputs.is_wordpress_theme }}
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Check the CI archetype
+        # Reads .github/ci-archetype, trimmed of surrounding whitespace and
+        # newlines, mirroring the equivalent step in ci.yml and
+        # accessibility.yml. A browser-extension project has no public
+        # website at all — nothing for GitHub Pages to serve — so this
+        # entire workflow is a deliberate no-op for that archetype, not a
+        # weakened deploy. See jacob-ci-archetypes.md section 2c.
+        #
+        # A wordpress-theme project is the same kind of no-op for a
+        # different reason: it has no root package.json for this job's
+        # Node setup/npm ci steps, and it is never published via GitHub
+        # Pages at all. It deploys to a real WordPress server through a
+        # separate, manual, cookie-authenticated admin upload process, so
+        # this workflow has nothing to build or publish for this archetype.
+        id: archetype
+        run: |
+          if [ -f .github/ci-archetype ]; then
+            value=$(tr -d '[:space:]' < .github/ci-archetype)
+          else
+            value=""
+          fi
+          if [ "$value" = "browser-extension" ]; then
+            echo "is_browser_extension=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_browser_extension=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$value" = "wordpress-theme" ]; then
+            echo "is_wordpress_theme=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_wordpress_theme=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Note that browser-extension projects have nothing to deploy
+        if: steps.archetype.outputs.is_browser_extension == 'true'
+        run: |
+          echo "This project's .github/ci-archetype declares browser-extension."
+          echo "A browser extension has no public website for GitHub Pages to"
+          echo "serve, so this workflow is a deliberate no-op for this archetype."
+
+      - name: Note that wordpress-theme projects have nothing to deploy
+        if: steps.archetype.outputs.is_wordpress_theme == 'true'
+        run: |
+          echo "This project's .github/ci-archetype declares wordpress-theme."
+          echo "A WordPress theme deploys to a WordPress server via a separate"
+          echo "manual admin upload process, not GitHub Pages, so this workflow"
+          echo "is a deliberate no-op for this archetype."
+
+      - name: Set up Node.js
+        if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
+        run: npm ci
+
+      - name: Build
+        # --if-present no-ops when the project has no "build" script (a
+        # bundler-free static-app project with a package.json for tooling
+        # only, e.g. Braille Reference). Without --if-present, npm exits
+        # non-zero with "Missing script: build" and the deploy fails.
+        if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
+        run: npm run build --if-present
+
+      - name: Assemble the deploy artifact
+        # dist/ is the template default build output folder (change the
+        # test below to match your build output folder if different). If
+        # the build step above no-op'd because there is no build script,
+        # dist/ never gets created — the bundler-free case (e.g. Braille
+        # Reference). Uploading the repository root as-is would publish
+        # every file in the repo, including internal-only material such as
+        # .claude/, CLAUDE.md, README.md, tests/, scripts run for tooling,
+        # and config files.
+        #
+        # This is a fail-safe ALLOW-list, not a deny-list: only paths
+        # matching an explicit --include line below are copied into
+        # _site/. Everything else is excluded by the trailing
+        # --exclude='*'. A file nobody thought to exclude is therefore
+        # NOT published by default — the opposite of a deny-list, where a
+        # forgotten exclude ships an unknown file to a public Pages URL.
+        # The path names match the canonical static front-end project
+        # layout in docs/stacks/static-front-end.md: index.html at the
+        # root, plus the styles/, scripts/, data/, and assets/ folders. A
+        # project that genuinely needs an extra runtime path (for example
+        # fonts/ kept outside assets/) adds one explicit --include line
+        # for it, rather than loosening the list.
+        #
+        # Every include below (other than the '*/' descend-only pattern)
+        # carries a leading '/' to anchor it to the repo root. An rsync
+        # include that contains a '/' but has NO leading '/' is NOT
+        # anchored — it matches at any depth, not just the root. Because
+        # npm ci runs before this step, an unanchored 'scripts/***' also
+        # matches nested paths such as node_modules/ajv/scripts/*, and
+        # unanchored 'data/***' also matches node_modules/css-tree/data/*,
+        # silently publishing node_modules internals to the public site.
+        id: artifact
+        if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
+        run: |
+          if [ -d dist ]; then
+            echo "path=dist" >> "$GITHUB_OUTPUT"
+          else
+            mkdir _site
+            # The allow-listed paths below (styles/, scripts/, data/,
+            # assets/, index.html) are published to the public site: never
+            # put a secret or other non-public file in any of them.
+            rsync -a --prune-empty-dirs --safe-links \
+                     --include='/index.html' \
+                     --include='/styles/***' \
+                     --include='/scripts/***' \
+                     --include='/data/***' \
+                     --include='/assets/***' \
+                     --include='*/' \
+                     --exclude='*' \
+                     ./ _site/
+            echo "path=_site" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure Pages
+        if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
+
+      - name: Upload Pages artifact
+        if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+        with:
+          path: ${{ steps.artifact.outputs.path }}
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.is_browser_extension != 'true' && needs.build.outputs.is_wordpress_theme != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
+
+
+  # ── UNBUNDLED JOB ───────────────────────────────────────────────────────────
+  # Use for projects with no build step — files served straight from the repo.
+  # Reference implementation: SWOT Builder.
+  # DELETE or COMMENT OUT this job if your project is BUNDLED.
+  #
+  # build-unbundled:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out the code
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+  #
+  #     - name: Assemble site
+  #       # Fail-safe ALLOW-list: only paths matching an explicit --include
+  #       # line are copied into _site/; everything else is excluded by the
+  #       # trailing --exclude='*'. A forgotten file is NOT published by
+  #       # default. Path names match the canonical static front-end layout
+  #       # in docs/stacks/static-front-end.md. Add one explicit --include
+  #       # line for any extra runtime path your project genuinely needs.
+  #       #
+  #       # Every include below (other than the '*/' descend-only pattern)
+  #       # carries a leading '/' to anchor it to the repo root. An rsync
+  #       # include that contains a '/' but has NO leading '/' is NOT
+  #       # anchored — it matches at any depth, not just the root, so an
+  #       # unanchored 'scripts/***' or 'data/***' also matches nested
+  #       # node_modules paths (e.g. node_modules/ajv/scripts/*), silently
+  #       # publishing node_modules internals to the public site.
+  #       run: |
+  #         mkdir _site
+  #         # The allow-listed paths below (styles/, scripts/, data/,
+  #         # assets/, index.html) are published to the public site: never
+  #         # put a secret or other non-public file in any of them.
+  #         rsync -a --prune-empty-dirs --safe-links \
+  #                  --include='/index.html' \
+  #                  --include='/styles/***' \
+  #                  --include='/scripts/***' \
+  #                  --include='/data/***' \
+  #                  --include='/assets/***' \
+  #                  --include='*/' \
+  #                  --exclude='*' \
+  #                  ./ _site/
+  #
+  #     - name: Configure Pages
+  #       uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
+  #
+  #     - name: Upload Pages artifact
+  #       uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+  #       with:
+  #         path: _site
+  #
+  # deploy-unbundled:
+  #   needs: build-unbundled
+  #   runs-on: ubuntu-latest
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #   steps:
+  #     - name: Deploy to GitHub Pages
+  #       id: deployment
+  #       uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0

@@ -1,0 +1,35 @@
+# Dependabot configuration.
+# Weekly, grouped dependency updates. A scaffolded project should remove
+# any ecosystem it does not use, so Dependabot does not warn about a
+# missing manifest.
+#
+# This is the team's meta-repository, not a code-type project: it has no
+# package.json or composer.json at its root, and its own .github/ carries
+# no accessibility-tools folder (that lives under templates/, for
+# scaffolded projects to use). The composer-at-root, npm-at-root, and
+# npm-at-/.github/accessibility-tools entries this file used to carry were
+# copied from the scaffold defaults without removing what does not apply
+# here, and errored every week with "package.json not found" or the
+# composer equivalent. Removed, and the accessibility-tools entry
+# repointed at the real manifest location, templates/.github/accessibility-tools.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /templates/.github/accessibility-tools
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      accessibility-tools:
+        patterns: ["*"]

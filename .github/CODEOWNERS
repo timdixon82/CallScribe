@@ -1,0 +1,13 @@
+# CODEOWNERS
+#
+# Every path is owned by @timdixon82, who is the only human reviewer.
+# The comments record which agent is responsible for each area, so the
+# team knows where to route work. The agents are not GitHub accounts.
+
+* @timdixon82
+
+# CLAUDE.md and .claude/agents/  - the team itself. Changes go through Sonja.
+# docs/                          - the wiki. Ingested and linted by Sonja.
+# .claude/commands/, .claude/hooks/ - the command and safety layer.
+# src/ and application code      - built by Sean, reviewed by Jed, tested by Carol.
+# .github/workflows/             - the release process. Owned with Neil.

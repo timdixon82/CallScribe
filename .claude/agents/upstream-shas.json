@@ -1,0 +1,12 @@
+{
+  "source": "https://github.com/Community-Access/accessibility-agents",
+  "imported": "2026-06-02",
+  "files": {
+    "wcag-aaa": "75575390856de4cd0feed89c39ac445b03b01da8",
+    "contrast-master": "40b6388b7baf6216e215e36e2d47db7b2958e95e",
+    "aria-specialist": "a287786ca4856153da99bd436b8b099c01655713",
+    "keyboard-navigator": "e137c82a95fe0e32e9bfae197bf632468498a05d",
+    "screen-reader-lab": "cc2891f6920d5b09aec691a6afd187fa1a7309aa",
+    "forms-specialist": "31a45998c69164ba222568726da1ce65f7f7cdfd"
+  }
+}

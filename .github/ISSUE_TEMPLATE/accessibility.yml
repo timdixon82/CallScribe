@@ -1,0 +1,46 @@
+name: Accessibility issue
+description: Report an accessibility barrier
+labels: [accessibility]
+body:
+  - type: textarea
+    id: barrier
+    attributes:
+      label: The barrier
+      description: What is inaccessible, and who it affects.
+    validations:
+      required: true
+  - type: dropdown
+    id: principle
+    attributes:
+      label: WCAG 2.2 principle
+      options:
+        - Perceivable
+        - Operable
+        - Understandable
+        - Robust
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: criterion
+    attributes:
+      label: WCAG 2.2 criterion
+      description: The criterion number and name, if known. For example, 1.4.6 Contrast (Enhanced).
+  - type: dropdown
+    id: assistive-tech
+    attributes:
+      label: Assistive technology affected
+      options:
+        - VoiceOver
+        - JAWS
+        - NVDA
+        - Keyboard only
+        - Other
+        - Not sure
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How to encounter the barrier.
+    validations:
+      required: true

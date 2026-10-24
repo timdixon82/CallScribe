@@ -1,0 +1,67 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+
+
+# Editor files
+.vscode/
+.idea/
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+
+# Claude Code local settings — local to this machine, not shared
+.claude/settings.local.json
+
+# Local input drop-zone — zips, design handoffs, and binaries Tim drops in
+# locally for the team to read. These do not belong in the shared repo.
+Inputs/
+
+# Hook-generated telemetry files — appended by post-tool-use.sh on every
+# tool call. Tracking them causes git pull conflicts when hooks fire
+# during pulls. These are local-only audit trails.
+.claude/work/*/events.jsonl
+.claude/work/*/github-actions-log.md
+
+# Hook-generated lint log — appended by post-tool-use.sh. Its own header
+# states it is never committed; accidentally tracked in commit 732cb57 and
+# now corrected (work folder 031).
+/lint.md
+
+# Question-migration dry-run preview directory — working artefact, not for commit.
+migration-preview/
+
+# Transcripts written by the session hook — local audit trail, not for the repo.
+.claude/transcripts/
+
+# Project source-code drops inside work folders (e.g. 008-swot-builder-setup/Github/).
+# Tim drops project repos here for the team to read; they belong in their own repos.
+.claude/work/*/Github/
+
+# Agent worktrees created by the harness for isolated runs — ephemeral, not for the repo.
+.claude/worktrees/
+
+# understand-anything generated knowledge graph and fingerprints — generated artefact, not for commit.
+.understand-anything/
+
+# CI-only Pa11y config, derived from pa11y.json in the accessibility workflow. Generated, never committed.
+pa11y.ci.json
+
+# Status-rebuild debounce lock — per-repo ephemeral file written by post-tool-use.sh.
+# It is a local-only timing marker; never belongs in the repo.
+.claude/.status-rebuild.lock

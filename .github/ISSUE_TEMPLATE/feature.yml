@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest a new feature or a change
+labels: [feature]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What need or problem does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you would like to happen.
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility considerations
+      description: How should this feature work for screen reader and keyboard users?

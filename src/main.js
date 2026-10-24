@@ -21,7 +21,7 @@ function formatTime(time) { return new Date(time).toLocaleTimeString([], { hour:
 function formatDateTime(time) { return new Date(time).toLocaleString([], { dateStyle: 'medium', timeStyle: 'medium' }); }
 function defaultSessionName(time = new Date()) { const month = time.toLocaleString('en-GB', { month: 'short' }); return `Call ${time.getFullYear()}-${month}-${String(time.getDate()).padStart(2, '0')} ${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`; }
 function safeText(value) { return String(value ?? ''); }
-function setModelDownloadStatus(detail, loaded = 0, total = 0) { ui['model-download-detail'].textContent = detail; ui['model-download-progress'].style.visibility = total || downloadState ? 'visible' : 'hidden'; if (total) { ui['model-download-progress'].max = total; ui['model-download-progress'].value = loaded; } else { ui['model-download-progress'].removeAttribute('value'); ui['model-download-progress'].removeAttribute('max'); } }
+function setModelDownloadStatus(detail, loaded = 0, total = 0) { ui['model-download-status'].hidden = false; ui['model-download-detail'].textContent = detail; ui['model-download-progress'].style.visibility = total || downloadState ? 'visible' : 'hidden'; if (total) { ui['model-download-progress'].max = total; ui['model-download-progress'].value = loaded; } else { ui['model-download-progress'].removeAttribute('value'); ui['model-download-progress'].removeAttribute('max'); } }
 function setCaptureToggle(source, enabled, status) { const system = source === 'system'; const button = ui[system ? 'share-system-audio' : 'enable-microphone']; const label = button.querySelector('.toggle-label'); button.setAttribute('aria-pressed', String(enabled)); button.dataset.enabled = String(enabled); label.textContent = enabled ? (system ? 'Stop screen sharing' : 'Disable microphone') : (system ? 'Share screen' : 'Enable microphone'); ui[system ? 'system-audio-status' : 'microphone-status'].textContent = status; }
 
 async function initialise() {
@@ -38,9 +38,9 @@ async function initialise() {
   if (!navigator.mediaDevices?.getDisplayMedia) { ui['share-system-audio'].disabled = true; setCaptureToggle('system', false, 'Screen capture is not supported by this browser.'); }
   await populateMicrophones(); await renderModels(); await renderSavedSessions(); await refreshDiagnostics();
   const defaultModel = findModel('moonshine-base'); const defaultRecord = await getModel(defaultModel.id); const savedModel = findModel(savedModelId); const savedRecord = savedModel ? await getModel(savedModel.id) : undefined;
-  // Moonshine Base is always provisioned first. A previously selected optional model
-  // is restored only after the required default is confirmed available.
-  const model = defaultRecord?.ready && savedModel && savedRecord?.ready ? savedModel : defaultModel; selectedModel = model.id; ui['model-select'].value = selectedModel;
+  // First launch provisions Moonshine Base. Once the user has selected a fully
+  // downloaded optional model, that selection is restored on later launches.
+  const model = savedModel && savedRecord?.ready ? savedModel : defaultModel; selectedModel = model.id; ui['model-select'].value = selectedModel;
   const record = model.id === defaultModel.id ? defaultRecord : savedRecord;
   if (record?.ready) loadModel(model, true); else if (!navigator.onLine) failDownload(`${model.name} is not downloaded and the browser is offline. Connect to the internet and select Retry download.`); else loadModel(model, false);
   requestMicrophoneOnLaunch();
@@ -124,7 +124,7 @@ worker.onmessage = async ({ data }) => {
   if (data.type === 'model-status') { downloadState = { ...downloadState, detail: data.status }; setModelDownloadStatus(`${downloadTarget.name}: ${data.status}`, downloadState.loaded, downloadState.total); renderModels(); return; }
   if (data.type === 'model-ready') {
     activeModel = data.modelId; await putModel({ id: activeModel, ready: true, device: data.device, verifiedAt: Date.now() }); await putSetting('selectedModel', activeModel); selectedModel = activeModel;
-    downloadState = undefined; const current = findModel(activeModel); ui['active-model'].textContent = `Selected model: ${current.name}, ready using ${data.device}.`; setModelDownloadStatus(`${current.name} is ready for transcription.`); ui['language-control'].hidden = current.language === 'English'; ui['language-status'].textContent = 'Whisper supports the selected language or auto-detection.'; ui['download-announcements'].textContent = `${current.name} is ready for transcription.`; setStatus(`${current.name} is ready. All transcription remains local.`); ui['start-session'].disabled = false; await renderModels(); refreshDiagnostics(); return;
+    downloadState = undefined; const current = findModel(activeModel); ui['active-model'].textContent = `Selected model: ${current.name}, ready using ${data.device}.`; ui['model-download-status'].hidden = true; ui['language-control'].hidden = current.language === 'English'; ui['language-status'].textContent = 'Whisper supports the selected language or auto-detection.'; ui['download-announcements'].textContent = `${current.name} is ready for transcription.`; setStatus(`${current.name} is ready. All transcription remains local.`); ui['start-session'].disabled = false; await renderModels(); refreshDiagnostics(); return;
   }
   if (data.type === 'segment') return addSegment(data);
   if (data.type === 'error') return failDownload(data.message);

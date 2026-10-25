@@ -35,7 +35,7 @@ test('voice-control setup uses the matching DOM IDs and cannot block launch', as
   assert.match(app, /const id = controlIds\[key\]/);
 });
 
-test('source controls expose a pressed state and the compact model picker remains available', async () => {
+test('source controls use accessible switches and the compact model picker remains available', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
@@ -43,7 +43,8 @@ test('source controls expose a pressed state and the compact model picker remain
   assert.match(app, /function setCaptureToggle/);
   assert.match(app, /pipelines\.has\('microphone'\)/);
   assert.match(page, /id="model-select"/);
-  assert.match(page, /aria-pressed="false"/);
+  assert.match(page, /role="switch" aria-checked="false"/);
+  assert.match(page, /class="toggle-slider"/);
 });
 
 test('audio processing has an explicit toggle and inline advanced settings', async () => {
@@ -96,7 +97,7 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /processScreenshotOcr/);
   assert.match(app, /image\.alt = text/);
   assert.match(page, /id="toggle-ocr"/);
-  assert.match(page, /aria-label="Enable OCR"/);
+  assert.match(page, /role="switch" aria-checked="false"/);
   assert.match(ocr, /recogniseImage/);
   assert.match(ocr, /recognitionQueue/);
   assert.match(ocr, /hasWebGpu/);
@@ -155,16 +156,18 @@ test('speaker labels remain visible in every transcript export', async () => {
   assert.match(app, /speakerText\(s\)/);
 });
 
-test('speaker labels can be hidden from the transcript without changing stored labels or exports', async () => {
+test('speaker separation, time, and source labels can be hidden from the transcript without changing exports', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
   ]);
   assert.match(page, /id="show-speaker-labels"/);
-  assert.match(page, /Saved labels and exports are unchanged/);
+  assert.match(page, /id="show-timestamps"/);
+  assert.match(page, /id="show-sources"/);
   assert.match(app, /localBrowserTranscriberShowSpeakerLabels/);
   assert.match(app, /const showSpeakerLabels = ui\['show-speaker-labels'\]\.checked/);
-  assert.match(app, /if \(showSpeakerLabels\)/);
+  assert.match(app, /const showTimestamps = ui\['show-timestamps'\]\.checked/);
+  assert.match(app, /const showSources = ui\['show-sources'\]\.checked/);
 });
 
 test('automatic speaker separation is optional, local, timestamp-aligned, and maps anonymous slots to saved people', async () => {
@@ -176,10 +179,11 @@ test('automatic speaker separation is optional, local, timestamp-aligned, and ma
   ]);
   assert.match(page, /id="enable-speaker-separation"/);
   assert.match(page, /id="detected-speaker-list"/);
-  assert.match(page, /does not recognise people from previous calls/);
+  assert.match(app, /Type a saved name or a new name/);
   assert.match(app, /function applyDiarization/);
   assert.match(app, /automaticSpeakerSlots/);
-  assert.match(app, /speakerAssignments/);
+  assert.match(app, /assignDetectedSpeaker/);
+  assert.match(app, /saved-person-names/);
   assert.match(app, /chunk\.audio\.slice\(\)/);
   assert.match(app, /type: 'flush'/);
   assert.match(diarizer, /NealCaren\/Nemotron-3-Diarization-ONNX/);
@@ -229,7 +233,7 @@ test('transcript controls can show labels by preference and otherwise provide ho
   assert.match(css, /\.icon-action:hover::after/);
 });
 
-test('toggle controls provide distinct on and off icons and primary sections are not duplicated', async () => {
+test('toggle controls use switches and primary sections are not duplicated', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
@@ -237,8 +241,9 @@ test('toggle controls provide distinct on and off icons and primary sections are
   for (const toggle of ['setCaptureToggle', 'setTranscriptMicrophoneMute', 'setAudioProcessingToggle', 'setOcrToggle', 'setScreenCaptureEnabled', 'setButtonLabels']) {
     assert.match(app, new RegExp(`function ${toggle}`));
   }
-  assert.match(app, /M4 4l16 16/);
-  assert.match(app, /M9 10h6M9 14h6/);
+  assert.match(app, /function setSwitch/);
+  assert.match(page, /Automatically separate speakers/);
+  assert.match(page, /class="toggle-control"/);
   assert.match(app, /section-summary-heading/);
   assert.equal((page.match(/id="transcript-heading"/g) || []).length, 1);
   assert.equal((page.match(/id="voice-settings-section"/g) || []).length, 1);

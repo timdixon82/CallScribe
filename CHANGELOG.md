@@ -2,6 +2,16 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.16] - 2026-10-25
+
+### Changed
+
+- Replaced operational toggle buttons with labelled Apple-style switches, while retaining the separate button-label control.
+- Placed automatic speaker separation with the microphone controls.
+- Simplified detected-speaker naming to a type-ahead text field that saves new names when focus leaves the field.
+- Made transcript display denser: short source names, time-only timestamps, plain speaker labels, and switches to show or hide speaker labels, times, and sources.
+- Kept People and speaker labels directly below Prior Sessions.
+
 ## [0.2.15] - 2026-10-25
 
 ### Added

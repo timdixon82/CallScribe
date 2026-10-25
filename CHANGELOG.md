@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.5] - 2026-10-25
+
+### Changed
+
+- Made Capture settings, Transcript, and History collapsible, and replaced the label eye control with page-with-text and page-without-text icons.
+
 ## [0.2.4] - 2026-10-25
 
 ### Changed

@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.14] - 2026-10-25
+
+### Fixed
+
+- Rotated the service-worker cache so returning visitors receive the current app shell after a release.
+
 ## [0.2.13] - 2026-10-25
 
 ### Fixed

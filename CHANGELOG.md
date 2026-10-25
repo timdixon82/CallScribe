@@ -2,6 +2,18 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.15] - 2026-10-25
+
+### Added
+
+- Added optional, browser-local automatic speaker separation using the NVIDIA Nemotron ONNX model with timestamp-level transcript alignment.
+- Added saved local people, one-time per-call detected-speaker naming, manual reassignment, overlapping-speaker labels, and a transcript-only speaker-label visibility filter.
+- Added timestamp word data from the transcription worker so automatic labels can align to transcript text rather than coarse blocks.
+
+### Privacy
+
+- Speaker separation is opt-in, downloads its model only when requested, does not create voiceprints or recognise people across calls, and clears temporary call audio when the call ends.
+
 ## [0.2.14] - 2026-10-25
 
 ### Fixed

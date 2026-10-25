@@ -1,6 +1,6 @@
 {
   "name": "local-browser-transcriber",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
   "dependencies": {
     "@gutenye/ocr-browser": "^1.4.8",
     "@huggingface/transformers": "^3.8.1",
-    "onnxruntime-web": "^1.27.0"
+    "onnxruntime-web": "1.27.0"
   },
   "devDependencies": {
     "@gutenye/ocr-models": "^1.4.2",

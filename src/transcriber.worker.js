@@ -34,7 +34,8 @@ self.onmessage = async ({ data }) => {
       const options = { sampling_rate: 16000, return_timestamps: true };
       if (data.language && data.language !== 'auto') { options.language = data.language; options.task = 'transcribe'; }
       const output = await transcriber(data.audio, options);
-      send('segment', { requestId: data.requestId, source: data.source, capturedAt: data.capturedAt, durationMs: Math.round(data.audio.length / 16), text: output.text?.trim() || '', modelId: activeId });
+      const words = (output.chunks || []).map((chunk) => ({ text: chunk.text?.trim() || '', startMs: Math.round((chunk.timestamp?.[0] || 0) * 1000), endMs: Math.round((chunk.timestamp?.[1] || chunk.timestamp?.[0] || 0) * 1000) })).filter((chunk) => chunk.text);
+      send('segment', { requestId: data.requestId, source: data.source, capturedAt: data.capturedAt, durationMs: Math.round(data.audio.length / 16), text: output.text?.trim() || '', words, modelId: activeId });
     }
   } catch (error) { send('error', { operation: data.type, message: error instanceof Error ? error.message : String(error) }); }
 };

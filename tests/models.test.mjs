@@ -129,6 +129,68 @@ test('transcript uses source filters rather than separate source sections', asyn
   assert.match(page, /name="transcript-source" value="ocr"/);
 });
 
+test('people are locally saved labels, manually assigned to blocks, and never voiceprints', async () => {
+  const [app, page, store] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../src/store.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(page, /People and speaker labels/);
+  assert.match(page, /does not analyse voices, create voiceprints, or identify people automatically/);
+  assert.match(page, /id="participant-command"/);
+  assert.match(page, /id="speaker-assignment-person"/);
+  assert.match(page, /Add more than one name when people speak over each other/);
+  assert.match(app, /function applyPersonToSelected/);
+  assert.match(app, /speakerIds/);
+  assert.match(app, /function runParticipantCommand/);
+  assert.match(app, /function participantNames/);
+  assert.match(store, /createObjectStore\('participants'/);
+  assert.match(store, /removeParticipantFromSegments/);
+});
+
+test('speaker labels remain visible in every transcript export', async () => {
+  const app = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  assert.match(app, /function speakerText/);
+  assert.match(app, /speakerText\(segment\)/);
+  assert.match(app, /speakerText\(s\)/);
+});
+
+test('speaker labels can be hidden from the transcript without changing stored labels or exports', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(page, /id="show-speaker-labels"/);
+  assert.match(page, /Saved labels and exports are unchanged/);
+  assert.match(app, /localBrowserTranscriberShowSpeakerLabels/);
+  assert.match(app, /const showSpeakerLabels = ui\['show-speaker-labels'\]\.checked/);
+  assert.match(app, /if \(showSpeakerLabels\)/);
+});
+
+test('automatic speaker separation is optional, local, timestamp-aligned, and maps anonymous slots to saved people', async () => {
+  const [app, page, diarizer, frontend] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../src/diarizer.worker.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/diarization.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(page, /id="enable-speaker-separation"/);
+  assert.match(page, /id="detected-speaker-list"/);
+  assert.match(page, /does not recognise people from previous calls/);
+  assert.match(app, /function applyDiarization/);
+  assert.match(app, /automaticSpeakerSlots/);
+  assert.match(app, /speakerAssignments/);
+  assert.match(app, /chunk\.audio\.slice\(\)/);
+  assert.match(app, /type: 'flush'/);
+  assert.match(diarizer, /NealCaren\/Nemotron-3-Diarization-ONNX/);
+  assert.match(diarizer, /mel_filters\.bin/);
+  assert.match(diarizer, /silence_embeds\.bin/);
+  assert.match(diarizer, /data\.type === 'reset'/);
+  assert.match(diarizer, /numThreads = 1/);
+  assert.match(frontend, /export class Diarizer/);
+  assert.match(frontend, /frames \* CFG\.nSpk/);
+});
+
 test('model controls keep stable selection, expose languages, and list downloaded assets separately', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),

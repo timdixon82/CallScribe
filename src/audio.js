@@ -35,7 +35,7 @@ export class AudioPipeline {
     for (const part of this.parts) { audio.set(part, offset); offset += part.length; }
     this.parts = []; this.sampleCount = 0;
     const energy = audio.reduce((sum, value) => sum + value * value, 0) / audio.length;
-    if (energy > 0.00001) this.onChunk({ source: this.source, audio, capturedAt: Date.now() });
+    if (energy > 0.00001) this.onChunk({ source: this.source, audio, capturedAt: Date.now() - Math.round(audio.length / 16) });
   }
   stop() {
     if (!this.running) return;

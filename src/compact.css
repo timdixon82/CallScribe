@@ -39,7 +39,6 @@
 .collapsible-section[open] summary { margin-bottom: .75rem; }
 .primary-section > summary { cursor: pointer; color: var(--heading); font-size: 1.35rem; font-weight: 800; }
 .primary-section[open] > summary { margin-bottom: .75rem; }
-.primary-section.saved-transcripts > summary { font-size: 1.35rem; }
 .inline-details, .saved-transcripts { margin-top: .75rem; max-width: 48rem; }
 .inline-details summary, .saved-transcripts summary { cursor: pointer; color: var(--heading); font-weight: 800; }
 .inline-details[open] summary, .saved-transcripts[open] summary { margin-bottom: .75rem; }

@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.10] - 2026-10-25
+
+### Fixed
+
+- Made Prior Sessions use the same primary disclosure styling and placed the transcript summary below Search and source filters, only while a session is active.
+
 ## [0.2.9] - 2026-10-25
 
 ### Changed

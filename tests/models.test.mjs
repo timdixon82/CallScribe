@@ -110,7 +110,7 @@ test('exports include a self-contained Markdown transcript and individual screen
   ]);
   assert.match(page, /id="export-format"/);
   assert.match(page, /id="export-transcript"/);
-  assert.match(page, /id="download-screenshots"/);
+  assert.match(page, /value="screenshots"/);
   assert.match(app, /function exportMarkdown/);
   assert.match(app, /blobToDataUrl/);
   assert.match(app, /function downloadScreenshots/);

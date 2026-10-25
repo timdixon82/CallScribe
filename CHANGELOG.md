@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.12] - 2026-10-25
+
+### Changed
+
+- Moved all-screenshot downloads into the export format selector and removed the separate action button.
+
 ## [0.2.11] - 2026-10-25
 
 ### Fixed

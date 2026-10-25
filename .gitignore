@@ -21,6 +21,8 @@ vendor/
 # Build output
 dist/
 build/
+public/models/
+public/ort/
 
 # Logs
 *.log

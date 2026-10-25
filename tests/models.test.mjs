@@ -70,3 +70,37 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
   assert.match(page, /value="changes"/);
   assert.match(store, /createObjectStore\('screenshots'/);
 });
+
+test('OCR is explicitly enabled, cached locally, and used as screenshot alternative text', async () => {
+  const [app, page, ocr] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../src/ocr.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /local-browser-transcriber-ocr-v1/);
+  assert.match(app, /cacheOcrAssets/);
+  assert.match(app, /processScreenshotOcr/);
+  assert.match(app, /image\.alt = text/);
+  assert.match(page, /id="toggle-ocr"/);
+  assert.match(ocr, /recogniseImage/);
+});
+
+test('transcript uses source filters rather than separate source sections', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /selectedTranscriptSources/);
+  assert.match(page, /name="transcript-source" value="microphone"/);
+  assert.match(page, /name="transcript-source" value="system"/);
+  assert.match(page, /name="transcript-source" value="screen"/);
+  assert.match(page, /name="transcript-source" value="ocr"/);
+});
+
+test('help, privacy, terms and accessibility pages are published with the app', async () => {
+  const pages = await Promise.all(['help', 'privacy', 'terms', 'accessibility'].map((name) => readFile(new URL(`../public/docs/${name}.html`, import.meta.url), 'utf8')));
+  assert.match(pages[0], /Screenshots and OCR/);
+  assert.match(pages[1], /does not send speech, transcript or screenshot content/);
+  assert.match(pages[2], /obtaining any consent required/);
+  assert.match(pages[3], /screenshot has alternative text/);
+});

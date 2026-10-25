@@ -57,8 +57,8 @@ test('audio processing has an explicit toggle and inline advanced settings', asy
   assert.match(app, /audioProcessingEnabled/);
   assert.match(page, /id="toggle-audio-processing"/);
   assert.match(page, /Voice and advanced processing settings/);
-  assert.match(page, /id="toggle-transcript-microphone"/);
-  assert.match(app, /setTranscriptMicrophoneMute/);
+  assert.match(page, /class="toggle-slider microphone-switch"/);
+  assert.match(page, /Automatically separate speakers/);
   assert.match(audio, /setMuted\(muted\)/);
 });
 
@@ -73,10 +73,10 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
   assert.match(app, /detectScreenChange/);
   assert.match(page, /value="periodic"/);
   assert.match(page, /value="changes"/);
-  assert.match(page, /id="toggle-screen-capture"/);
-  assert.match(page, /Without it, only your microphone is transcribed/);
+  assert.match(page, /Screen capture mode/);
+  assert.match(page, /<option value="audio">Audio Only<\/option>/);
   assert.match(app, /function setScreenCaptureEnabled/);
-  assert.match(page, /<option value="manual">Manual only<\/option>/);
+  assert.match(page, /<option value="manual">Manual screenshots<\/option>/);
   assert.match(page, /id="model-settings-section"/);
   assert.match(page, /id="voice-settings-section"/);
   assert.match(page, /id="diagnostics-panel" class="collapsible-section"/);
@@ -140,7 +140,11 @@ test('people are locally saved labels, manually assigned to blocks, and never vo
   assert.match(page, /does not analyse voices, create voiceprints, or identify people automatically/);
   assert.match(page, /id="participant-command"/);
   assert.match(page, /id="speaker-assignment-person"/);
-  assert.match(page, /Add more than one name when people speak over each other/);
+  assert.match(page, /Speaker assignment/);
+  assert.match(page, /list="saved-person-names"/);
+  assert.match(page, /id="add-speaker-to-selected"[^>]*>Add<\/button>/);
+  assert.match(page, /id="remove-speaker-from-selected"[^>]*>Remove<\/button>/);
+  assert.match(page, /id="clear-speakers-from-selected"[^>]*>Clear<\/button>/);
   assert.match(app, /function applyPersonToSelected/);
   assert.match(app, /speakerIds/);
   assert.match(app, /function runParticipantCommand/);
@@ -238,7 +242,7 @@ test('toggle controls use switches and primary sections are not duplicated', asy
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
   ]);
-  for (const toggle of ['setCaptureToggle', 'setTranscriptMicrophoneMute', 'setAudioProcessingToggle', 'setOcrToggle', 'setScreenCaptureEnabled', 'setButtonLabels']) {
+  for (const toggle of ['setCaptureToggle', 'setAudioProcessingToggle', 'setOcrToggle', 'setScreenCaptureEnabled', 'setButtonLabels']) {
     assert.match(app, new RegExp(`function ${toggle}`));
   }
   assert.match(app, /function setSwitch/);

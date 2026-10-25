@@ -2,6 +2,20 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.17] - 2026-10-25
+
+### Changed
+
+- Made Audio Only the default Screen capture mode and moved the manual screenshot control beneath the live screen preview.
+- Rebuilt transcript options as a collapsible advanced area with separate source filters and display checkboxes.
+- Made Speaker assignment collapsed by default, with a saved-name type-ahead field and only Add, Remove, and Clear actions.
+- Restored transcript controls above export and simplified microphone capture controls.
+
+### Fixed
+
+- Made removing or clearing people from selected blocks also remove their automatic speaker labels.
+- Downloaded the local speaker-separation model automatically when automatic separation is turned on.
+
 ## [0.2.16] - 2026-10-25
 
 ### Changed

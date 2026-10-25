@@ -2,6 +2,13 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.18] - 2026-10-25
+
+### Changed
+
+- Introduced the CallScribe name in the browser title, app heading, and site header.
+- Added the CallScribe waveform logo to the header, plus a favicon and Apple touch icon.
+
 ## [0.2.17] - 2026-10-25
 
 ### Changed

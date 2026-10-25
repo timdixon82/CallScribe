@@ -47,6 +47,13 @@ async function saveScreenshot(frame, reason) { if (!session) throw new Error('St
 async function processScreenshotOcr(screenshot, marker) { try { const { recogniseImage } = await import('./ocr.js'); const text = await recogniseImage(screenshot.blob); screenshot.ocrState = 'ready'; screenshot.ocrText = text || 'No readable text was found in this screenshot.'; marker.text = screenshot.ocrText; await Promise.all([putScreenshot(screenshot), putSegment(marker)]); ui['ocr-status'].textContent = text ? 'OCR text added to the transcript.' : 'OCR completed: no readable text was found.'; } catch (error) { screenshot.ocrState = 'failed'; screenshot.ocrText = `OCR failed: ${error.message}`; marker.text = `[${screenshot.ocrText}]`; await Promise.all([putScreenshot(screenshot), putSegment(marker)]); ui['ocr-status'].textContent = 'OCR failed for a screenshot. You can continue capturing screenshots.'; } finally { renderTranscript(); } }
 
 async function initialise() {
+  const brand = document.querySelector('.app-brand');
+  const brandLogo = document.createElement('img');
+  brandLogo.src = 'assets/favicon.png';
+  brandLogo.alt = '';
+  brandLogo.setAttribute('aria-hidden', 'true');
+  brand.append(brandLogo, document.createTextNode('CallScribe'));
+  document.querySelector('main > header h1').textContent = 'CallScribe';
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
   ui['enable-microphone'].querySelector('.toggle-text').classList.add('sr-only');
   $('theme-select').value = theme;

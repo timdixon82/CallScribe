@@ -1,4 +1,6 @@
 .top-sources { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; margin-block: .75rem; }
+.app-brand { display: inline-flex; align-items: center; gap: .55rem; }
+.app-brand img { width: 2.25rem; height: 2.25rem; flex: 0 0 auto; }
 .top-sources > div { min-width: min(100%, 20rem); }
 .microphone-source > label { display: block; font-weight: 700; }
 .microphone-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .25rem; }

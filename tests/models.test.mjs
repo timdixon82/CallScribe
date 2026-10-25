@@ -68,6 +68,8 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
   assert.match(app, /detectScreenChange/);
   assert.match(page, /value="periodic"/);
   assert.match(page, /value="changes"/);
+  assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="transcript-tab"'));
+  assert.ok(page.indexOf('id="capture-screen"') > page.indexOf('id="transcript-heading"'));
   assert.match(store, /createObjectStore\('screenshots'/);
 });
 

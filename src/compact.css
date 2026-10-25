@@ -22,10 +22,15 @@
 [hidden] { display: none !important; }
 .voice-settings { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 2fr); gap: .5rem 1rem; max-width: 50rem; align-items: center; }
 .voice-settings button { grid-column: 1 / -1; justify-self: start; }
-.screenshot-controls { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(10rem, 1fr); gap: .5rem 1rem; max-width: 48rem; align-items: center; }
-.screenshot-controls output { grid-column: 1 / -1; }
-.screenshot-controls progress { width: 100%; }
-.screenshot-controls #ocr-download-status { grid-column: 1 / -1; }
+.screen-capture-settings { max-width: 48rem; margin: .75rem 0 0; padding: .6rem .75rem .75rem; border: 1px solid var(--border); }
+.screen-capture-fields { display: flex; flex-wrap: wrap; gap: .4rem .75rem; align-items: end; }
+.screen-capture-fields > div { display: grid; gap: .2rem; min-width: 10rem; }
+.screen-capture-fields label { font-weight: 700; }
+.screen-capture-fields select, .screen-capture-fields input { margin: 0; min-height: 2.5rem; }
+.screen-capture-fields #toggle-ocr { align-self: end; }
+.screen-capture-settings output { display: block; margin-top: .5rem; }
+.screen-capture-settings progress { width: 100%; }
+.screen-capture-settings #ocr-download-status { margin-top: .5rem; }
 .downloaded-model-list { list-style: none; padding: 0; margin: 0; max-width: 48rem; }
 .downloaded-model-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid var(--border); }
 .downloaded-model-list button { min-height: 2.25rem; margin: 0; }
@@ -45,4 +50,4 @@
 .site-footer nav { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
 .site-footer a { color: var(--focus); }
 .site-footer .sep { color: var(--muted); }
-@media (max-width: 40rem) { .voice-settings, .screenshot-controls { grid-template-columns: 1fr; } .model-picker { grid-template-columns: 1fr; } .model-picker label, .model-picker output { grid-column: auto; } }
+@media (max-width: 40rem) { .voice-settings { grid-template-columns: 1fr; } .screen-capture-fields { display: grid; grid-template-columns: 1fr; } .model-picker { grid-template-columns: 1fr; } .model-picker label, .model-picker output { grid-column: auto; } }

@@ -2,6 +2,13 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.13] - 2026-10-25
+
+### Fixed
+
+- Aligned the microphone controls, removed duplicate Transcript content and session actions, and made Prior Sessions match the other primary disclosure panels.
+- Kept paired visual states for toggle controls and restored the page-with-text / blank-page icon pair for button labels.
+
 ## [0.2.12] - 2026-10-25
 
 ### Changed

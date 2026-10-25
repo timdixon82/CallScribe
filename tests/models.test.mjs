@@ -81,7 +81,7 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
   assert.match(page, /id="diagnostics-panel" class="collapsible-section"/);
   assert.match(page, /id="toggle-button-labels"/);
   assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="session-name"'));
-  assert.ok(page.lastIndexOf('data-capture-screen') > page.indexOf('id="transcript-heading"'));
+  assert.ok(page.indexOf('data-capture-screen') < page.indexOf('id="transcript-heading"'));
   assert.match(store, /createObjectStore\('screenshots'/);
 });
 
@@ -142,14 +142,15 @@ test('model controls keep stable selection, expose languages, and list downloade
   assert.match(page, /id="ocr-download-status" hidden/);
 });
 
-test('compact transcript action icons and duplicate session controls retain accessible names', async () => {
+test('compact transcript action icons retain accessible names without duplicating session controls', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
   ]);
   assert.match(app, /transcriptIconButton/);
   assert.match(app, /syncSessionActionButtons/);
-  assert.match(page, /data-session-action="start"/);
+  assert.doesNotMatch(page, /data-session-action="start"/);
+  assert.equal((page.match(/id="start-session"/g) || []).length, 1);
   assert.match(app, /'Download screenshot'/);
   assert.match(page, /id="share-system-audio"/);
 });
@@ -164,6 +165,21 @@ test('transcript controls can show labels by preference and otherwise provide ho
   assert.match(app, /localBrowserTranscriberShowButtonLabels/);
   assert.match(css, /data-show-button-labels="true"/);
   assert.match(css, /\.icon-action:hover::after/);
+});
+
+test('toggle controls provide distinct on and off icons and primary sections are not duplicated', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  for (const toggle of ['setCaptureToggle', 'setTranscriptMicrophoneMute', 'setAudioProcessingToggle', 'setOcrToggle', 'setScreenCaptureEnabled', 'setButtonLabels']) {
+    assert.match(app, new RegExp(`function ${toggle}`));
+  }
+  assert.match(app, /M4 4l16 16/);
+  assert.match(app, /M9 10h6M9 14h6/);
+  assert.match(app, /section-summary-heading/);
+  assert.equal((page.match(/id="transcript-heading"/g) || []).length, 1);
+  assert.equal((page.match(/id="voice-settings-section"/g) || []).length, 1);
 });
 
 test('the footer displays the canonical release version', async () => {

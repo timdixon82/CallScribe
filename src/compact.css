@@ -48,6 +48,7 @@
 .screen-capture-settings output { display: block; margin-top: .5rem; }
 .screen-capture-settings progress { width: 100%; }
 .screen-capture-settings #ocr-download-status { margin-top: .5rem; }
+.live-screen-preview { display: block; width: min(100%, 48rem); max-height: 22rem; margin-top: .75rem; border: 1px solid var(--border); border-radius: .5rem; background: #111; }
 .downloaded-model-list { list-style: none; padding: 0; margin: 0; max-width: 48rem; }
 .downloaded-model-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid var(--border); }
 .downloaded-model-list button { min-height: 2.25rem; margin: 0; }

@@ -1,5 +1,5 @@
 import Ocr from '@gutenye/ocr-browser';
-import * as ort from 'onnxruntime-web/wasm';
+import * as ort from 'onnxruntime-web';
 
 const assetUrl = (path) => new URL(path, document.baseURI).href;
 const MODEL_PATHS = {
@@ -12,11 +12,17 @@ ort.env.wasm.wasmPaths = assetUrl('ort/');
 
 let ocrPromise;
 
+function hasWebGpu() {
+  const ua = navigator.userAgent || '';
+  const appleMobile = /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  return Boolean(navigator.gpu) && !appleMobile;
+}
+
 export function getOcr() {
   if (!ocrPromise) {
     ocrPromise = Ocr.create({
       models: MODEL_PATHS,
-      onnxOptions: { executionProviders: ['wasm'] },
+      onnxOptions: { executionProviders: hasWebGpu() ? ['webgpu', 'wasm'] : ['wasm'] },
     });
   }
   return ocrPromise;

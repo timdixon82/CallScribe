@@ -83,6 +83,8 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /image\.alt = text/);
   assert.match(page, /id="toggle-ocr"/);
   assert.match(ocr, /recogniseImage/);
+  assert.match(ocr, /hasWebGpu/);
+  assert.match(ocr, /appleMobile/);
 });
 
 test('transcript uses source filters rather than separate source sections', async () => {
@@ -95,6 +97,31 @@ test('transcript uses source filters rather than separate source sections', asyn
   assert.match(page, /name="transcript-source" value="system"/);
   assert.match(page, /name="transcript-source" value="screen"/);
   assert.match(page, /name="transcript-source" value="ocr"/);
+});
+
+test('model controls keep stable selection, expose languages, and list downloaded assets separately', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /renderModels\(\{ rebuild = false \} = \{\}\)/);
+  assert.match(app, /Multilingual/);
+  assert.match(app, /renderDownloadedModels/);
+  assert.match(app, /requestOcrDelete/);
+  assert.match(page, /id="downloaded-model-list"/);
+  assert.match(page, /id="ocr-download-status" hidden/);
+});
+
+test('compact transcript action icons and duplicate session controls retain accessible names', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /transcriptIconButton/);
+  assert.match(app, /syncSessionActionButtons/);
+  assert.match(page, /data-session-action="start"/);
+  assert.match(app, /'Download screenshot'/);
+  assert.match(page, /id="share-system-audio"/);
 });
 
 test('help, privacy, terms and accessibility pages are published with the app', async () => {

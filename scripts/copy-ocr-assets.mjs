@@ -17,8 +17,8 @@ for (const file of ['ch_PP-OCRv4_det_infer.onnx', 'ch_PP-OCRv4_rec_infer.onnx', 
   copyFileSync(source, join(modelOutput, file));
 }
 
-const wasmRuntime = join(runtime, 'ort-wasm-simd-threaded.wasm');
-if (!existsSync(wasmRuntime)) throw new Error(`Missing ONNX Runtime asset: ${wasmRuntime}`);
-copyFileSync(wasmRuntime, join(runtimeOutput, 'ort-wasm-simd-threaded.wasm'));
+for (const file of readdirSync(runtime)) {
+  if (/\.(wasm|mjs)$/.test(file) || /^ort-.*\.js$/.test(file)) copyFileSync(join(runtime, file), join(runtimeOutput, file));
+}
 
 console.log('Copied local PaddleOCR and ONNX Runtime assets.');

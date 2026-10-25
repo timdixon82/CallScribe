@@ -53,12 +53,28 @@ async function initialise() {
   brandLogo.alt = '';
   brandLogo.setAttribute('aria-hidden', 'true');
   brand.replaceChildren(brandLogo, document.createTextNode('CallScribe'));
-  document.querySelector('main > header h1').textContent = 'CallScribe';
+  document.querySelector('main > header h1').remove();
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
   ui['enable-microphone'].querySelector('.toggle-text').classList.add('sr-only');
   $('theme-select').value = theme;
   applyTheme(theme);
   const transcriptPanel = $('transcript-panel'); const sessionStart = ui['session-name'].parentElement; const transcriptHeader = document.createElement('header'); transcriptHeader.className = 'transcript-header'; transcriptHeader.append(sessionStart); transcriptPanel.prepend(transcriptHeader); const sessionActions = sessionStart.querySelector('.session-actions'); const captureScreen = sessionActions.querySelector('[data-capture-screen]'); $('screen-capture-manual-actions').append(captureScreen); $('transcript-session-actions').append(sessionActions); const savedSection = $('saved-session-list').closest('section'); const savedDetails = document.createElement('details'); savedDetails.id = 'history-section'; savedDetails.className = 'primary-section'; const savedSummary = document.createElement('summary'); savedSummary.textContent = 'Prior Sessions'; savedDetails.append(savedSummary, ...[...savedSection.children].filter((node) => node.id !== 'saved-sessions-heading')); savedSection.remove(); transcriptPanel.after(savedDetails); savedDetails.after($('people-section')); makeSectionCollapsible(document.querySelector('.session-toolbar'), 'Capture settings', true); makeSectionCollapsible(transcriptPanel, 'Transcript', true);
+  document.querySelector('.speaker-assignment').classList.add('collapsible-section');
+  document.querySelector('.screen-capture-connection').after($('screen-capture-manual-actions'));
+  captureScreen.classList.remove('icon-action');
+  captureScreen.classList.add('full-width-action');
+  const captureSessionActions = document.createElement('div');
+  captureSessionActions.className = 'button-row session-actions capture-session-actions';
+  for (const [id, action] of [['start-session', 'start'], ['pause-session', 'pause'], ['stop-session', 'stop'], ['new-session', 'new']]) {
+    const original = ui[id];
+    original.dataset.sessionAction = action;
+    const duplicate = original.cloneNode(true);
+    duplicate.removeAttribute('id');
+    duplicate.dataset.sessionAction = action;
+    duplicate.addEventListener('click', () => original.click());
+    captureSessionActions.append(duplicate);
+  }
+  document.querySelector('.session-toolbar').append(captureSessionActions);
   document.querySelectorAll('#start-session, [data-session-action="start"]').forEach((button) => { button.firstElementChild.textContent = '●'; button.querySelector('.button-label').textContent = 'Record transcript'; button.setAttribute('aria-label', 'Record transcript'); button.dataset.tooltip = 'Record transcript'; });
   voiceProcessing = { ...DEFAULT_VOICE, ...JSON.parse(localStorage.getItem('localBrowserTranscriberVoiceProcessing') || '{}') };
   audioProcessingEnabled = localStorage.getItem('localBrowserTranscriberAudioProcessing') !== 'false'; setAudioProcessingToggle(audioProcessingEnabled);

@@ -25,11 +25,14 @@
 .session-start { margin-top: .75rem; }
 .session-start label { display: block; font-weight: 700; }
 .session-start input { width: min(100%, 32rem); }
+.capture-session-actions { margin-top: .75rem; }
 [hidden] { display: none !important; }
 .voice-settings { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 2fr); gap: .5rem 1rem; max-width: 50rem; align-items: center; }
 .voice-settings button { grid-column: 1 / -1; justify-self: start; }
 .screen-capture-settings { max-width: 48rem; margin: .75rem 0; padding: .6rem .75rem .75rem; border: 1px solid var(--border); }
 .screen-capture-connection { margin-bottom: .5rem; }
+#screen-capture-manual-actions { margin: .6rem 0; }
+#screen-capture-manual-actions .full-width-action { width: 100%; justify-content: center; margin: 0; }
 .screen-capture-fields { display: flex; flex-wrap: wrap; gap: .4rem .75rem; align-items: end; }
 .screen-capture-fields > div { display: grid; gap: .2rem; min-width: 10rem; }
 .screen-capture-fields label { font-weight: 700; }

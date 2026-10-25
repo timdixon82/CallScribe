@@ -2,6 +2,15 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.20] - 2026-10-25
+
+### Changed
+
+- Styled Speaker assignment as the standard collapsible section used elsewhere in the app.
+- Displayed the recording controls both in Capture settings and beneath the transcript.
+- Kept Capture screen now directly below screen sharing as a full-width button with a permanent icon and text label.
+- Removed the redundant CallScribe page heading above Capture settings.
+
 ## [0.2.19] - 2026-10-25
 
 ### Fixed

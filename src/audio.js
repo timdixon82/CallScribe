@@ -1,7 +1,7 @@
 export class AudioPipeline {
   constructor({ source, stream, voiceProcessing, onChunk, onStopped }) {
     this.source = source; this.stream = stream; this.voiceProcessing = voiceProcessing; this.onChunk = onChunk; this.onStopped = onStopped;
-    this.parts = []; this.sampleCount = 0; this.running = false; this.maxSamples = 8 * 16000;
+    this.parts = []; this.sampleCount = 0; this.running = false; this.muted = false; this.maxSamples = 8 * 16000;
   }
   async start() {
     this.context = new AudioContext();
@@ -22,8 +22,9 @@ export class AudioPipeline {
     this.running = true;
   }
   setVoiceProcessing(settings) { if (!settings || !this.highPass) return; this.highPass.frequency.value = settings.highPass; this.lowPass.frequency.value = settings.lowPass; this.compressor.threshold.value = settings.threshold; this.compressor.ratio.value = settings.ratio; }
+  setMuted(muted) { this.muted = muted; if (muted) { this.parts = []; this.sampleCount = 0; } }
   receive(samples) {
-    if (!this.running) return;
+    if (!this.running || this.muted) return;
     const resampled = resample(samples, this.context.sampleRate, 16000);
     this.parts.push(resampled); this.sampleCount += resampled.length;
     if (this.sampleCount >= this.maxSamples) this.flush();

@@ -47,14 +47,18 @@ test('source controls expose a pressed state and the compact model picker remain
 });
 
 test('audio processing has an explicit toggle and settings shortcut', async () => {
-  const [app, page] = await Promise.all([
+  const [app, page, audio] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../src/audio.js', import.meta.url), 'utf8'),
   ]);
   assert.match(app, /function setAudioProcessingToggle/);
   assert.match(app, /audioProcessingEnabled/);
   assert.match(page, /id="toggle-audio-processing"/);
   assert.match(page, /id="audio-processing-settings"/);
+  assert.match(page, /id="toggle-transcript-microphone"/);
+  assert.match(app, /setTranscriptMicrophoneMute/);
+  assert.match(audio, /setMuted\(muted\)/);
 });
 
 test('screen capture supports manual, periodic, and screen-change screenshots', async () => {
@@ -68,6 +72,9 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
   assert.match(app, /detectScreenChange/);
   assert.match(page, /value="periodic"/);
   assert.match(page, /value="changes"/);
+  assert.match(page, /id="toggle-screen-capture"/);
+  assert.match(page, /Without it, only your microphone is transcribed/);
+  assert.match(app, /function setScreenCaptureEnabled/);
   assert.match(page, /<option value="manual">Manual only<\/option>/);
   assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="transcript-tab"'));
   assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="session-name"'));
@@ -165,7 +172,7 @@ test('the footer displays the canonical release version', async () => {
   assert.ok(match, 'assets/version.js must define APP_VERSION');
   const appVersion = match[1];
   assert.match(page, /data-app-version/);
-  assert.match(page, /src="assets\/version\.js\?v=0\.2\.0"/);
+  assert.match(page, /src="assets\/version\.js\?v=0\.2\.1"/);
   assert.match(versionWorkflow, /public\/assets\/version\.js/);
   assert.equal(JSON.parse(packageJson).version, appVersion);
 });

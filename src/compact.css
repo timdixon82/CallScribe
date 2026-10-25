@@ -1,5 +1,8 @@
 .top-sources { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; margin-block: .75rem; }
 .top-sources > div { min-width: min(100%, 20rem); }
+.microphone-source > label { display: block; font-weight: 700; }
+.microphone-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .25rem; }
+#microphone-select, #enable-microphone, #toggle-transcript-microphone { min-height: 3rem; margin-bottom: 0; }
 .model-picker { display: grid; grid-template-columns: minmax(16rem, 1fr) auto; gap: .25rem .75rem; max-width: 48rem; align-items: end; }
 .model-picker > label, .model-picker > output, .model-language { grid-column: 1 / -1; font-weight: 700; }
 .model-picker output { color: var(--muted); font-weight: 600; }
@@ -27,8 +30,9 @@
 .screen-capture-fields { display: flex; flex-wrap: wrap; gap: .4rem .75rem; align-items: end; }
 .screen-capture-fields > div { display: grid; gap: .2rem; min-width: 10rem; }
 .screen-capture-fields label { font-weight: 700; }
-.screen-capture-fields select, .screen-capture-fields input { margin: 0; min-height: 2.5rem; }
+.screen-capture-fields select, .screen-capture-fields input, .screen-capture-fields #toggle-ocr { margin: 0; min-height: 3rem; }
 .screen-capture-fields #toggle-ocr { align-self: end; }
+.screen-audio-note { max-width: 42rem; margin: .5rem 0; color: var(--muted); font-weight: 600; }
 .screen-capture-settings output { display: block; margin-top: .5rem; }
 .screen-capture-settings progress { width: 100%; }
 .screen-capture-settings #ocr-download-status { margin-top: .5rem; }

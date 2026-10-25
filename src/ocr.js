@@ -11,6 +11,7 @@ const MODEL_PATHS = {
 ort.env.wasm.wasmPaths = assetUrl('ort/');
 
 let ocrPromise;
+let recognitionQueue = Promise.resolve();
 
 function hasWebGpu() {
   const ua = navigator.userAgent || '';
@@ -28,7 +29,7 @@ export function getOcr() {
   return ocrPromise;
 }
 
-export async function recogniseImage(blob) {
+async function recogniseImageNow(blob) {
   const url = URL.createObjectURL(blob);
   try {
     const lines = await (await getOcr()).detect(url);
@@ -36,4 +37,10 @@ export async function recogniseImage(blob) {
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+export function recogniseImage(blob) {
+  const job = recognitionQueue.then(() => recogniseImageNow(blob));
+  recognitionQueue = job.catch(() => {});
+  return job;
 }

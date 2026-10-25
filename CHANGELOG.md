@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.6] - 2026-10-25
+
+### Fixed
+
+- Serialised OCR recognition requests so overlapping screenshots cannot reuse an ONNX session and fail with “Session mismatch”.
+
 ## [0.2.5] - 2026-10-25
 
 ### Changed

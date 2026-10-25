@@ -98,6 +98,7 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(page, /id="toggle-ocr"/);
   assert.match(page, /aria-label="Enable OCR"/);
   assert.match(ocr, /recogniseImage/);
+  assert.match(ocr, /recognitionQueue/);
   assert.match(ocr, /hasWebGpu/);
   assert.match(ocr, /appleMobile/);
 });

@@ -2,6 +2,14 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.2] - 2026-10-25
+
+### Changed
+
+- Rebuilt the controls as one page: Models, Voice settings, and Diagnostics are inline expandable sections.
+- Reworked Share Screen and Audio so screen selection comes first, followed by the independent screen-capture setup switch.
+- Made recording, microphone, mute, audio-processing, and button-label states more visually explicit, with icon-only defaults and hover/focus names.
+
 ## [0.2.1] - 2026-10-25
 
 ### Changed

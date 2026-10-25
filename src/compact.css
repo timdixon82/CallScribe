@@ -33,6 +33,14 @@
 .screen-capture-fields select, .screen-capture-fields input, .screen-capture-fields #toggle-ocr { margin: 0; min-height: 3rem; }
 .screen-capture-fields #toggle-ocr { align-self: end; }
 .screen-audio-note { max-width: 42rem; margin: .5rem 0; color: var(--muted); font-weight: 600; }
+.screen-capture-setup-heading { margin: .9rem 0 .35rem; color: var(--heading); font-weight: 800; }
+.collapsible-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .625rem; background: var(--panel); box-shadow: var(--shadow); }
+.collapsible-section summary { cursor: pointer; color: var(--heading); font-size: 1.25rem; font-weight: 800; }
+.collapsible-section[open] summary { margin-bottom: .75rem; }
+#enable-microphone { width: 3.5rem; min-width: 3.5rem; padding: .25rem; border-radius: 99px; }
+#enable-microphone svg, #enable-microphone .toggle-label { display: none; }
+#enable-microphone::before { content: ''; display: block; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: currentColor; transition: transform .15s ease; }
+#enable-microphone[aria-pressed="true"]::before { transform: translateX(1.35rem); }
 .screen-capture-settings output { display: block; margin-top: .5rem; }
 .screen-capture-settings progress { width: 100%; }
 .screen-capture-settings #ocr-download-status { margin-top: .5rem; }

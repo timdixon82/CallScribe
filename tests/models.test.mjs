@@ -76,7 +76,10 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
   assert.match(page, /Without it, only your microphone is transcribed/);
   assert.match(app, /function setScreenCaptureEnabled/);
   assert.match(page, /<option value="manual">Manual only<\/option>/);
-  assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="transcript-tab"'));
+  assert.match(page, /id="model-settings-section"/);
+  assert.match(page, /id="voice-settings-section"/);
+  assert.match(page, /id="diagnostics-panel" class="collapsible-section"/);
+  assert.match(page, /id="toggle-button-labels"/);
   assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="session-name"'));
   assert.ok(page.lastIndexOf('data-capture-screen') > page.indexOf('id="transcript-heading"'));
   assert.match(store, /createObjectStore\('screenshots'/);
@@ -155,7 +158,7 @@ test('transcript controls can show labels by preference and otherwise provide ho
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../src/compact.css', import.meta.url), 'utf8'),
   ]);
-  assert.match(page, /id="show-button-labels"/);
+  assert.match(page, /id="toggle-button-labels"/);
   assert.match(app, /localBrowserTranscriberShowButtonLabels/);
   assert.match(css, /data-show-button-labels="true"/);
   assert.match(css, /\.icon-action:hover::after/);
@@ -172,7 +175,7 @@ test('the footer displays the canonical release version', async () => {
   assert.ok(match, 'assets/version.js must define APP_VERSION');
   const appVersion = match[1];
   assert.match(page, /data-app-version/);
-  assert.match(page, /src="assets\/version\.js\?v=0\.2\.1"/);
+  assert.ok(page.includes(`src="assets/version.js?v=${appVersion}"`));
   assert.match(versionWorkflow, /public\/assets\/version\.js/);
   assert.equal(JSON.parse(packageJson).version, appVersion);
 });

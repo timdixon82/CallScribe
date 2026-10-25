@@ -52,7 +52,7 @@ async function initialise() {
   brandLogo.src = 'assets/favicon.png';
   brandLogo.alt = '';
   brandLogo.setAttribute('aria-hidden', 'true');
-  brand.append(brandLogo, document.createTextNode('CallScribe'));
+  brand.replaceChildren(brandLogo, document.createTextNode('CallScribe'));
   document.querySelector('main > header h1').textContent = 'CallScribe';
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
   ui['enable-microphone'].querySelector('.toggle-text').classList.add('sr-only');

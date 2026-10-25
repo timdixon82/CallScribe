@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.19] - 2026-10-25
+
+### Fixed
+
+- Removed the previous product name from the CallScribe header.
+
 ## [0.2.18] - 2026-10-25
 
 ### Changed

@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.9] - 2026-10-25
+
+### Changed
+
+- Renamed History to Prior Sessions, removed the redundant TXT action from each session row, and standardised the main collapsible section titles.
+
 ## [0.2.6] - 2026-10-25
 
 ### Fixed

@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.11] - 2026-10-25
+
+### Fixed
+
+- Moved audio processing into the microphone control row and placed synchronised transcript-mute controls beside both screen-capture actions. Completed the audit of paired on/off toggle icons.
+
 ## [0.2.10] - 2026-10-25
 
 ### Fixed

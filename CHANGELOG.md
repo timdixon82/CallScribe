@@ -2,6 +2,12 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.4] - 2026-10-25
+
+### Changed
+
+- Renamed the initial area to Capture settings and moved saved transcripts into a dedicated History section between Transcript and Diagnostics.
+
 ## [0.2.3] - 2026-10-25
 
 ### Changed

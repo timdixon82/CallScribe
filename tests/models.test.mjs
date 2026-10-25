@@ -46,7 +46,7 @@ test('source controls expose a pressed state and the compact model picker remain
   assert.match(page, /aria-pressed="false"/);
 });
 
-test('audio processing has an explicit toggle and settings shortcut', async () => {
+test('audio processing has an explicit toggle and inline advanced settings', async () => {
   const [app, page, audio] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
@@ -55,7 +55,7 @@ test('audio processing has an explicit toggle and settings shortcut', async () =
   assert.match(app, /function setAudioProcessingToggle/);
   assert.match(app, /audioProcessingEnabled/);
   assert.match(page, /id="toggle-audio-processing"/);
-  assert.match(page, /id="audio-processing-settings"/);
+  assert.match(page, /Voice and advanced processing settings/);
   assert.match(page, /id="toggle-transcript-microphone"/);
   assert.match(app, /setTranscriptMicrophoneMute/);
   assert.match(audio, /setMuted\(muted\)/);
@@ -107,7 +107,8 @@ test('exports include a self-contained Markdown transcript and individual screen
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
   ]);
-  assert.match(page, /id="export-markdown"/);
+  assert.match(page, /id="export-format"/);
+  assert.match(page, /id="export-transcript"/);
   assert.match(page, /id="download-screenshots"/);
   assert.match(app, /function exportMarkdown/);
   assert.match(app, /blobToDataUrl/);

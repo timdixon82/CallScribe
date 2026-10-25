@@ -2,6 +2,14 @@
 
 All notable changes to Local Browser Transcriber are documented here.
 
+## [0.2.3] - 2026-10-25
+
+### Changed
+
+- Kept model and spoken-language selection visible, with model details collapsed by default and automatic download when a missing model is selected.
+- Replaced ambiguous capture controls with paired state icons, gated screen capture until screen sharing is selected, and moved voice settings beside audio processing.
+- Consolidated exports into a format selector and single Export button; exports now include model, processing settings, and app provenance.
+
 ## [0.2.2] - 2026-10-25
 
 ### Changed

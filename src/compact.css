@@ -37,10 +37,12 @@
 .collapsible-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .625rem; background: var(--panel); box-shadow: var(--shadow); }
 .collapsible-section summary { cursor: pointer; color: var(--heading); font-size: 1.25rem; font-weight: 800; }
 .collapsible-section[open] summary { margin-bottom: .75rem; }
-#enable-microphone { width: 3.5rem; min-width: 3.5rem; padding: .25rem; border-radius: 99px; }
-#enable-microphone svg, #enable-microphone .toggle-label { display: none; }
-#enable-microphone::before { content: ''; display: block; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: currentColor; transition: transform .15s ease; }
-#enable-microphone[aria-pressed="true"]::before { transform: translateX(1.35rem); }
+.inline-details, .saved-transcripts { margin-top: .75rem; max-width: 48rem; }
+.inline-details summary, .saved-transcripts summary { cursor: pointer; color: var(--heading); font-weight: 800; }
+.inline-details[open] summary, .saved-transcripts[open] summary { margin-bottom: .75rem; }
+.transcript-header { display: grid; gap: .5rem; margin-bottom: 1rem; }
+.export-controls { align-items: center; }
+.export-controls select { min-height: 2.75rem; }
 .screen-capture-settings output { display: block; margin-top: .5rem; }
 .screen-capture-settings progress { width: 100%; }
 .screen-capture-settings #ocr-download-status { margin-top: .5rem; }

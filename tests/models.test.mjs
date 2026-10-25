@@ -68,8 +68,10 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
   assert.match(app, /detectScreenChange/);
   assert.match(page, /value="periodic"/);
   assert.match(page, /value="changes"/);
+  assert.match(page, /<option value="manual">Manual only<\/option>/);
   assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="transcript-tab"'));
-  assert.ok(page.indexOf('id="capture-screen"') > page.indexOf('id="transcript-heading"'));
+  assert.ok(page.indexOf('class="screen-capture-settings"') < page.indexOf('id="session-name"'));
+  assert.ok(page.lastIndexOf('data-capture-screen') > page.indexOf('id="transcript-heading"'));
   assert.match(store, /createObjectStore\('screenshots'/);
 });
 
@@ -84,9 +86,23 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /processScreenshotOcr/);
   assert.match(app, /image\.alt = text/);
   assert.match(page, /id="toggle-ocr"/);
+  assert.match(page, /aria-label="Enable OCR"/);
   assert.match(ocr, /recogniseImage/);
   assert.match(ocr, /hasWebGpu/);
   assert.match(ocr, /appleMobile/);
+});
+
+test('exports include a self-contained Markdown transcript and individual screenshots', async () => {
+  const [app, page] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(page, /id="export-markdown"/);
+  assert.match(page, /id="download-screenshots"/);
+  assert.match(app, /function exportMarkdown/);
+  assert.match(app, /blobToDataUrl/);
+  assert.match(app, /function downloadScreenshots/);
+  assert.match(app, /getScreenshots/);
 });
 
 test('transcript uses source filters rather than separate source sections', async () => {
@@ -124,6 +140,34 @@ test('compact transcript action icons and duplicate session controls retain acce
   assert.match(page, /data-session-action="start"/);
   assert.match(app, /'Download screenshot'/);
   assert.match(page, /id="share-system-audio"/);
+});
+
+test('transcript controls can show labels by preference and otherwise provide hover labels', async () => {
+  const [app, page, css] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../src/compact.css', import.meta.url), 'utf8'),
+  ]);
+  assert.match(page, /id="show-button-labels"/);
+  assert.match(app, /localBrowserTranscriberShowButtonLabels/);
+  assert.match(css, /data-show-button-labels="true"/);
+  assert.match(css, /\.icon-action:hover::after/);
+});
+
+test('the footer displays the canonical release version', async () => {
+  const [page, version, versionWorkflow, packageJson] = await Promise.all([
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../public/assets/version.js', import.meta.url), 'utf8'),
+    readFile(new URL('../.github/workflows/version.yml', import.meta.url), 'utf8'),
+    readFile(new URL('../package.json', import.meta.url), 'utf8'),
+  ]);
+  const match = version.match(/APP_VERSION = '([^']+)'/);
+  assert.ok(match, 'assets/version.js must define APP_VERSION');
+  const appVersion = match[1];
+  assert.match(page, /data-app-version/);
+  assert.match(page, /src="assets\/version\.js\?v=0\.2\.0"/);
+  assert.match(versionWorkflow, /public\/assets\/version\.js/);
+  assert.equal(JSON.parse(packageJson).version, appVersion);
 });
 
 test('help, privacy, terms and accessibility pages are published with the app', async () => {

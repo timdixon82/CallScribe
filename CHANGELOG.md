@@ -2,6 +2,13 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.25] - 2026-10-26
+
+### Changed
+
+- Replaced the mic-in-transcript labels with accessible microphone and crossed-microphone icons.
+- Renamed Share app audio to Share App and positioned the Capture control beneath the live screen preview.
+
 ## [0.2.24] - 2026-10-26
 
 ### Changed

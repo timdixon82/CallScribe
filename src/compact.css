@@ -33,6 +33,8 @@
 .screen-capture-connection { margin-bottom: .5rem; }
 #screen-capture-manual-actions { margin: .6rem 0; }
 #screen-capture-manual-actions .full-width-action { width: 100%; justify-content: center; margin: 0; }
+.transcript-mic-mute { min-width: 2.5rem; padding-inline: .5rem; }
+.transcript-mic-icon { display: block; width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .screen-capture-fields { display: flex; flex-wrap: wrap; gap: .4rem .75rem; align-items: end; }
 .screen-capture-fields > div { display: grid; gap: .2rem; min-width: 10rem; }
 .screen-capture-fields label { font-weight: 700; }

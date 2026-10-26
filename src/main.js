@@ -75,6 +75,12 @@ async function initialise() {
     duplicate.addEventListener('click', () => original.click());
     captureSessionActions.append(duplicate);
   }
+  for (const actions of [captureSessionActions, $('transcript-session-actions')]) {
+    const duplicate = captureScreen.cloneNode(true);
+    duplicate.classList.remove('full-width-action');
+    duplicate.classList.add('icon-action');
+    actions.append(duplicate);
+  }
   transcriptPanel.querySelector('.transcript-header').after(captureSessionActions);
   document.querySelectorAll('#start-session, [data-session-action="start"]').forEach((button) => { button.firstElementChild.textContent = '●'; button.querySelector('.button-label').textContent = 'Record transcript'; button.setAttribute('aria-label', 'Record transcript'); button.dataset.tooltip = 'Record transcript'; });
   voiceProcessing = { ...DEFAULT_VOICE, ...JSON.parse(localStorage.getItem('localBrowserTranscriberVoiceProcessing') || '{}') };

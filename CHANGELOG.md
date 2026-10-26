@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.23] - 2026-10-26
+
+### Changed
+
+- Added screen-capture controls above and below Transcript, alongside the duplicate recording controls.
+
 ## [0.2.22] - 2026-10-26
 
 ### Fixed

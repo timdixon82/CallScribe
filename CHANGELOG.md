@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.24] - 2026-10-26
+
+### Changed
+
+- Restored the mic-in-transcript mute control beside both transcript control rows.
+
 ## [0.2.23] - 2026-10-26
 
 ### Changed

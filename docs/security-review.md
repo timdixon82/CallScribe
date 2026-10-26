@@ -1,6 +1,6 @@
-# Security Review: Local Call Transcriber
+# Security Review: CallScribe
 
-This document records the security review for Local Call Transcriber, carried out by Jed (penetration testing and security governance). It covers the OWASP Top 10 assessment, any findings, and the release condition.
+This document records the security review for CallScribe, carried out by Jed (penetration testing and security governance). It covers the OWASP Top 10 assessment, any findings, and the release condition.
 
 ## Verdict
 

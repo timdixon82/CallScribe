@@ -1,4 +1,4 @@
-# Code Review and Penetration Test: Local Call Transcriber
+# Code Review and Penetration Test: CallScribe
 
 Reviewer: Jed (penetration tester and code reviewer)
 Date: 2026-10-24

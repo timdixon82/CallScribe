@@ -1,6 +1,6 @@
-# Design brief: Local Call Transcriber
+# Design brief: CallScribe
 
-This document records the design brief for Local Call Transcriber. Fill in every section before Simon begins work. Simon reads this brief at the start of each design dispatch.
+This document records the design brief for CallScribe. Fill in every section before Simon begins work. Simon reads this brief at the start of each design dispatch.
 
 ## Project context
 

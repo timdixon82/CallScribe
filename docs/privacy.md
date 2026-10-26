@@ -1,6 +1,6 @@
-# Privacy: Local Call Transcriber
+# Privacy: CallScribe
 
-This document records the privacy posture for Local Call Transcriber. It is produced during the project setup pass and updated whenever the analytics or data collection approach changes.
+This document records the privacy posture for CallScribe. It is produced during the project setup pass and updated whenever the analytics or data collection approach changes.
 
 ## Analytics
 

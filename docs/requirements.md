@@ -1,4 +1,4 @@
-# Requirements: Local Call Transcriber
+# Requirements: CallScribe
 
 ## Status
 
@@ -6,7 +6,7 @@ This document records the requirements supplied for model provisioning and downl
 
 ## Product direction
 
-Local Call Transcriber is a privacy-first application. Speech recognition runs locally on the user's device. Speech and transcript data must not be sent externally.
+CallScribe is a privacy-first application. Speech recognition runs locally on the user's device. Speech and transcript data must not be sent externally.
 
 ## Functional requirements
 

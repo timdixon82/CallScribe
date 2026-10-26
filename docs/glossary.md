@@ -1,3 +1,3 @@
-# Project Wiki: Glossary: Local Call Transcriber
+# Project Wiki: Glossary: CallScribe
 
-Domain terms specific to Local Call Transcriber, defined as the team meets them. Terms that apply across every project are in the global wiki's glossary.
+Domain terms specific to CallScribe, defined as the team meets them. Terms that apply across every project are in the global wiki's glossary.

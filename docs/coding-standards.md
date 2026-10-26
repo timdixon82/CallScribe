@@ -1,8 +1,8 @@
-# Project Coding Standards: Local Call Transcriber
+# Project Coding Standards: CallScribe
 
 This project follows the team's stack-independent standards in the global wiki's `coding-standards.md`, and the per-stack standards in the global wiki's `stacks/`.
 
-This page records only what is specific to Local Call Transcriber: its stack, and any project-specific coding decisions.
+This page records only what is specific to CallScribe: its stack, and any project-specific coding decisions.
 
 ## Stack
 

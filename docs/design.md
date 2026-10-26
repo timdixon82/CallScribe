@@ -1,6 +1,6 @@
-# Design: Local Call Transcriber
+# Design: CallScribe
 
-This document records the design decisions for Local Call Transcriber. Simon updates it as design artefacts and decisions are produced. It is the design handoff document for Jacob (architecture) and Sean (development).
+This document records the design decisions for CallScribe. Simon updates it as design artefacts and decisions are produced. It is the design handoff document for Jacob (architecture) and Sean (development).
 
 ## Design decisions
 

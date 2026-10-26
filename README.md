@@ -1,10 +1,16 @@
-# Local Browser Transcriber
+# CallScribe
 
-Local Browser Transcriber is a static, privacy-first browser application for capturing microphone and browser-supported computer audio, then transcribing it locally. It can also retain screen captures and, when explicitly enabled, run local PaddleOCR to add readable screenshot text to the transcript.
+CallScribe is a static, privacy-first browser application for capturing microphone and browser-supported computer audio, then transcribing it locally. It can also retain screen captures and, when explicitly enabled, run local PaddleOCR to add readable screenshot text to the transcript.
 
 ## Privacy and local storage
 
 There is no backend or cloud inference. Audio, transcripts, screenshots and OCR text remain in browser-managed storage until removed. Models download only when required: Moonshine Base on first use, optional speech models when chosen, and the OCR model when local OCR is enabled. See the built-in [Help](public/docs/help.html) and [Privacy](public/docs/privacy.html) pages for the operational details and limitations.
+
+## Licence
+
+CallScribe's source code is licensed under [Apache-2.0](LICENSE). See
+[third-party notices](THIRD_PARTY_NOTICES.md) for the licences that apply to
+bundled software and separately downloaded models.
 
 ## Local development
 

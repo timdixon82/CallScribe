@@ -1,8 +1,8 @@
-# Project Accessibility: Local Call Transcriber
+# Project Accessibility: CallScribe
 
 This project meets WCAG 2.2 at AAA, interpreted in the global wiki's `accessibility.md`.
 
-This page records only what is specific to Local Call Transcriber: its accessibility notes, and a pointer to its exceptions.
+This page records only what is specific to CallScribe: its accessibility notes, and a pointer to its exceptions.
 
 ## Project-specific notes
 

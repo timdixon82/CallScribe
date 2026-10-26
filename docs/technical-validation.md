@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document records the first feasibility assessment for the Local Browser Transcriber PRD, version 1.0, dated 24 October 2026. It distinguishes design evidence from testing completed on target hardware.
+This document records the first feasibility assessment for the CallScribe PRD, version 1.0, dated 24 October 2026. It distinguishes design evidence from testing completed on target hardware.
 
 ## Outcome
 

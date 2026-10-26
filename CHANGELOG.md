@@ -1,6 +1,17 @@
 # Changelog
 
-All notable changes to Local Browser Transcriber are documented here.
+All notable changes to CallScribe are documented here.
+
+## [0.2.21] - 2026-10-26
+
+### Changed
+
+- Renamed the project and GitHub repository to CallScribe.
+- Updated the project wiki, README, exports, and published information pages to use the CallScribe name and repository link.
+
+### Added
+
+- Added the Apache-2.0 licence and third-party notices, including the separate model-licence position.
 
 ## [0.2.20] - 2026-10-25
 

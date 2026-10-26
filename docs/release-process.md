@@ -1,6 +1,6 @@
-# Release process: Local Call Transcriber
+# Release process: CallScribe
 
-This document records the release process for Local Call Transcriber. It is produced during the project setup pass and updated whenever the process changes.
+This document records the release process for CallScribe. It is produced during the project setup pass and updated whenever the process changes.
 
 ## Branching model
 

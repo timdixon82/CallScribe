@@ -1,6 +1,6 @@
-# Project Wiki: Local Call Transcriber
+# Project Wiki: CallScribe
 
-This is the project wiki for Local Call Transcriber. It holds knowledge specific to this project. Knowledge shared across every project lives in the global wiki at the team root.
+This is the project wiki for CallScribe. It holds knowledge specific to this project. Knowledge shared across every project lives in the global wiki at the team root.
 
 Cross-cutting learnings flow to both this wiki and the global wiki at the time they are learned.
 

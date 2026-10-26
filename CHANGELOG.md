@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.26] - 2026-10-26
+
+### Fixed
+
+- Applied the microphone icon state to both Transcript control rows.
+
 ## [0.2.25] - 2026-10-26
 
 ### Changed

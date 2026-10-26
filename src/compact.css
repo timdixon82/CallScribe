@@ -25,7 +25,7 @@
 .session-start { margin-top: .75rem; }
 .session-start label { display: block; font-weight: 700; }
 .session-start input { width: min(100%, 32rem); }
-.capture-session-actions { margin-top: .75rem; }
+.capture-session-actions { margin: .75rem 0; }
 [hidden] { display: none !important; }
 .voice-settings { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 2fr); gap: .5rem 1rem; max-width: 50rem; align-items: center; }
 .voice-settings button { grid-column: 1 / -1; justify-self: start; }

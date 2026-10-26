@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.22] - 2026-10-26
+
+### Fixed
+
+- Kept the duplicate recording controls above and below Transcript, rather than placing one set in Capture settings.
+
 ## [0.2.21] - 2026-10-26
 
 ### Changed

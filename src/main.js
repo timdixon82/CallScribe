@@ -75,7 +75,7 @@ async function initialise() {
     duplicate.addEventListener('click', () => original.click());
     captureSessionActions.append(duplicate);
   }
-  document.querySelector('.session-toolbar').append(captureSessionActions);
+  transcriptPanel.querySelector('.transcript-header').after(captureSessionActions);
   document.querySelectorAll('#start-session, [data-session-action="start"]').forEach((button) => { button.firstElementChild.textContent = '●'; button.querySelector('.button-label').textContent = 'Record transcript'; button.setAttribute('aria-label', 'Record transcript'); button.dataset.tooltip = 'Record transcript'; });
   voiceProcessing = { ...DEFAULT_VOICE, ...JSON.parse(localStorage.getItem('localBrowserTranscriberVoiceProcessing') || '{}') };
   audioProcessingEnabled = localStorage.getItem('localBrowserTranscriberAudioProcessing') !== 'false'; setAudioProcessingToggle(audioProcessingEnabled);

@@ -29,10 +29,10 @@ export function getOcr() {
   return ocrPromise;
 }
 
-async function recogniseImageNow(blob) {
-  const url = URL.createObjectURL(blob);
+async function recogniseImageNow(image) {
+  const url = image instanceof Blob ? URL.createObjectURL(image) : undefined;
   try {
-    const result = await (await getOcr()).detect(url);
+    const result = await (await getOcr()).detect(url || image);
     // Guten OCR 1.4 returns an object containing `texts`; earlier releases
     // returned the line array directly. Support both shapes so an installed
     // browser cache cannot turn a successful recognition into a transcript
@@ -40,7 +40,7 @@ async function recogniseImageNow(blob) {
     const lines = Array.isArray(result) ? result : Array.isArray(result?.texts) ? result.texts : [];
     return (lines || []).map((line) => String(line.text || '').trim()).filter(Boolean).join('\n');
   } finally {
-    URL.revokeObjectURL(url);
+    if (url) URL.revokeObjectURL(url);
   }
 }
 

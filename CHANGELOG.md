@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.30] - 2026-10-27
+
+### Improved
+
+- Removed an unnecessary WebP encode and image decode before local OCR, passing resized screen pixels directly to the OCR model instead.
+
 ## [0.2.29] - 2026-10-27
 
 ### Added

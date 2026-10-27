@@ -2,6 +2,13 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.32] - 2026-10-27
+
+### Fixed
+
+- Made every manual screenshot control run its own capture action and show its result in the Transcript section.
+- Reduced OCR work for tall and high-resolution shared screens, and removed an unnecessary image decode before recognition.
+
 ## [0.2.31] - 2026-10-27
 
 ### Changed

@@ -96,8 +96,9 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /cacheOcrAssets/);
   assert.match(app, /processScreenshotOcr/);
   assert.match(app, /OCR_PROCESSING_DETAILS/);
-  assert.match(app, /createOcrImage/);
+  assert.match(app, /ocrImage/);
   assert.match(app, /context\.getImageData/);
+  assert.match(app, /1280 \/ longestEdge/);
   assert.match(app, /localBrowserTranscriberOcrProcessingDetail/);
   assert.match(app, /image\.alt = text/);
   assert.match(app, /figure\.append\(image\)/);
@@ -108,6 +109,14 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(ocr, /Array\.isArray\(result\?\.texts\)/);
   assert.match(ocr, /hasWebGpu/);
   assert.match(ocr, /appleMobile/);
+});
+
+test('each manual screenshot control has its own capture action and reports its outcome in the transcript', async () => {
+  const app = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  assert.match(app, /function captureManualScreenshot/);
+  assert.match(app, /captureScreen\.addEventListener\('click', captureManualScreenshot\)/);
+  assert.match(app, /duplicate\.addEventListener\('click', captureManualScreenshot\)/);
+  assert.match(app, /setSessionStatus\(message\)/);
 });
 
 test('exports include a self-contained Markdown transcript and individual screenshots', async () => {

@@ -2,6 +2,13 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.31] - 2026-10-27
+
+### Changed
+
+- Made Speaker assignment use the same disclosure layout as the other collapsible sections.
+- Moved transcript announcements into Transcript options, above the filter and display settings.
+
 ## [0.2.30] - 2026-10-27
 
 ### Improved

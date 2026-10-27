@@ -143,6 +143,8 @@ test('people are locally saved labels, manually assigned to blocks, and never vo
     readFile(new URL('../src/store.js', import.meta.url), 'utf8'),
   ]);
   assert.match(page, /People and speaker labels/);
+  assert.match(app, /speaker-assignment-body/);
+  assert.match(app, /announceSettings/);
   assert.match(page, /does not analyse voices, create voiceprints, or identify people automatically/);
   assert.match(page, /id="participant-command"/);
   assert.match(page, /id="speaker-assignment-person"/);

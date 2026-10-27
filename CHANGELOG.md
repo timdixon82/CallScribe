@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.29] - 2026-10-27
+
+### Added
+
+- Added an OCR detail choice: Fast, Balanced (the default), or Detailed. It resizes only the temporary OCR input, while keeping saved screenshots at full quality.
+
 ## [0.2.28] - 2026-10-27
 
 ### Changed

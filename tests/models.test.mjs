@@ -95,6 +95,9 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /local-browser-transcriber-ocr-v1/);
   assert.match(app, /cacheOcrAssets/);
   assert.match(app, /processScreenshotOcr/);
+  assert.match(app, /OCR_PROCESSING_DETAILS/);
+  assert.match(app, /createOcrImage/);
+  assert.match(app, /localBrowserTranscriberOcrProcessingDetail/);
   assert.match(app, /image\.alt = text/);
   assert.match(app, /figure\.append\(image\)/);
   assert.match(page, /id="toggle-ocr"/);

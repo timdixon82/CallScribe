@@ -100,6 +100,7 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(page, /role="switch" aria-checked="false"/);
   assert.match(ocr, /recogniseImage/);
   assert.match(ocr, /recognitionQueue/);
+  assert.match(ocr, /Array\.isArray\(result\?\.texts\)/);
   assert.match(ocr, /hasWebGpu/);
   assert.match(ocr, /appleMobile/);
 });

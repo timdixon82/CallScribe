@@ -32,7 +32,12 @@ export function getOcr() {
 async function recogniseImageNow(blob) {
   const url = URL.createObjectURL(blob);
   try {
-    const lines = await (await getOcr()).detect(url);
+    const result = await (await getOcr()).detect(url);
+    // Guten OCR 1.4 returns an object containing `texts`; earlier releases
+    // returned the line array directly. Support both shapes so an installed
+    // browser cache cannot turn a successful recognition into a transcript
+    // error merely because the library changed its return type.
+    const lines = Array.isArray(result) ? result : Array.isArray(result?.texts) ? result.texts : [];
     return (lines || []).map((line) => String(line.text || '').trim()).filter(Boolean).join('\n');
   } finally {
     URL.revokeObjectURL(url);

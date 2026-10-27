@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.27] - 2026-10-27
+
+### Fixed
+
+- Accepted the current local OCR library result object as well as the older line-array response, restoring screenshot OCR text extraction.
+
 ## [0.2.26] - 2026-10-26
 
 ### Fixed

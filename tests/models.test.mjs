@@ -96,6 +96,7 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /cacheOcrAssets/);
   assert.match(app, /processScreenshotOcr/);
   assert.match(app, /image\.alt = text/);
+  assert.match(app, /figure\.append\(image\)/);
   assert.match(page, /id="toggle-ocr"/);
   assert.match(page, /role="switch" aria-checked="false"/);
   assert.match(ocr, /recogniseImage/);

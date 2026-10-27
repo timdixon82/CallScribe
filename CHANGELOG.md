@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.28] - 2026-10-27
+
+### Changed
+
+- Kept recognised screenshot text as accessible image alternative text and in its separate OCR transcript entry, without repeating it visually beneath the screenshot.
+
 ## [0.2.27] - 2026-10-27
 
 ### Fixed

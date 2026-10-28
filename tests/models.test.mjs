@@ -105,6 +105,7 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /image\.alt = text/);
   assert.match(app, /figure\.append\(image\)/);
   assert.match(page, /id="toggle-ocr" type="checkbox" switch disabled/);
+  assert.match(app, /closest\('\.toggle-slider'\)\.after\(ocrDetailField\)/);
   assert.match(ocr, /recogniseImage/);
   assert.match(ocr, /recognitionQueue/);
   assert.match(ocr, /Array\.isArray\(result\?\.texts\)/);

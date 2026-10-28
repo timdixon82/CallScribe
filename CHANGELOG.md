@@ -2,6 +2,13 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.34] - 2026-10-28
+
+### Fixed
+
+- Kept the OCR switch and OCR-detail selector as separate screen-capture settings, preventing the detail selector from being inserted inside the switch label.
+- Rebuilt the screen-capture settings as an aligned two-column grid and rotated the service-worker cache for the corrected layout.
+
 ## [0.2.33] - 2026-10-28
 
 ### Fixed

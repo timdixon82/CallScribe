@@ -60,7 +60,7 @@ async function initialise() {
   document.querySelectorAll('a[href*="timdixon82/Local-Call-Transcriber"]').forEach((link) => { link.href = 'https://github.com/timdixon82/CallScribe'; });
   document.querySelector('main > header h1').remove();
   ui['share-system-audio'].closest('.toggle-slider').querySelector('.toggle-text').textContent = 'Share App';
-  const ocrDetailField = document.createElement('div'); const ocrDetailLabel = document.createElement('label'); ocrDetailLabel.htmlFor = 'ocr-processing-detail'; ocrDetailLabel.textContent = 'OCR detail'; const ocrDetail = document.createElement('select'); ocrDetail.id = 'ocr-processing-detail'; Object.entries(OCR_PROCESSING_DETAILS).forEach(([value, detail]) => ocrDetail.add(new Option(detail.label, value))); ocrDetailField.append(ocrDetailLabel, ocrDetail); ui['toggle-ocr'].before(ocrDetailField);
+  const ocrDetailField = document.createElement('div'); const ocrDetailLabel = document.createElement('label'); ocrDetailLabel.htmlFor = 'ocr-processing-detail'; ocrDetailLabel.textContent = 'OCR detail'; const ocrDetail = document.createElement('select'); ocrDetail.id = 'ocr-processing-detail'; Object.entries(OCR_PROCESSING_DETAILS).forEach(([value, detail]) => ocrDetail.add(new Option(detail.label, value))); ocrDetailField.append(ocrDetailLabel, ocrDetail); ui['toggle-ocr'].closest('.toggle-slider').after(ocrDetailField);
   const theme = localStorage.getItem('localBrowserTranscriberTheme') || 'system';
   ui['enable-microphone'].closest('.toggle-slider').querySelector('.toggle-text').classList.add('sr-only');
   $('theme-select').value = theme;

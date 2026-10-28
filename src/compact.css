@@ -4,7 +4,7 @@
 .top-sources > div { min-width: min(100%, 20rem); }
 .microphone-source > label { display: block; font-weight: 700; }
 .microphone-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .25rem; }
-#microphone-select, #enable-microphone { min-height: 3rem; margin-bottom: 0; }
+#microphone-select, .microphone-switch { min-height: 3rem; margin-bottom: 0; }
 .microphone-controls .capture-toggle { min-height: 3rem; margin: 0; }
 .model-picker { display: grid; grid-template-columns: minmax(16rem, 1fr) auto; gap: .25rem .75rem; max-width: 48rem; align-items: end; }
 .model-picker > label, .model-picker > output, .model-language { grid-column: 1 / -1; font-weight: 700; }
@@ -38,8 +38,8 @@
 .screen-capture-fields { display: flex; flex-wrap: wrap; gap: .4rem .75rem; align-items: end; }
 .screen-capture-fields > div { display: grid; gap: .2rem; min-width: 10rem; }
 .screen-capture-fields label { font-weight: 700; }
-.screen-capture-fields select, .screen-capture-fields input, .screen-capture-fields #toggle-ocr { margin: 0; min-height: 3rem; }
-.screen-capture-fields #toggle-ocr { align-self: end; }
+.screen-capture-fields select, .screen-capture-fields input:not([type="checkbox"]), .screen-capture-fields .toggle-slider { margin: 0; min-height: 3rem; }
+.screen-capture-fields .toggle-slider { align-self: end; }
 .screen-audio-note { max-width: 42rem; margin: .5rem 0; color: var(--muted); font-weight: 600; }
 .screen-capture-setup-heading { margin: .9rem 0 .35rem; color: var(--heading); font-weight: 800; }
 .collapsible-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .625rem; background: var(--panel); box-shadow: var(--shadow); }
@@ -84,18 +84,9 @@ main > .primary-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(-
 :root[data-show-button-labels="true"] .icon-action .button-label { display: inline; }
 .icon-action::after { content: attr(data-tooltip); position: absolute; z-index: 3; left: 50%; bottom: calc(100% + .4rem); transform: translateX(-50%); width: max-content; max-width: min(18rem, 85vw); padding: .35rem .5rem; border-radius: .35rem; background: var(--text); color: var(--bg); font-size: .875rem; font-weight: 700; line-height: 1.2; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s ease; }
 .icon-action:hover::after, .icon-action:focus-visible::after { opacity: 1; visibility: visible; }
-.toggle-control, .toggle-slider { display: inline-flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 2.75rem; margin: 0; font-weight: 700; }
-.toggle-control { position: relative; cursor: pointer; }
-.toggle-control input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; }
-.toggle-track { position: relative; display: inline-block; flex: 0 0 auto; width: 3rem; height: 1.75rem; border-radius: 999px; background: var(--border); transition: background .15s ease; }
-.toggle-track::after { content: ''; position: absolute; top: .2rem; left: .2rem; width: 1.35rem; height: 1.35rem; border-radius: 50%; background: var(--button); box-shadow: 0 1px 2px rgb(0 0 0 / 25%); transition: transform .15s ease; }
-.toggle-control input:checked + .toggle-track, .toggle-slider[data-enabled="true"] .toggle-track { background: var(--focus); }
-.toggle-control input:checked + .toggle-track::after, .toggle-slider[data-enabled="true"] .toggle-track::after { transform: translateX(1.25rem); }
-.toggle-control:focus-within .toggle-track, .toggle-slider:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; }
-.toggle-slider { width: auto; min-width: min(100%, 15rem); padding: .35rem .15rem .35rem .65rem; border: 0; background: transparent; color: var(--text); }
-.toggle-slider:hover:not(:disabled) { background: var(--selected); }
-.toggle-slider:focus-visible { outline: none; }
-.toggle-slider:disabled { opacity: .55; }
+.toggle-slider { display: inline-flex; align-items: center; justify-content: space-between; gap: .75rem; width: auto; min-width: min(100%, 15rem); min-height: 2.75rem; margin: 0; padding: .35rem .15rem .35rem .65rem; color: var(--text); cursor: pointer; font-weight: 700; }
+.toggle-slider input[type="checkbox"] { flex: 0 0 auto; margin: 0; padding: 0; accent-color: var(--focus); }
+.toggle-slider:has(input:disabled) { cursor: not-allowed; opacity: .65; }
 .processing-controls { display: flex; flex-wrap: wrap; gap: .5rem .75rem; margin-top: .5rem; }
 .speaker-model-status { flex-basis: 100%; margin: 0; }
 .transcript-icon-button { font-size: 1.2rem; }

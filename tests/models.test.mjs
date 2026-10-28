@@ -35,7 +35,7 @@ test('voice-control setup uses the matching DOM IDs and cannot block launch', as
   assert.match(app, /const id = controlIds\[key\]/);
 });
 
-test('source controls use accessible switches and the compact model picker remains available', async () => {
+test('source controls use native progressive-enhancement switches and the compact model picker remains available', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
@@ -43,7 +43,9 @@ test('source controls use accessible switches and the compact model picker remai
   assert.match(app, /function setCaptureToggle/);
   assert.match(app, /pipelines\.has\('microphone'\)/);
   assert.match(page, /id="model-select"/);
-  assert.match(page, /role="switch" aria-checked="false"/);
+  assert.match(page, /id="enable-microphone" type="checkbox" switch/);
+  assert.match(page, /id="share-system-audio" type="checkbox" switch disabled/);
+  assert.doesNotMatch(page, /role="switch"/);
   assert.match(page, /class="toggle-slider"/);
 });
 
@@ -102,8 +104,7 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(app, /localBrowserTranscriberOcrProcessingDetail/);
   assert.match(app, /image\.alt = text/);
   assert.match(app, /figure\.append\(image\)/);
-  assert.match(page, /id="toggle-ocr"/);
-  assert.match(page, /role="switch" aria-checked="false"/);
+  assert.match(page, /id="toggle-ocr" type="checkbox" switch disabled/);
   assert.match(ocr, /recogniseImage/);
   assert.match(ocr, /recognitionQueue/);
   assert.match(ocr, /Array\.isArray\(result\?\.texts\)/);
@@ -254,7 +255,7 @@ test('transcript controls can show labels by preference and otherwise provide ho
   assert.match(css, /\.icon-action:hover::after/);
 });
 
-test('toggle controls use switches and primary sections are not duplicated', async () => {
+test('toggle controls use native switches and primary sections are not duplicated', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
@@ -264,7 +265,8 @@ test('toggle controls use switches and primary sections are not duplicated', asy
   }
   assert.match(app, /function setSwitch/);
   assert.match(page, /Automatically separate speakers/);
-  assert.match(page, /class="toggle-control"/);
+  assert.match(page, /id="enable-speaker-separation" type="checkbox" switch/);
+  assert.match(app, /input\.checked = enabled/);
   assert.match(app, /section-summary-heading/);
   assert.equal((page.match(/id="transcript-heading"/g) || []).length, 1);
   assert.equal((page.match(/id="voice-settings-section"/g) || []).length, 1);

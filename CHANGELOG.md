@@ -2,6 +2,13 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.33] - 2026-10-28
+
+### Fixed
+
+- Replaced custom-drawn capture and processing switches with native checkbox switches, so browsers and Windows High Contrast provide the visible control state, focus indicator and accessible name.
+- Rotated the service-worker cache so returning visitors receive the updated control markup.
+
 ## [0.2.32] - 2026-10-27
 
 ### Fixed

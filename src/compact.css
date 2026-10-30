@@ -52,6 +52,7 @@ main > .primary-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(-
 .inline-details summary, .saved-transcripts summary { cursor: pointer; color: var(--heading); font-weight: 800; }
 .inline-details[open] summary, .saved-transcripts[open] summary { margin-bottom: .75rem; }
 .transcript-header { display: grid; gap: .5rem; margin-bottom: 1rem; }
+.keyboard-shortcuts-hint { margin: -.5rem 0 1rem; color: var(--muted); font-size: .9rem; }
 .export-controls { align-items: center; }
 .export-controls select { min-height: 2.75rem; }
 .screen-capture-settings output { display: block; margin-top: .5rem; }
@@ -78,7 +79,9 @@ main > .primary-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(-
 .segment-label { font-size: .9rem; color: var(--muted); white-space: nowrap; }
 .segment-text { flex: 1 1 20rem; }
 .transcript-segment button { min-height: 2.25rem; padding: .35rem .6rem; margin: 0; }
-.transcript-icon-button, .transcript-session-actions button { min-width: 2.5rem; padding-inline: .5rem; }
+.transcript-icon-button { min-width: 2.5rem; padding-inline: .5rem; }
+.capture-session-actions, .transcript-session-actions { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .35rem; }
+.capture-session-actions button, .transcript-session-actions button { width: 100%; min-width: 0; margin: 0; padding-inline: .35rem; }
 .icon-action { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; }
 .icon-action .button-label { display: none; }
 :root[data-show-button-labels="true"] .icon-action .button-label { display: inline; }
@@ -88,7 +91,8 @@ main > .primary-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(-
 .toggle-slider input[type="checkbox"] { flex: 0 0 auto; margin: 0; padding: 0; accent-color: var(--focus); }
 .toggle-slider:has(input:disabled) { cursor: not-allowed; opacity: .65; }
 .processing-controls { display: flex; flex-wrap: wrap; gap: .5rem .75rem; margin-top: .5rem; }
-.speaker-model-status { flex-basis: 100%; margin: 0; }
+.speaker-model-status { margin: 0; }
+.speaker-separation-status { margin: .75rem 0; padding: .6rem .75rem; border: 1px solid var(--border); border-left: .3rem solid var(--focus); border-radius: .4rem; background: var(--selected); color: var(--text); }
 .transcript-icon-button { font-size: 1.2rem; }
 .transcript-segment textarea { flex-basis: 100%; min-height: 3rem; }
 .people-add, .people-command, .speaker-assignment-body { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem .75rem; margin-block: .75rem; }

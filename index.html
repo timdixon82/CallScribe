@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/favicon.png">
   <title>CallScribe — Local call transcription</title>
-  <script src="assets/version.js?v=0.2.34" defer></script>
+  <script src="assets/version.js?v=0.2.35" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#transcript-heading">Skip to transcript</a>
@@ -35,6 +35,7 @@
     <details id="diagnostics-panel" class="collapsible-section"><summary>Diagnostics</summary><dl id="diagnostics"></dl><button id="export-diagnostics" type="button">Export diagnostics</button></details>
   </main>
   <dialog id="delete-dialog" aria-labelledby="delete-heading"><h2 id="delete-heading">Confirm deletion</h2><p id="delete-message"></p><form method="dialog"><button value="cancel">Cancel</button><button id="confirm-delete" value="confirm">Delete</button></form></dialog>
+  <dialog id="keyboard-shortcuts-dialog" aria-labelledby="keyboard-shortcuts-heading"><h2 id="keyboard-shortcuts-heading">Keyboard shortcuts</h2><p>Shortcuts work when you are not typing in a field or editing transcript text. Button tips and screen-reader names also include the shortcut.</p><dl><dt>/</dt><dd>Focus transcript search</dd><dt>R</dt><dd>Record a new transcript, or resume when paused</dd><dt>Space</dt><dd>Pause or resume transcription</dd><dt>S</dt><dd>Stop transcription</dd><dt>N</dt><dd>Start a new transcript</dd><dt>C</dt><dd>Capture the shared screen now</dd><dt>M</dt><dd>Mute or include microphone transcript text</dd><dt>E</dt><dd>Export the transcript</dd><dt>?</dt><dd>Show this list</dd></dl><form method="dialog"><button>Close</button></form></dialog>
   <footer class="site-footer"><p><strong>Audio, transcripts, screenshots and OCR text stay in this browser.</strong> Model downloads use network access only to obtain the selected local model. Exported copies go where you choose to save them.</p><nav aria-label="App information"><span data-app-version>Loading version</span><span class="sep" aria-hidden="true">·</span><a href="https://github.com/timdixon82/Local-Call-Transcriber/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">What’s new / changelog</a><span class="sep" aria-hidden="true">·</span><a href="docs/help.html">Help</a><span class="sep" aria-hidden="true">·</span><a href="docs/privacy.html">Privacy</a><span class="sep" aria-hidden="true">·</span><a href="docs/terms.html">Terms and use</a><span class="sep" aria-hidden="true">·</span><a href="docs/accessibility.html">Accessibility</a><span class="sep" aria-hidden="true">·</span><a href="https://github.com/timdixon82/Local-Call-Transcriber" target="_blank" rel="noopener noreferrer">Open source on GitHub</a><span class="sep" aria-hidden="true">·</span><a href="https://www.timdixon.net/contact/" target="_blank" rel="noopener">Contact / feedback</a><span class="sep" aria-hidden="true">·</span><a href="https://www.timdixon.net/" target="_blank" rel="noopener">© Tim Dixon</a></nav></footer>
   <script type="module" src="/src/main.js"></script>
 </body>

@@ -2,6 +2,18 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.35] - 2026-10-30
+
+### Added
+
+- Added discoverable transcript keyboard shortcuts: `/` search, `R` record or resume, `Space` pause or resume, `S` stop, `N` new transcript, `C` capture screen, `M` microphone transcript mute, `E` export, and `?` for the in-app shortcut list.
+- Added shortcut details to Help, button hover/focus tips, and accessible button names.
+
+### Changed
+
+- Made every button in both transcript action rows the same width.
+- Moved the visible speaker-separation status into People and speaker labels, retaining its screen-reader announcement.
+
 ## [0.2.34] - 2026-10-28
 
 ### Fixed

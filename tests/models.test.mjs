@@ -193,6 +193,32 @@ test('speaker separation, time, and source labels can be hidden from the transcr
   assert.match(app, /const showSources = ui\['show-sources'\]\.checked/);
 });
 
+test('transcript controls have equal-width buttons and speaker status is visible beside speaker labels', async () => {
+  const [app, css] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/compact.css', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /speakerStatus\.classList\.add\('speaker-separation-status'\)/);
+  assert.match(app, /detected-speaker-list'\)\.before\(speakerStatus\)/);
+  assert.match(css, /\.capture-session-actions, \.transcript-session-actions \{ display: grid; grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.speaker-separation-status \{ margin: \.75rem 0;/);
+});
+
+test('transcript shortcuts are discoverable in controls, screen-reader names, and Help', async () => {
+  const [app, page, help] = await Promise.all([
+    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
+    readFile(new URL('../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../public/docs/help.html', import.meta.url), 'utf8'),
+  ]);
+  assert.match(app, /function setButtonShortcut/);
+  assert.match(app, /aria-keyshortcuts/);
+  assert.match(app, /event\.key === '\?'/);
+  assert.match(app, /target\.matches\('input, textarea, select/);
+  assert.match(page, /id="keyboard-shortcuts-dialog"/);
+  assert.match(help, /Transcript keyboard shortcuts/);
+  assert.match(help, /Hover or keyboard-focus a transcript button/);
+});
+
 test('automatic speaker separation is optional, local, timestamp-aligned, and maps anonymous slots to saved people', async () => {
   const [app, page, diarizer, frontend] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),

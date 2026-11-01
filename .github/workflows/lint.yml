@@ -104,7 +104,7 @@ jobs:
         with:
           node-version: lts/*
           cache: npm
-          cache-dependency-path: .github/lint-tools/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         if: steps.archetype.outputs.is_python_tool != 'true' && hashFiles('package.json') != ''

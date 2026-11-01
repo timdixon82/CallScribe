@@ -196,7 +196,7 @@ jobs:
         if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_python_tool != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
         env:
           PUPPETEER_EXECUTABLE_PATH: ${{ steps.chrome.outputs.chrome-path }}
-        run: pa11y --standard WCAG2AAA http://localhost:8080/index.html
+        run: pa11y --config .github/accessibility-tools/pa11y-chrome-launch.json --standard WCAG2AAA http://localhost:8080/index.html
 
       - name: axe-core at WCAG 2.2 AAA
         # Adapt the URL to match the project's entry point.

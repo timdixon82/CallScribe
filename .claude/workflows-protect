@@ -1,0 +1,7 @@
+
+# accessibility.yml: the project runs Pa11y with its own Chrome launch
+# configuration (no-sandbox), which the master template does not have.
+accessibility.yml
+# lint.yml: the project caches npm from its root package-lock.json, not from
+# the template's .github/lint-tools folder, which this project does not have.
+lint.yml

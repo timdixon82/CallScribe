@@ -270,4 +270,20 @@ The session-start hook reads every project's `.claude/backport-candidates.md` vi
 
 At the start of every AgentTeam session, include any such lines in the greeting — name the project and the candidate description — so Tim can see at a glance whether anything is waiting to move from a project into the team master. Do not omit them or defer them to a later part of the conversation.
 
+### CallScribe: release pull request exemption from the checks requirement
+
+This rule applies to CallScribe only. It sits in the PROJECT OVERLAY so template syncs do not remove it. It narrows the first item of the merge gate above (required checks pass) for one kind of pull request. See `docs/decisions/001-release-pr-checks-exemption.md`.
+
+Pull requests opened by the release bot never start checks by themselves. A release pull request may therefore merge without passing checks only when all of these hold:
+
+- The author is the release bot (`github-actions`).
+- The title starts with `chore(main): release`.
+- The changed files are limited to `.release-please-manifest.json`, `package.json`, `package-lock.json`, `public/assets/version.js`, `index.html` and `CHANGELOG.md`.
+
+Rules for using the exemption:
+
+- If the pull request touches any other file, the normal merge gate applies in full and checks must pass.
+- Verify the file list with `gh pr view <n> --json files` before presenting the merge to Tim.
+- The exemption removes only the checks requirement. Every other gate item still applies, and merging still needs Tim's express approval at the time.
+
 <!-- END PROJECT OVERLAY -->

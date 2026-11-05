@@ -16,7 +16,7 @@ Cross-cutting learnings flow to both this wiki and the global wiki at the time t
 
 ## Decisions
 
-No decision records yet. Architecture Decision Records are added to `decisions/` as they are made.
+- [Decision 001: Release pull request exemption from the checks requirement](decisions/001-release-pr-checks-exemption.md)
 
 ## Patterns
 

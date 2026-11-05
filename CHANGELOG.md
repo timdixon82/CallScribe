@@ -2,6 +2,14 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.36](https://github.com/timdixon82/CallScribe/compare/v0.2.35...v0.2.36) (2026-11-05)
+
+
+### Bug Fixes
+
+* **release:** add release-please config and manifest ([#4](https://github.com/timdixon82/CallScribe/issues/4)) ([2e09827](https://github.com/timdixon82/CallScribe/commit/2e0982758ee8e7c85eee45f7ff19fbe3920a5bd4))
+* **release:** keep index.html version in step with release-please ([#7](https://github.com/timdixon82/CallScribe/issues/7)) ([052e43d](https://github.com/timdixon82/CallScribe/commit/052e43d106166975a5ca6df021714ca89ac223bd))
+
 ## [0.2.35] - 2026-10-30
 
 ### Added

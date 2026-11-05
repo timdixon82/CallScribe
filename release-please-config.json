@@ -10,6 +10,10 @@
         {
           "type": "generic",
           "path": "public/assets/version.js"
+        },
+        {
+          "type": "generic",
+          "path": "index.html"
         }
       ]
     }

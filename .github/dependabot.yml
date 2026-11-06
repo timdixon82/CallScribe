@@ -22,6 +22,16 @@ updates:
     groups:
       javascript:
         patterns: ["*"]
+    ignore:
+      # Held back: see AgentTeam work folder 059-callscribe-dependabot-pr11.
+      # Vite 8 build rejects a Latin-1 comment in js-clipper (not valid UTF-8).
+      - dependency-name: vite
+        update-types: ["version-update:semver-major"]
+      # Held back: see AgentTeam work folder 059-callscribe-dependabot-pr11.
+      # transformers 4 changes WebGPU, tokenizers and caching; it needs real
+      # audio testing before adoption.
+      - dependency-name: "@huggingface/transformers"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /.github/accessibility-tools

@@ -14,9 +14,9 @@
     "lint": "find src scripts tests -type f \\( -name '*.js' -o -name '*.mjs' \\) -exec node --check {} +"
   },
   "dependencies": {
-    "@gutenye/ocr-browser": "^1.4.8",
+    "@gutenye/ocr-browser": "^1.4.9",
     "@huggingface/transformers": "^3.8.1",
-    "onnxruntime-web": "1.27.0"
+    "onnxruntime-web": "1.31.1"
   },
   "devDependencies": {
     "@gutenye/ocr-models": "^1.4.2",

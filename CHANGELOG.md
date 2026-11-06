@@ -2,6 +2,13 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.37](https://github.com/timdixon82/CallScribe/compare/v0.2.36...v0.2.37) (2026-11-06)
+
+
+### Bug Fixes
+
+* **deps:** point Dependabot at CallScribe's real manifests ([#9](https://github.com/timdixon82/CallScribe/issues/9)) ([47364ef](https://github.com/timdixon82/CallScribe/commit/47364ef582d9ba0475b70176aa29972e86379929))
+
 ## [0.2.36](https://github.com/timdixon82/CallScribe/compare/v0.2.35...v0.2.36) (2026-11-05)
 
 

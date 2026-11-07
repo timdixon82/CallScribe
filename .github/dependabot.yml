@@ -25,14 +25,17 @@ updates:
     ignore:
       # Held back: see AgentTeam work folder 059-callscribe-dependabot-pr11.
       # Vite 8 build rejects a Latin-1 comment in js-clipper (not valid UTF-8).
-      # Lift when the build works on vite 8. This hold also suppresses security
+      # Review by 2027-02-07. Lift when the build works on vite 8.
+      # This hold also suppresses security
       # update pull requests that need vite 8, so check the Dependabot alert
       # list for vite on a regular basis.
       - dependency-name: vite
         update-types: ["version-update:semver-major"]
       # Held back: see AgentTeam work folder 059-callscribe-dependabot-pr11.
       # transformers 4 changes WebGPU, tokenizers and caching; it needs real
-      # audio testing before adoption. This hold also suppresses security
+      # audio testing before adoption. Review by 2027-02-07. Lift when
+      # transformers 4 has passed that audio testing.
+      # This hold also suppresses security
       # update pull requests that need transformers 4, so check the Dependabot
       # alert list for @huggingface/transformers on a regular basis.
       - dependency-name: "@huggingface/transformers"

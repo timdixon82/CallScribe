@@ -42,7 +42,7 @@ updates:
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
-    directory: /.github/accessibility-tools
+    directory: /ci-tools/accessibility-tools
     schedule:
       interval: weekly
     cooldown:

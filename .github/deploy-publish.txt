@@ -1,0 +1,43 @@
+# Generated default, review before merging. Every path below is published to a
+# public site. Keep only what the site needs at run time; see the notes after this one.
+#
+# Publish list for GitHub Pages.
+#
+# This file decides what becomes public. The deploy workflow reads it,
+# publishes ONLY the paths named here, and stops (leaving the previous live
+# site up) if anything is wrong. It belongs to the project: the team template
+# sync creates it when it is missing and never overwrites it.
+#
+# A change to this file changes what is public, so the security reviewer
+# checks every pull request that touches it.
+#
+# One entry per line. Blank lines and lines starting with # are ignored.
+#
+#   /index.html        Publishes one file. The leading slash is required; it
+#                      anchors the path to the repository root.
+#   /assets/           A trailing slash publishes that whole folder.
+#   !/assets/old-*.js  Never publish matching paths, even inside a published
+#                      folder. Wildcards are allowed only on ! lines.
+#   require /VERSION   This file must exist, and not be empty, in the finished
+#                      site and on the live site. It publishes nothing by
+#                      itself: list the file or its folder as well.
+#
+# Not allowed, and the deploy fails with a message naming the line: a path
+# without a leading slash, "..", spaces, wildcards on an include line, and
+# /tests/ as includes. Also not allowed on an include or require line: a name
+# that starts with a dot (the upload step drops hidden files, so it would
+# never publish), and a symbolic link.
+#
+# Test files (*.test.*, *.spec.*, __tests__/) and node_modules never publish,
+# whatever is listed here. The deploy also fails if a tests folder, a key file
+# (*.pem, *.key, *.p12, id_rsa*) or a symbolic link ends up in the site.
+#
+# The lines below are the canonical static front-end layout. Remove folders
+# the project does not have; add a line for any other runtime path (for
+# example /fonts/ or /VERSION), and a require line for runtime files that sit
+# inside a whole-folder entry. The first line keeps the team shell scripts
+# that the template sync puts in scripts/ out of the public site.
+!/scripts/*.sh
+/index.html
+/scripts/
+require /index.html

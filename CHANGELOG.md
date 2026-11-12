@@ -2,6 +2,13 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.2.38](https://github.com/timdixon82/CallScribe/compare/v0.2.37...v0.2.38) (2026-11-12)
+
+
+### Bug Fixes
+
+* **deps:** update ocr-browser and onnxruntime-web, hold back vite 8 and transformers 4 ([#12](https://github.com/timdixon82/CallScribe/issues/12)) ([9d0e473](https://github.com/timdixon82/CallScribe/commit/9d0e473444b7a9f5e295873b98f35ffa5a0da9d3))
+
 ## [0.2.37](https://github.com/timdixon82/CallScribe/compare/v0.2.36...v0.2.37) (2026-11-06)
 
 

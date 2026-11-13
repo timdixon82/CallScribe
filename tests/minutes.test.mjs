@@ -225,4 +225,6 @@ test('HTML minutes export groups bullet items in semantic lists', async () => {
   assert.match(source, /function minutesHtmlBody/);
   assert.match(source, /<ul>\$\{list\.map/);
   assert.doesNotMatch(source, /safe\.startsWith\('- '\) \? `<li>/);
+  assert.match(source, /element\.textContent = String\(value \?\? ''\)/);
+  assert.doesNotMatch(source, /replaceAll\('&', '&amp;'\)/);
 });

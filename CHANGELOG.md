@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.4.2](https://github.com/timdixon82/CallScribe/compare/v0.4.1...v0.4.2) (2026-11-13)
+
+### Bug Fixes
+
+* Make the capture summary actionable: share a screen directly, or move keyboard focus to microphone, sharing and screenshot settings. Screenshot setup guides users to sharing first, then opens the mode selector once connected.
+
 ## [0.4.1](https://github.com/timdixon82/CallScribe/compare/v0.4.0...v0.4.1) (2026-11-13)
 
 ### Bug Fixes

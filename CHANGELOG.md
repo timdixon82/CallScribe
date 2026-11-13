@@ -2,6 +2,21 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.3.0](https://github.com/timdixon82/CallScribe/compare/v0.2.38...v0.3.0) (2026-11-13)
+
+
+### Features
+
+* add local AI meeting minutes ([73371f1](https://github.com/timdixon82/CallScribe/commit/73371f1f0da8ec530c91f4773d38585bc9bdc5d8))
+* **minutes:** add local AI meeting minutes ([d361973](https://github.com/timdixon82/CallScribe/commit/d361973ccf9f2e4e2bb292c7292ffc52238e2cb1))
+
+
+### Bug Fixes
+
+* **a11y:** expose standalone notes heading ([cc42d98](https://github.com/timdixon82/CallScribe/commit/cc42d98e26fe8a8315e94c815f25662f3a815a55))
+* **a11y:** preserve meeting notes heading order ([e839f3c](https://github.com/timdixon82/CallScribe/commit/e839f3cca54f23609c84865398c0458999418254))
+* **export:** safely escape generated HTML ([029124a](https://github.com/timdixon82/CallScribe/commit/029124a9aa6f6a132b512d71a94d2b77ba5e743f))
+
 ## [0.2.38](https://github.com/timdixon82/CallScribe/compare/v0.2.37...v0.2.38) (2026-11-12)
 
 

@@ -100,6 +100,7 @@ main > .primary-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(-
 .meeting-notes-controls label, #minutes-sections legend { font-weight: 700; }
 .meeting-notes-controls select, .meeting-notes-controls output { margin: 0; width: 100%; }
 #meeting-notes-panel, #minutes-customisation, #minutes-evidence-details { max-width: none; }
+#meeting-notes-heading { font-size: 1.5rem; }
 #minutes-editor { margin-top: 1.25rem; }
 #minutes-title { width: min(100%, 60rem); }
 #minutes-content { width: 100%; max-width: none; min-height: clamp(28rem, 60vh, 52rem); resize: vertical; }

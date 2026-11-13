@@ -67,3 +67,8 @@ a { color: var(--focus); }
   .capture-summary dl > div { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
 .capture-help { font-size: .875rem; color: var(--muted); margin-block: .5rem; }
+
+/* Source status includes explicit actions, with native focus and no hover dependency. */
+.capture-source-link { display: block; width: fit-content; padding-block: .35rem; margin-top: .15rem; font-size: .9rem; }
+.capture-source-action { display: block; width: auto; min-height: 2.5rem; margin: .35rem 0 0; padding: .35rem .5rem; font-size: .9rem; text-align: left; }
+.capture-source-link:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; }

@@ -39,7 +39,13 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
 
   const summary = document.createElement('div');
   summary.className = 'capture-summary';
-  summary.innerHTML = '<p id="capture-state" class="capture-state"></p><p id="capture-elapsed" hidden></p><dl><div><dt>Microphone</dt><dd id="capture-microphone"></dd></div><div><dt>App audio</dt><dd id="capture-app-audio"></dd></div><div><dt>Screenshots</dt><dd id="capture-screenshots"></dd></div></dl><p id="capture-announcement" class="sr-only" role="status" aria-atomic="true"></p>';
+  summary.innerHTML = `<p id="capture-state" class="capture-state"></p><p id="capture-elapsed" hidden></p>
+    <dl>
+      <div><dt>Microphone</dt><dd><span id="capture-microphone"></span><a class="capture-source-link" href="#microphone-select">Microphone settings</a></dd></div>
+      <div><dt>App audio</dt><dd><span id="capture-app-audio"></span><button id="summary-share-screen" class="capture-source-action" type="button">Share screen and audio</button></dd></div>
+      <div><dt>Screenshots</dt><dd><span id="capture-screenshots"></span><a id="summary-screenshot-settings" class="capture-source-link" href="#connect-app-audio">Set up screenshots</a></dd></div>
+    </dl>
+    <p id="capture-announcement" class="sr-only" role="status" aria-atomic="true"></p>`;
   capture.querySelector('h2').after(summary, sessionActions, ui['app-status'], ui['session-status']);
   ui['app-status'].classList.remove('sr-only');
   const micHelp = document.createElement('p');
@@ -75,8 +81,9 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   ui['microphone-status'].classList.remove('sr-only');
 
   const screenSettings = document.querySelector('.screen-capture-settings');
+  screenSettings.id = 'screen-audio-settings';
   screenSettings.querySelector('legend').textContent = 'Screen and app audio';
-  screenSettings.querySelector('.screen-audio-note').textContent = 'Choose a tab, window or screen in the browser dialog. Select its audio when available to transcribe other participants.';
+  screenSettings.querySelector('.screen-audio-note').textContent = 'Choose a tab, window or screen in the browser dialog. Select its audio when available to transcribe other participants. Share a screen first to enable screenshot settings.';
   ui['share-system-audio'].closest('label').hidden = true;
   const shareButton = document.createElement('button');
   shareButton.id = 'connect-app-audio';
@@ -92,6 +99,23 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   previewContent.id = 'screen-preview-content';
   preview.append(previewContent);
   screenSettings.append(screenshotSettings, preview);
+  // Summary shortcuts move real keyboard focus, rather than only scrolling the page.
+  summary.querySelector('a[href="#microphone-select"]').addEventListener('click', (event) => {
+    event.preventDefault();
+    focusCaptureControl(ui['microphone-select']);
+  });
+  const quickShare = document.getElementById('summary-share-screen');
+  quickShare.addEventListener('click', () => {
+    if (ui['share-system-audio'].checked) focusCaptureControl(shareButton);
+    else shareButton.click();
+  });
+  document.getElementById('summary-screenshot-settings').addEventListener('click', (event) => {
+    event.preventDefault();
+    if (ui['share-system-audio'].checked) {
+      screenshotSettings.open = true;
+      focusCaptureControl(ui['screenshot-mode']);
+    } else focusCaptureControl(shareButton);
+  });
   capture.insertBefore(document.querySelector('.top-sources'), language);
   capture.insertBefore(screenSettings, language);
   // No duplicate action row below the transcript or inside sharing settings.
@@ -129,6 +153,15 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   document.querySelectorAll('a[href="#capture-panel"], a[href="#transcript-panel"]').forEach((link) => link.addEventListener('click', () => document.querySelector(link.getAttribute('href')).focus()));
 }
 
+function focusCaptureControl(control) {
+  // Revealing ancestors keeps these shortcuts useful if settings gain more disclosures.
+  for (let parent = control.parentElement; parent; parent = parent.parentElement) {
+    if (parent.tagName === 'DETAILS') parent.open = true;
+  }
+  control.focus({ preventScroll: true });
+  control.scrollIntoView({ block: 'center', behavior: 'auto' });
+}
+
 function setText(id, value) {
   const element = document.getElementById(id);
   if (element && element.textContent !== value) element.textContent = value;
@@ -147,6 +180,11 @@ export function updateWorkspace(state, { session, ui, screenshotMode, ocrEnabled
   setText('capture-announcement', `${state.transcription}. Microphone: ${state.microphone}. App audio: ${state.appAudio}. Screenshots: ${state.screenshots}.`);
   const shareButton = document.getElementById('connect-app-audio');
   shareButton.disabled = ui['share-system-audio'].disabled;
+  document.getElementById('summary-share-screen').disabled = shareButton.disabled;
+  setText('summary-share-screen', sharing ? 'Sharing settings' : 'Share screen and audio');
+  const screenshotLink = document.getElementById('summary-screenshot-settings');
+  setText('summary-screenshot-settings', sharing ? 'Screenshot settings' : 'Set up screenshots');
+  screenshotLink.href = sharing ? '#screenshot-mode' : '#connect-app-audio';
   setText('connect-app-audio', sharing ? 'Stop sharing screen and audio' : 'Share screen and audio');
   document.getElementById('screenshot-settings').hidden = !sharing;
   document.getElementById('screen-preview').hidden = !sharing;

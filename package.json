@@ -16,6 +16,8 @@
   "dependencies": {
     "@gutenye/ocr-browser": "^1.4.9",
     "@huggingface/transformers": "^3.8.1",
+    "@mlc-ai/web-llm": "^0.2.88",
+    "docx": "^9.15.3",
     "onnxruntime-web": "1.31.1"
   },
   "devDependencies": {

@@ -27,6 +27,9 @@
 .session-start input { width: min(100%, 32rem); }
 .capture-session-actions { margin: .75rem 0; }
 [hidden] { display: none !important; }
+.button-like { display: inline-flex; align-items: center; min-height: 3rem; margin: .35rem .5rem .35rem 0; padding: .5rem .65rem; border: 2px solid var(--border); border-radius: .5rem; background: var(--button); color: var(--text); cursor: pointer; font-weight: 700; }
+.button-like:hover { background: var(--selected); }
+.minutes-model-settings { display: grid; gap: .25rem; margin-bottom: 1rem; }
 .voice-settings { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 2fr); gap: .5rem 1rem; max-width: 50rem; align-items: center; }
 .voice-settings button { grid-column: 1 / -1; justify-self: start; }
 .screen-capture-settings { max-width: 48rem; margin: .75rem 0; padding: .6rem .75rem .75rem; border: 1px solid var(--border); }
@@ -93,6 +96,22 @@ main > .primary-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(-
 .processing-controls { display: flex; flex-wrap: wrap; gap: .5rem .75rem; margin-top: .5rem; }
 .speaker-model-status { margin: 0; }
 .speaker-separation-status { margin: .75rem 0; padding: .6rem .75rem; border: 1px solid var(--border); border-left: .3rem solid var(--focus); border-radius: .4rem; background: var(--selected); color: var(--text); }
+.meeting-notes-controls { display: grid; grid-template-columns: repeat(2, minmax(14rem, 1fr)); gap: .35rem .75rem; max-width: 50rem; }
+.meeting-notes-controls label, #minutes-sections legend { font-weight: 700; }
+.meeting-notes-controls select, .meeting-notes-controls output { margin: 0; width: 100%; }
+#meeting-notes-panel, #minutes-customisation, #minutes-evidence-details { max-width: none; }
+#meeting-notes-heading { font-size: 1.5rem; }
+#minutes-editor { margin-top: 1.25rem; }
+#minutes-title { width: min(100%, 60rem); }
+#minutes-content { width: 100%; max-width: none; min-height: clamp(28rem, 60vh, 52rem); resize: vertical; }
+#minutes-sections { display: flex; flex-wrap: wrap; gap: .35rem 1rem; margin: 1rem 0; }
+#minutes-sections label { display: flex; gap: .35rem; align-items: center; }
+.minutes-section-order { display: flex; flex-wrap: wrap; gap: .4rem; align-items: end; margin: .5rem 0 1rem; }
+.minutes-section-order label { display: grid; gap: .2rem; font-weight: 700; }
+.minutes-section-order select, .minutes-section-order button { min-height: 2.5rem; margin: 0; }
+#minutes-evidence { margin-top: 1rem; }
+.minutes-evidence-item { border-top: 1px solid var(--border); padding: .75rem 0; }
+.minutes-evidence-item p { margin: .25rem 0; }
 .transcript-icon-button { font-size: 1.2rem; }
 .transcript-segment textarea { flex-basis: 100%; min-height: 3rem; }
 .people-add, .people-command, .speaker-assignment-body { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem .75rem; margin-block: .75rem; }
@@ -118,4 +137,6 @@ main > .primary-section { margin: 1rem 0; padding: 1rem; border: 1px solid var(-
 .site-footer nav { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
 .site-footer a { color: var(--focus); }
 .site-footer .sep { color: var(--muted); }
-@media (max-width: 40rem) { .voice-settings, .transcript-controls, .transcript-option-groups { grid-template-columns: 1fr; } .screen-capture-fields { display: grid; grid-template-columns: 1fr; } .model-picker { grid-template-columns: 1fr; } .model-picker label, .model-picker output { grid-column: auto; } }
+/* Use available desktop width while retaining the small-screen rules below. */
+main, .app-header-inner, .site-footer { max-width: 1440px; }
+@media (max-width: 40rem) { .voice-settings, .transcript-controls, .transcript-option-groups, .meeting-notes-controls { grid-template-columns: 1fr; } .screen-capture-fields { display: grid; grid-template-columns: 1fr; } .model-picker { grid-template-columns: 1fr; } .model-picker label, .model-picker output { grid-column: auto; } }

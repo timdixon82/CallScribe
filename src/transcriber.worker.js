@@ -1,10 +1,10 @@
 import { env, pipeline } from '@huggingface/transformers';
 
+// Cache Storage is checked before a remote request. Do not also probe Vite's
+// SPA fallback as a local `/models/` directory: it returns index.html with a
+// 200 response, which otherwise gets mistaken for a model asset.
 env.useBrowserCache = true;
-// Transformers.js disables cached/local lookups in a browser worker by default.
-// This application deliberately uses Cache Storage for downloaded model files,
-// so cached-only loads must be explicitly permitted.
-env.allowLocalModels = true;
+env.allowLocalModels = false;
 let transcriber; let activeId;
 const send = (type, detail = {}) => postMessage({ type, ...detail });
 
@@ -13,14 +13,14 @@ async function load(model, localOnly, preferredDevice) {
   send('model-status', { status: localOnly ? 'Verifying cached model' : 'Preparing download', modelId: model.id });
   let device = preferredDevice || (self.navigator.gpu ? 'webgpu' : 'wasm');
   try {
-    transcriber = await pipeline('automatic-speech-recognition', model.repo, { device, dtype: device === 'webgpu' ? 'q4' : 'q8', local_files_only: localOnly, progress_callback: progress });
+    transcriber = await pipeline('automatic-speech-recognition', model.repo, { device, dtype: device === 'webgpu' ? 'q4' : 'q8', progress_callback: progress });
   } catch (error) {
     if (device !== 'webgpu') throw error;
     // Some published ONNX model variants do not provide WebGPU's requested dtype.
     // Fall back to the widely supported local WASM q8 route before reporting failure.
     device = 'wasm';
     send('model-status', { status: 'WebGPU was unavailable for this model; retrying locally with WebAssembly', modelId: model.id });
-    transcriber = await pipeline('automatic-speech-recognition', model.repo, { device, dtype: 'q8', local_files_only: localOnly, progress_callback: progress });
+    transcriber = await pipeline('automatic-speech-recognition', model.repo, { device, dtype: 'q8', progress_callback: progress });
   }
   activeId = model.id;
   send('model-ready', { modelId: model.id, device });

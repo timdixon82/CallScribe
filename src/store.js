@@ -1,5 +1,5 @@
 const DB_NAME = 'local-browser-transcriber';
-const DB_VERSION = 3;
+const DB_VERSION = 5;
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -14,6 +14,11 @@ function openDb() {
       if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
       // Names are user-entered labels only. No voice data or biometric templates are stored.
       if (!db.objectStoreNames.contains('participants')) db.createObjectStore('participants', { keyPath: 'id' });
+      // Generated meeting notes are deliberately separate from immutable source
+      // transcripts. A note retains segment and screenshot references rather
+      // than duplicating audio, image blobs, or OCR text.
+      if (!db.objectStoreNames.contains('meetingNotes')) { const notes = db.createObjectStore('meetingNotes', { keyPath: 'sessionId' }); notes.createIndex('updatedAt', 'updatedAt'); }
+      if (!db.objectStoreNames.contains('minutesRuns')) db.createObjectStore('minutesRuns', { keyPath: 'sessionId' });
     };
     request.onsuccess = () => resolve(request.result);
   });
@@ -89,3 +94,9 @@ export const deleteScreenshots = async (sessionId) => {
   const items = await getScreenshots(sessionId);
   return Promise.all(items.map((item) => run('screenshots', 'readwrite', (store) => store.delete(item.id))));
 };
+export const getMeetingNotes = (sessionId) => run('meetingNotes', 'readonly', (store) => store.get(sessionId));
+export const putMeetingNotes = (value) => run('meetingNotes', 'readwrite', (store) => store.put(value));
+export const deleteMeetingNotes = (sessionId) => run('meetingNotes', 'readwrite', (store) => store.delete(sessionId));
+export const getMinutesRun = (sessionId) => run('minutesRuns', 'readonly', (store) => store.get(sessionId));
+export const putMinutesRun = (value) => run('minutesRuns', 'readwrite', (store) => store.put(value));
+export const deleteMinutesRun = (sessionId) => run('minutesRuns', 'readwrite', (store) => store.delete(sessionId));

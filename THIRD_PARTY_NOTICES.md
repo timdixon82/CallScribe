@@ -13,6 +13,7 @@ licences remain their own; this repository's licence does not change them.
 | `@gutenye/ocr-browser` | 1.4.8 | MIT |
 | `@gutenye/ocr-models` | 1.4.2 | MIT |
 | `@techstark/opencv-js` | 4.9.0-release.3 | Apache-2.0 |
+| `docx` | 9.15.3 | MIT |
 
 The packaged PP-OCRv4 detection and recognition assets originate from the
 PaddleOCR ecosystem, which is licensed under Apache-2.0.

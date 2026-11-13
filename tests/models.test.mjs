@@ -15,10 +15,11 @@ test('Moonshine Base alone is automatic default', () => {
   assert.equal(findModel('unknown'), undefined);
 });
 
-test('worker permits cached-only model loads', async () => {
+test('worker checks browser cache without mistaking the SPA fallback for local model files', async () => {
   const worker = await readFile(new URL('../src/transcriber.worker.js', import.meta.url), 'utf8');
   assert.match(worker, /env\.useBrowserCache\s*=\s*true/);
-  assert.match(worker, /env\.allowLocalModels\s*=\s*true/);
+  assert.match(worker, /env\.allowLocalModels\s*=\s*false/);
+  assert.doesNotMatch(worker, /local_files_only/);
 });
 
 test('launch restores a verified user-selected model, otherwise uses Moonshine Base', async () => {

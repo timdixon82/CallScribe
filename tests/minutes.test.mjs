@@ -201,6 +201,7 @@ test('the notes interface keeps generation inline, remembers customisation, and 
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../src/compact.css', import.meta.url), 'utf8'),
   ]);
+  assert.match(page, /<h2 id="meeting-notes-heading">Meeting notes<\/h2>/);
   assert.match(source, /putSetting\('minutesSettings', selectedMinutesSettings\(\)\)/);
   assert.match(source, /getSetting\('minutesSettings'\)/);
   assert.doesNotMatch(source, /post-stop-dialog/);

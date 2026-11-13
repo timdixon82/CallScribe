@@ -114,11 +114,11 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(ocr, /appleMobile/);
 });
 
-test('each manual screenshot control has its own capture action and reports its outcome in the transcript', async () => {
+test('the single manual screenshot control has its capture action and reports its outcome in the transcript', async () => {
   const app = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   assert.match(app, /function captureManualScreenshot/);
   assert.match(app, /captureScreen\.addEventListener\('click', captureManualScreenshot\)/);
-  assert.match(app, /duplicate\.addEventListener\('click', captureManualScreenshot\)/);
+  assert.doesNotMatch(app, /cloneNode\(true\)/);
   assert.match(app, /setSessionStatus\(message\)/);
 });
 
@@ -295,7 +295,7 @@ test('toggle controls use native switches and primary sections are not duplicate
   assert.match(page, /Automatically separate speakers/);
   assert.match(page, /id="enable-speaker-separation" type="checkbox" switch/);
   assert.match(app, /input\.checked = enabled/);
-  assert.match(app, /section-summary-heading/);
+  assert.match(app, /buildWorkspace\(/);
   assert.equal((page.match(/id="transcript-heading"/g) || []).length, 1);
   assert.equal((page.match(/id="voice-settings-section"/g) || []).length, 1);
 });

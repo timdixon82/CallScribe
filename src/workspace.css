@@ -1,0 +1,69 @@
+/* Both columns remain in document flow: no floating controls or nested scrolling. */
+.capture-workspace { display: grid; grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.capture-workspace > section { min-width: 0; margin: 0; }
+.workspace-navigation { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin: .5rem 0 1rem; }
+a { color: var(--focus); }
+.workspace-navigation a { padding-block: .4rem; }
+#capture-panel, #transcript-panel { scroll-margin-block: 1rem; }
+#capture-panel:focus, #transcript-panel:focus { outline: 3px solid var(--focus); outline-offset: 3px; }
+.capture-workspace h2 { margin-top: 0; }
+.capture-summary { padding: .75rem; border: 1px solid var(--border); border-radius: .5rem; background: var(--bg); }
+.capture-state { margin: 0; font-size: 1.15rem; font-weight: 800; }
+#capture-elapsed { margin: .25rem 0; font-variant-numeric: tabular-nums; }
+.capture-summary dl { margin: .75rem 0 0; }
+.capture-summary dl > div + div { margin-top: .5rem; }
+.capture-summary dt { margin: 0; }
+.capture-summary dd { margin: 0; font-size: .95rem; }
+.capture-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin: .75rem 0; }
+.capture-actions button { width: 100%; min-width: 0; margin: 0; padding: .5rem; flex-wrap: wrap; overflow-wrap: anywhere; }
+.capture-actions .button-label { display: inline; }
+.capture-actions .primary-action { grid-column: 1 / -1; border-color: var(--focus); background: var(--selected); }
+.capture-actions .secondary-action { grid-column: 1 / -1; }
+.capture-actions .icon-action::after { display: none; }
+#capture-panel #app-status, #capture-panel #session-status { font-size: .95rem; overflow-wrap: anywhere; }
+#capture-panel .top-sources { display: block; }
+#capture-panel .top-sources > div { min-width: 0; }
+#capture-panel .microphone-controls { display: grid; grid-template-columns: 1fr; gap: .35rem; }
+#microphone-select { width: 100%; min-width: 0; margin: 0; }
+#capture-panel .toggle-slider { min-width: 0; width: 100%; padding-inline: .25rem; }
+#capture-panel .processing-controls { display: block; }
+#capture-panel .screen-capture-settings { min-width: 0; width: 100%; margin-block: 1rem; }
+#capture-panel select, #capture-panel input:not([type="checkbox"]), #capture-panel progress { max-width: 100%; width: 100%; min-width: 0; }
+#capture-panel .model-picker, #capture-panel .screen-capture-fields, #capture-panel .voice-settings { display: grid; grid-template-columns: minmax(0, 1fr); }
+#capture-panel .model-picker > *, #capture-panel .voice-settings > * { grid-column: auto; }
+#capture-panel .model-download-status { min-height: 0; }
+#capture-panel .speaker-separation-status { padding: .5rem; }
+#capture-panel .downloaded-model-list li { flex-wrap: wrap; }
+.workspace-details { margin-block: .75rem; min-width: 0; }
+.workspace-details > summary { padding: .5rem 0; cursor: pointer; font-weight: 700; }
+#capture-panel .collapsible-section { padding: .75rem; }
+#capture-panel .collapsible-section summary { font-size: 1rem; }
+#capture-panel .live-screen-preview { width: 100%; }
+#microphone-status, #system-audio-status { font-size: .9rem; font-weight: 400; overflow-wrap: anywhere; }
+#transcript-panel .transcript-controls, #transcript-panel .transcript-option-groups, #transcript-panel .meeting-notes-controls { grid-template-columns: minmax(0, 1fr); }
+#transcript-panel .session-start { margin-top: 0; }
+#transcript-panel .session-start input { width: 100%; }
+#meeting-notes-disclosure { border-top: 1px solid var(--border); padding-top: .5rem; }
+#meeting-notes-panel { margin: .5rem 0 0; box-shadow: none; }
+#meeting-notes-heading { font-size: 1.25rem; }
+#transcript-list { padding-left: 1.5rem; }
+.segment-text { overflow-wrap: anywhere; min-width: 0; }
+/* Match visual and reading order at narrow widths and browser zoom. */
+@media (max-width: 64rem) { .capture-workspace { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 40rem) {
+  .theme-control { flex-wrap: wrap; }
+  #detected-speaker-list label { grid-template-columns: minmax(0, 1fr); }
+  .capture-workspace > section { padding: .75rem; }
+}
+/* Keep control labels next to their selectors without making the page wider. */
+#capture-panel .microphone-controls { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+#capture-panel .microphone-switch { width: auto; gap: .4rem; padding: .25rem; }
+#capture-panel select, #capture-panel input, #transcript-panel input { margin-inline: 0; }
+.theme-control .icon-action::after { left: auto; right: 0; transform: none; }
+.capture-summary dl > div { display: grid; grid-template-columns: 6.3rem minmax(0, 1fr); gap: .5rem; }
+@media (max-width: 24rem) {
+  #capture-panel .microphone-controls { grid-template-columns: minmax(0, 1fr); }
+  #capture-panel .microphone-switch { justify-self: start; }
+  .capture-summary dl > div { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+.capture-help { font-size: .875rem; color: var(--muted); margin-block: .5rem; }

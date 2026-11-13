@@ -203,6 +203,7 @@ document.addEventListener('keydown', (event) => {
   const dialog = $('keyboard-shortcuts-dialog');
   if (event.key === '?') { event.preventDefault(); dialog?.showModal?.(); return; }
   if (event.key === '/') { event.preventDefault(); ui['transcript-search'].focus(); return; }
+  if (event.key === ' ' && target instanceof Element && target.closest('button, summary, a[href], [role="button"], [role="checkbox"], [role="switch"]')) return;
   if (event.key === ' ') { if (!ui['pause-session'].disabled) { event.preventDefault(); ui['pause-session'].click(); } return; }
   const key = event.key.toLowerCase();
   if (key === 'r') { if (!ui['start-session'].disabled) ui['start-session'].click(); else if (paused && !ui['pause-session'].disabled) ui['pause-session'].click(); return; }

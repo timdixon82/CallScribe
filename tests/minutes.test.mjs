@@ -216,7 +216,7 @@ test('the notes interface keeps generation inline, remembers customisation, and 
 
 test('the application shell cache is versioned and removes only prior shell caches', async () => {
   const worker = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
-  assert.match(worker, /callscribe-shell-v20/);
+  assert.match(worker, /callscribe-shell-v21/);
   assert.match(worker, /key\.startsWith\('callscribe-shell-'\)/);
   assert.match(worker, /clients\.claim\(\)/);
   assert.match(worker, /skipWaiting\(\)/);

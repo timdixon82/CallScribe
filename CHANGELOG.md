@@ -2,6 +2,12 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.4.1](https://github.com/timdixon82/CallScribe/compare/v0.4.0...v0.4.1) (2026-11-13)
+
+### Bug Fixes
+
+* Preserve native Space activation on focused buttons and disclosures during recording. The global pause/resume shortcut continues to work from page content.
+
 ## [0.4.0](https://github.com/timdixon82/CallScribe/compare/v0.3.0...v0.4.0) (2026-11-13)
 
 ### Features

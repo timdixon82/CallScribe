@@ -2,6 +2,19 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.5.0](https://github.com/timdixon82/CallScribe/compare/v0.4.2...v0.5.0) (2026-11-13)
+
+### Features
+
+* Make Markdown with embedded screenshots the default transcript export.
+* Add Microsoft Word transcript export with timestamps, speaker labels, embedded screenshots and alternative text. Exports include the full transcript regardless of display filters.
+* Add an accessible What’s new page covering the latest exports and recent capture-workspace improvements.
+
+### Bug Fixes
+
+* Preserve the full changelog destination when updating old repository links, and link directly to it from the footer.
+* Use the current CallScribe website address in export provenance.
+
 ## [0.4.2](https://github.com/timdixon82/CallScribe/compare/v0.4.1...v0.4.2) (2026-11-13)
 
 ### Bug Fixes

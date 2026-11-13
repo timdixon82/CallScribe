@@ -2,6 +2,21 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.4.0](https://github.com/timdixon82/CallScribe/compare/v0.3.0...v0.4.0) (2026-11-13)
+
+### Features
+
+* Add a two-column capture and transcript workspace that stacks at narrow widths and browser zoom, with one page scrollbar and direct navigation links.
+* Show live microphone, app-audio and screenshot state beside a single set of visibly labelled transcription controls. Distinguish microphone exclusion, blocked access, and screen sharing without audio.
+* Keep advanced recognition, voice processing, screenshot, preview and meeting-notes options available through disclosures; show interval and OCR detail only when relevant.
+
+### Bug Fixes
+
+* Keep the microphone connection checkbox labelled beside its selector, retaining native switch behaviour.
+* Preserve unchanged transcript entries and editing focus as updates arrive; provide useful empty states.
+* Pause screenshot capture with transcription, and return keyboard focus to the next available action after Record or Stop.
+* Rotate the application shell cache so existing installations receive the new layout without removing saved transcripts or downloaded models.
+
 ## [0.3.0](https://github.com/timdixon82/CallScribe/compare/v0.2.38...v0.3.0) (2026-11-13)
 
 

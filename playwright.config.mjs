@@ -9,7 +9,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
-  use: { baseURL: `http://localhost:${port}`, trace: 'retain-on-failure' },
+  use: { baseURL: `http://localhost:${port}`, // Traces keep page content: tests must use synthetic data only, never real calls or people.
+    trace: 'retain-on-failure' },
   projects: [{
     name: 'chromium',
     use: {

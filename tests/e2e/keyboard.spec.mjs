@@ -67,3 +67,17 @@ test('settings tabs work with arrow keys', async ({ page }) => {
   await expect(page.getByRole('tab', { name: 'Settings' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('tab', { name: 'Settings' })).toBeFocused();
 });
+
+test('import control is a keyboard-operable button that opens the file chooser', async ({ page }) => {
+  await page.goto('/index.html');
+  await openPriorSessions(page);
+  const button = page.getByRole('button', { name: 'Import CallScribe Markdown' });
+  await button.focus();
+  await expect(button).toBeFocused();
+  const chooser = page.waitForEvent('filechooser');
+  await page.keyboard.press('Enter');
+  expect(await chooser).toBeTruthy();
+  const second = page.waitForEvent('filechooser');
+  await page.keyboard.press('Space');
+  expect(await second).toBeTruthy();
+});

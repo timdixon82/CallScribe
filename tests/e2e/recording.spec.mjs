@@ -4,7 +4,7 @@ import { test, expect, storedCounts } from './helpers.mjs';
 test('fake microphone: record, pause, resume and stop saves a session', async ({ page }) => {
   await page.goto('/index.html');
   const start = page.locator('#start-session');
-  if (await start.isDisabled()) await page.locator('#model-action').click();
+  // No branching on Start's state here: on a slow runner it is still disabled while the stubbed model loads.
   await expect(start).toBeEnabled({ timeout: 15000 });
   // The app connects the (fake) microphone by itself once permission is granted.
   await expect(page.locator('#microphone-status')).toContainText(/Microphone on/i, { timeout: 15000 });

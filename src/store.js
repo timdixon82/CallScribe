@@ -45,7 +45,6 @@ export const putParticipant = (value) => run('participants', 'readwrite', (store
 export const removeParticipant = (id) => run('participants', 'readwrite', (store) => store.delete(id));
 export const putSession = (value) => run('sessions', 'readwrite', (store) => store.put(value));
 export const getSessions = () => run('sessions', 'readonly', (store) => store.getAll());
-export const removeSession = (id) => run('sessions', 'readwrite', (store) => store.delete(id));
 export const putSegment = (value) => run('segments', 'readwrite', (store) => store.put(value));
 export const getSegments = async (sessionId) => {
   const db = await openDb();
@@ -54,10 +53,6 @@ export const getSegments = async (sessionId) => {
     request.onsuccess = () => { db.close(); resolve(request.result); };
     request.onerror = () => { db.close(); reject(request.error); };
   });
-};
-export const deleteSegments = async (sessionId) => {
-  const items = await getSegments(sessionId);
-  return Promise.all(items.map((item) => run('segments', 'readwrite', (store) => store.delete(item.id))));
 };
 export async function removeParticipantFromSegments(participantId) {
   const db = await openDb();
@@ -90,13 +85,8 @@ export const getScreenshots = async (sessionId) => {
     request.onerror = () => { db.close(); reject(request.error); };
   });
 };
-export const deleteScreenshots = async (sessionId) => {
-  const items = await getScreenshots(sessionId);
-  return Promise.all(items.map((item) => run('screenshots', 'readwrite', (store) => store.delete(item.id))));
-};
 export const getMeetingNotes = (sessionId) => run('meetingNotes', 'readonly', (store) => store.get(sessionId));
 export const putMeetingNotes = (value) => run('meetingNotes', 'readwrite', (store) => store.put(value));
-export const deleteMeetingNotes = (sessionId) => run('meetingNotes', 'readwrite', (store) => store.delete(sessionId));
 export const getMinutesRun = (sessionId) => run('minutesRuns', 'readonly', (store) => store.get(sessionId));
 export const putMinutesRun = (value) => run('minutesRuns', 'readwrite', (store) => store.put(value));
 export const deleteMinutesRun = (sessionId) => run('minutesRuns', 'readwrite', (store) => store.delete(sessionId));

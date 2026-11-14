@@ -42,3 +42,8 @@ test('a bundle write that fails stores nothing', async () => {
   assert.ok(!(await getSessions()).some((item) => item.id === 'bad'));
   assert.equal((await getSegments('bad')).length, 0);
 });
+
+test('the unused per-store delete helpers are gone', async () => {
+  const store = await import('../src/store.js');
+  for (const name of ['removeSession', 'deleteSegments', 'deleteScreenshots', 'deleteMeetingNotes']) assert.equal(store[name], undefined, name);
+});

@@ -21,4 +21,15 @@ for (const file of readdirSync(runtime)) {
   if (/\.(wasm|mjs)$/.test(file) || /^ort-.*\.js$/.test(file)) copyFileSync(join(runtime, file), join(runtimeOutput, file));
 }
 
+// Transformers.js bundles its own ONNX Runtime build, so it needs its own wasm
+// files (not the ones above). They sit in ort-tfjs/ and replace the jsDelivr default.
+const tfjsDist = join(root, 'node_modules', '@huggingface', 'transformers', 'dist');
+const tfjsOutput = join(root, 'public', 'ort-tfjs');
+mkdirSync(tfjsOutput, { recursive: true });
+for (const file of ['ort-wasm-simd-threaded.jsep.mjs', 'ort-wasm-simd-threaded.jsep.wasm']) {
+  const source = join(tfjsDist, file);
+  if (!existsSync(source)) throw new Error(`Missing Transformers.js runtime file: ${source}`);
+  copyFileSync(source, join(tfjsOutput, file));
+}
+
 console.log('Copied local PaddleOCR and ONNX Runtime assets.');

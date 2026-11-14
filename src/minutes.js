@@ -1,5 +1,7 @@
+import { HF_REVISIONS } from './model-manifest.js';
+
 export const MINUTES_MODELS = [
-  { id: 'qwen3-0.6b', name: 'Qwen3 0.6B', repo: 'onnx-community/Qwen3-0.6B-ONNX', webllmModel: 'Qwen3-0.6B-q4f16_1-MLC', dtype: 'q4f16', download: 'about 570 MB', requirement: 'WebGPU recommended; lightweight extraction.', tier: 'lightweight' },
+  { id: 'qwen3-0.6b', name: 'Qwen3 0.6B', repo: 'onnx-community/Qwen3-0.6B-ONNX', revision: HF_REVISIONS['onnx-community/Qwen3-0.6B-ONNX'], webllmModel: 'Qwen3-0.6B-q4f16_1-MLC', dtype: 'q4f16', download: 'about 570 MB', requirement: 'WebGPU recommended; lightweight extraction.', tier: 'lightweight' },
   { id: 'qwen3-4b', name: 'Qwen3 4B', webllmModel: 'Qwen3-4B-q4f16_1-MLC', download: 'about 2.8 GB', requirement: 'WebGPU and at least 8 GB free memory/storage recommended.', tier: 'detailed' },
 ];
 

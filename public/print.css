@@ -1,0 +1,6 @@
+body { font: 12pt/1.5 system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; color: #111; }
+h1, h2 { line-height: 1.2; }
+figure { margin: 1.5rem 0; break-inside: avoid; }
+img { max-width: 100%; height: auto; }
+figcaption { font-size: .9em; }
+@media print { body { max-width: none; margin: 0; } h1, h2 { break-after: avoid; } }

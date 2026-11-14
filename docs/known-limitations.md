@@ -26,3 +26,16 @@ This is a static MVP with real browser APIs and a real local Transformers.js Moo
 ## Model distribution
 
 The model catalogue uses the browser-compatible repositories published for Transformers.js. Model downloads use the configured Hugging Face repository only when a model is first loaded. After a successful cached model load, the worker requests local files only.
+
+## Content Security Policy limits
+
+The Content Security Policy is set in a meta tag in each page, not in a response header. This has limits:
+
+- It cannot use `frame-ancestors`, so the policy does not stop other sites from putting the app in a frame.
+- It cannot send violation reports, so blocked requests are not reported anywhere.
+- It cannot use `sandbox`.
+- It does not restrict where the page can navigate to.
+- It does not govern worker scripts that load from this site. The automated test for the workers checks the hosts they contact, but it does not prove that the policy is enforced in them.
+
+A policy sent as a response header would remove these limits. It needs a proxy or a host that can set headers. Tim chose not to add one for now.
+

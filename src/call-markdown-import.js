@@ -60,7 +60,12 @@ export function parseBlocks(markdown) {
  * Parse and validate everything, with no writes. Returns the records to store and the skipped blocks.
  * Throws before anything is stored if the file is too large or holds no usable passage.
  */
-export async function parseCallScribeMarkdown(file, now = Date.now()) {
+// Decodes the image to read its size. Returns zeros where the browser cannot decode (or has no createImageBitmap), so import never fails on it.
+export async function measureImage(blob) {
+  try { if (typeof createImageBitmap !== 'function') return { width: 0, height: 0 }; const bitmap = await createImageBitmap(blob); const size = { width: bitmap.width, height: bitmap.height }; bitmap.close?.(); return size; } catch { return { width: 0, height: 0 }; }
+}
+
+export async function parseCallScribeMarkdown(file, now = Date.now(), measure = measureImage) {
   if (file.size > MAX_IMPORT_BYTES) throw new Error(`The file is larger than the ${MAX_IMPORT_BYTES / 1024 / 1024} megabyte limit.`);
   const { blocks, skipped } = parseBlocks(await file.text());
   if (!blocks.length) throw new Error('No CallScribe Mic, App, or Screenshot headings were found. Choose an exported CallScribe Markdown file.');
@@ -79,7 +84,7 @@ export async function parseCallScribeMarkdown(file, now = Date.now()) {
       let blob; try { blob = await (await fetch(dataUrl.url)).blob(); } catch { skipped.push(`Screenshot image could not be read: ${entry.heading.slice(0, 60)}`); continue; }
       const screenshotId = crypto.randomUUID(); let ocrText = textFromBlock(entry.body.replace(/^\[[^\]\n]*\]$/gm, '').replace(/^Screenshot OCR:\s*/m, ''));
       if (ocrText.length > MAX_IMPORT_TEXT_CHARS) { skipped.push(`Screenshot text too long, kept the image only: ${entry.heading.slice(0, 60)}`); ocrText = ''; }
-      screenshots.push({ id: screenshotId, sessionId: id, capturedAt, reason: 'Imported screenshot', width: 0, height: 0, blob, ocrState: ocrText ? 'ready' : 'off', ocrText });
+      screenshots.push({ id: screenshotId, sessionId: id, capturedAt, reason: 'Imported screenshot', ...(await measure(blob)), blob, ocrState: ocrText ? 'ready' : 'off', ocrText });
       segments.push({ ...base, id: crypto.randomUUID(), source: 'screen', text: '[Imported screenshot]', screenshotId });
       if (ocrText) segments.push({ ...base, id: crypto.randomUUID(), source: 'ocr', text: ocrText, screenshotId });
     } else {

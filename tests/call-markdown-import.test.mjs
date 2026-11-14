@@ -101,3 +101,11 @@ test('too many passages and oversized text are skipped and reported', async () =
   assert.equal(big.screenshots.length, 1);
   assert.equal(big.skipped.length, 2);
 });
+
+test('imported screenshots keep the width and height the measure step reports, and zeros if it cannot decode', async () => {
+  const md = `## 14 Nov 2026, 10:00:05 — Screenshot\n\n![x](${PNG})\n`;
+  const sized = await parseCallScribeMarkdown(file(md), Date.now(), async () => ({ width: 640, height: 480 }));
+  assert.deepEqual([sized.screenshots[0].width, sized.screenshots[0].height], [640, 480]);
+  const plain = await parseCallScribeMarkdown(file(md)); // Node has no createImageBitmap
+  assert.deepEqual([plain.screenshots[0].width, plain.screenshots[0].height], [0, 0]);
+});

@@ -23,6 +23,7 @@ dist/
 build/
 public/models/
 public/ort/
+public/ort-tfjs/
 
 # Logs
 *.log

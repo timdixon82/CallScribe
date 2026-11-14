@@ -6,8 +6,8 @@ async function harness() {
   const source = (await readFile(new URL('../src/minutes.webllm.worker.js', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '');
   const messages = []; const self = {}; let release;
   const engine = { chat: { completions: { create: () => new Promise(resolve => { release = resolve; }) } }, interruptGenerate() {} };
-  const make = new Function('CreateMLCEngine', 'chunkEvidence', 'consolidateExtractions', 'conservativeRecovery', 'validateExtraction', 'postMessage', 'self', source);
-  make(async () => engine, () => [{ entries: [{ id: 's1', text: 'Synthetic release planning.', speaker: [] }], screenshots: [] }], () => ({ discussion: [] }), () => ({}), value => value, message => messages.push(message), self);
+  const make = new Function('CreateMLCEngine', 'chunkEvidence', 'consolidateExtractions', 'conservativeRecovery', 'validateExtraction', 'prebuiltAppConfig', 'pinnedAppConfig', 'postMessage', 'self', source);
+  make(async () => engine, () => [{ entries: [{ id: 's1', text: 'Synthetic release planning.', speaker: [] }], screenshots: [] }], () => ({ discussion: [] }), () => ({}), value => value, {}, () => ({}), message => messages.push(message), self);
   await self.onmessage({ data: { type: 'load', model: { webllmModel: 'test' } } });
   return { messages, send: data => self.onmessage({ data }), release: () => release({ choices: [{ message: { content: 'Synthetic release planning.' } }] }) };
 }

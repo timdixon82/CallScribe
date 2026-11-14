@@ -5,6 +5,8 @@ import { env, pipeline } from '@huggingface/transformers';
 // 200 response, which otherwise gets mistaken for a model asset.
 env.useBrowserCache = true;
 env.allowLocalModels = false;
+// ONNX Runtime files for Transformers.js are served from this site, not a CDN (see scripts/copy-ocr-assets.mjs).
+env.backends.onnx.wasm.wasmPaths = new URL('../ort-tfjs/', self.location.href).href;
 let transcriber; let activeId;
 const send = (type, detail = {}) => postMessage({ type, ...detail });
 
@@ -13,14 +15,14 @@ async function load(model, localOnly, preferredDevice) {
   send('model-status', { status: localOnly ? 'Verifying cached model' : 'Preparing download', modelId: model.id });
   let device = preferredDevice || (self.navigator.gpu ? 'webgpu' : 'wasm');
   try {
-    transcriber = await pipeline('automatic-speech-recognition', model.repo, { device, dtype: device === 'webgpu' ? 'q4' : 'q8', progress_callback: progress });
+    transcriber = await pipeline('automatic-speech-recognition', model.repo, { revision: model.revision, device, dtype: device === 'webgpu' ? 'q4' : 'q8', progress_callback: progress });
   } catch (error) {
     if (device !== 'webgpu') throw error;
     // Some published ONNX model variants do not provide WebGPU's requested dtype.
     // Fall back to the widely supported local WASM q8 route before reporting failure.
     device = 'wasm';
     send('model-status', { status: 'WebGPU was unavailable for this model; retrying locally with WebAssembly', modelId: model.id });
-    transcriber = await pipeline('automatic-speech-recognition', model.repo, { device, dtype: 'q8', progress_callback: progress });
+    transcriber = await pipeline('automatic-speech-recognition', model.repo, { revision: model.revision, device, dtype: 'q8', progress_callback: progress });
   }
   activeId = model.id;
   send('model-ready', { modelId: model.id, device });

@@ -1,4 +1,5 @@
-import { CreateMLCEngine } from '@mlc-ai/web-llm';
+import { CreateMLCEngine, prebuiltAppConfig } from '@mlc-ai/web-llm';
+import { pinnedAppConfig } from './model-manifest.js';
 import { chunkEvidence, consolidateExtractions, conservativeRecovery, validateExtraction } from './minutes.js';
 
 let engine;
@@ -67,7 +68,7 @@ async function load(model) {
   cancelled = false;
   checkpoint = { extractions: [], total: 0 };
   const startedAt = performance.now();
-  engine = await CreateMLCEngine(model.webllmModel, { initProgressCallback: (report) => send('model-status', { status: report.text }) });
+  engine = await CreateMLCEngine(model.webllmModel, { appConfig: pinnedAppConfig(prebuiltAppConfig), initProgressCallback: (report) => send('model-status', { status: report.text }) });
   if (cancelled) return send('cancelled', checkpoint);
   send('model-ready', { modelId: model.id, device: 'webgpu', loadMs: Math.round(performance.now() - startedAt) });
 }

@@ -1,0 +1,24 @@
+# Weekly check that pinned model commits, hashes and hosts still match the live
+# services. It does not run on pull requests, so it never blocks a merge.
+name: Pin drift
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pins:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 22
+      - name: Check pins and hosts
+        run: node scripts/check-pins.mjs

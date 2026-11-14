@@ -236,9 +236,10 @@ test('automatic speaker separation is optional, local, timestamp-aligned, and ma
   assert.match(app, /saved-person-names/);
   assert.match(app, /chunk\.audio\.slice\(\)/);
   assert.match(app, /type: 'flush'/);
-  assert.match(diarizer, /NealCaren\/Nemotron-3-Diarization-ONNX/);
+  assert.match(diarizer, /diarizerUrl/);
   assert.match(diarizer, /mel_filters\.bin/);
   assert.match(diarizer, /silence_embeds\.bin/);
+  assert.match(await readFile(new URL('../src/model-manifest.js', import.meta.url), 'utf8'), /NealCaren\/Nemotron-3-Diarization-ONNX/);
   assert.match(diarizer, /data\.type === 'reset'/);
   assert.match(diarizer, /numThreads = 1/);
   assert.match(frontend, /export class Diarizer/);

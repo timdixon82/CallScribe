@@ -5,7 +5,7 @@ export class AudioPipeline {
   }
   async start() {
     this.context = new AudioContext();
-    await this.context.audioWorklet.addModule(new URL('./audio-worklet.js', import.meta.url));
+    await this.context.audioWorklet.addModule(new URL('audio-worklet.js', document.baseURI) /* same-origin file in public/: a data: URL would need data: in script-src */);
     this.node = new AudioWorkletNode(this.context, 'capture-processor');
     this.node.port.onmessage = ({ data }) => this.receive(new Float32Array(data));
     const source = this.context.createMediaStreamSource(this.stream);

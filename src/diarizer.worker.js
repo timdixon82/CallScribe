@@ -8,7 +8,10 @@ let diarizer; let loading; const recordings = new Map();
 async function cached(file, label) {
   const url = diarizerUrl(file);
   const cache = await caches.open(CACHE); const hit = await cache.match(url);
-  if (hit) return new Uint8Array(await hit.arrayBuffer());
+  if (hit) {
+    const stored = new Uint8Array(await hit.arrayBuffer());
+    try { await verifySha256(stored, DIARIZER.files[file], label); return stored; } catch { await cache.delete(url); }
+  }
   const response = await fetch(url); if (!response.ok || !response.body) throw new Error(`Could not download ${label}.`);
   const total = Number(response.headers.get('content-length')) || 0; const reader = response.body.getReader(); const pieces = []; let loaded = 0;
   for (;;) { const { done, value } = await reader.read(); if (done) break; pieces.push(value); loaded += value.byteLength; postMessage({ type: 'status', text: `Downloading local speaker model: ${Math.round(loaded / 1e6)}${total ? ` of ${Math.round(total / 1e6)}` : ''} MB.` }); }
@@ -16,7 +19,7 @@ async function cached(file, label) {
 }
 async function load() {
   if (diarizer) return diarizer; if (loading) return loading;
-  loading = (async () => { await caches.delete('local-browser-transcriber-nemotron-v1'); ort.env.wasm.numThreads = 1; postMessage({ type: 'status', text: 'Preparing local speaker separation with single-threaded WebAssembly.' }); const [embed, step, mel, silence] = await Promise.all([cached('embed.onnx', 'feature model'), cached('step_int8.onnx', 'speaker model'), cached('mel_filters.bin', 'mel filters'), cached('silence_embeds.bin', 'silence embedding')]); const options = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' }; diarizer = new Diarizer(ort, await ort.InferenceSession.create(embed, options), await ort.InferenceSession.create(step, options), new Float32Array(mel.buffer, mel.byteOffset, mel.byteLength / 4), new Float32Array(silence.buffer, silence.byteOffset, silence.byteLength / 4)); postMessage({ type: 'ready', backend: 'single-threaded WebAssembly' }); return diarizer; })();
+  loading = (async () => { try { await caches.delete('local-browser-transcriber-nemotron-v1'); } catch { /* cleanup must never block loading */ } ort.env.wasm.numThreads = 1; postMessage({ type: 'status', text: 'Preparing local speaker separation with single-threaded WebAssembly.' }); const [embed, step, mel, silence] = await Promise.all([cached('embed.onnx', 'feature model'), cached('step_int8.onnx', 'speaker model'), cached('mel_filters.bin', 'mel filters'), cached('silence_embeds.bin', 'silence embedding')]); const options = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' }; diarizer = new Diarizer(ort, await ort.InferenceSession.create(embed, options), await ort.InferenceSession.create(step, options), new Float32Array(mel.buffer, mel.byteOffset, mel.byteLength / 4), new Float32Array(silence.buffer, silence.byteOffset, silence.byteLength / 4)); postMessage({ type: 'ready', backend: 'single-threaded WebAssembly' }); return diarizer; })();
   try { return await loading; } finally { loading = undefined; }
 }
 function append(source, audio, capturedAt, sessionId) { const item = recordings.get(source) || { parts: [], length: 0, labelled: 0, capturedAt, sessionId }; item.parts.push(audio); item.length += audio.length; item.capturedAt ??= capturedAt; recordings.set(source, item); }

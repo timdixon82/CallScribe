@@ -75,6 +75,16 @@ test('adversarial headings and image markers are parsed in well under one second
   assert.ok(ms < 500, `data url took ${ms} ms`);
 });
 
+test('repeated data-URL openers with one far closing bracket stay linear, and a valid image is still found', async () => {
+  const head = '## 2026-01-01 10:00 — Screenshot\n\n';
+  const bad = await timed(`${head}${'](data:;'.repeat(160000)})\n`);
+  console.log(`160000 repeats took ${bad.ms} ms`);
+  assert.ok(bad.ms < 500, `data url took ${bad.ms} ms`);
+  assert.ok(bad.result instanceof Error);
+  const good = await parseCallScribeMarkdown(file(`${head}${'](data:;'.repeat(1000)}\n![x](${PNG})\n`));
+  assert.equal(good.screenshots.length, 1);
+});
+
 test('images are still stripped from passages', async () => {
   const { segments } = await parseCallScribeMarkdown(file('## 2026-01-01 10:00 — Mic\n\nbefore ![x](data:y) after ![z] kept\n'));
   assert.equal(segments[0].text, 'before  after ![z] kept');

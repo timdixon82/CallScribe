@@ -28,9 +28,10 @@ function stripImages(value) {
 function textFromBlock(value) { return stripImages(value).replace(/^>\s?/gm, '').replace(/\n{2,}/g, '\n').trim(); }
 /** First data: image link in a block, found without backtracking: { url, type } or null. */
 function findDataUrl(body) {
-  const start = /\]\(data:/gi; let hit;
+  const start = /\]\(data:/gi; let hit; let end = -2;
   while ((hit = start.exec(body))) {
-    const end = body.indexOf(')', hit.index);
+    // Reuse the cached ")" while it is still ahead of this hit, so rejected hits never rescan.
+    if (end < hit.index) end = body.indexOf(')', hit.index);
     if (end < 0) return null;
     const type = body.slice(hit.index + 7, hit.index + 107).match(/^[^;,)]+/);
     if (type) return { url: body.slice(hit.index + 2, end), type: type[0] };

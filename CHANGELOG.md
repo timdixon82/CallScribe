@@ -2,6 +2,14 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.6.0](https://github.com/timdixon82/CallScribe/compare/v0.5.0...v0.6.0) (2026-11-14)
+
+
+### Features
+
+* streamline workspace and Summary generation ([a4d2589](https://github.com/timdixon82/CallScribe/commit/a4d25891b78e5e886e663b30e35c7008be05259a))
+* streamline workspace and Summary generation ([830041f](https://github.com/timdixon82/CallScribe/commit/830041fbf41681edd3986ee59406a19b9a912be7))
+
 ## [0.5.0](https://github.com/timdixon82/CallScribe/compare/v0.4.2...v0.5.0) (2026-11-13)
 
 ### Features

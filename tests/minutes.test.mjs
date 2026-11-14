@@ -138,7 +138,7 @@ test('requested evidence references preserve decision and action source labels',
 });
 
 test('the browser-side DOCX dependency can create an Office document', async () => {
-  const blob = await Packer.toBlob(new Document({ sections: [{ children: [new Paragraph('CallScribe meeting notes')] }] }));
+  const blob = await Packer.toBlob(new Document({ sections: [{ children: [new Paragraph('CallScribe summary')] }] }));
   assert.ok(blob.size > 1000);
 });
 
@@ -201,7 +201,7 @@ test('the notes interface keeps generation inline, remembers customisation, and 
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../src/compact.css', import.meta.url), 'utf8'),
   ]);
-  assert.match(page, /<h1 id="meeting-notes-heading">Meeting notes<\/h1>/);
+  assert.match(page, /<h1 id="meeting-notes-heading">Summary<\/h1>/);
   assert.match(css, /#meeting-notes-heading \{ font-size: 1\.5rem; \}/);
   assert.match(source, /putSetting\('minutesSettings', selectedMinutesSettings\(\)\)/);
   assert.match(source, /getSetting\('minutesSettings'\)/);
@@ -216,7 +216,7 @@ test('the notes interface keeps generation inline, remembers customisation, and 
 
 test('the application shell cache is versioned and removes only prior shell caches', async () => {
   const worker = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
-  assert.match(worker, /callscribe-shell-v23/);
+  assert.match(worker, /callscribe-shell-v24/);
   assert.match(worker, /key\.startsWith\('callscribe-shell-'\)/);
   assert.match(worker, /clients\.claim\(\)/);
   assert.match(worker, /skipWaiting\(\)/);

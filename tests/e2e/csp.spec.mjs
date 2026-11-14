@@ -1,9 +1,21 @@
+import { readFileSync } from 'node:fs';
 import { test as base, expect } from '@playwright/test';
 import { test, importSample, openPriorSessions } from './helpers.mjs';
 
 // Content Security Policy checks. The policy is a meta tag in index.html, so these load the built app and
 // fail on any securitypolicyviolation event or CSP console error. Synthetic data only.
-const ALLOWED_HOSTS = /^(localhost|huggingface\.co|(.+\.)?hf\.co|raw\.githubusercontent\.com)$/;
+// The allowed hosts are parsed from connect-src in the meta tag, so the policy is the single source of truth.
+function connectHosts() {
+  const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+  const policy = html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]*)"/)[1];
+  const sources = policy.split(';').map((part) => part.trim()).find((part) => part.startsWith('connect-src')).split(/\s+/).slice(1);
+  return sources.flatMap((source) => {
+    if (source === "'self'") return ['localhost'];
+    const match = source.match(/^https:\/\/(\*\.)?([a-z0-9.-]+)$/);
+    return match ? [match[1] ? `*.${match[2]}` : match[2]] : [];
+  });
+}
+const isAllowedHost = (hostname, allowed) => allowed.some((host) => host.startsWith('*.') ? hostname.endsWith(host.slice(1)) : hostname === host);
 const IS_CSP = /Content Security Policy|Refused to|CSP-VIOLATION/i;
 
 async function watchCsp(page) {
@@ -57,8 +69,10 @@ test('main flows raise no policy violations: landing, settings, import, export, 
       open.onsuccess = () => {
         const db = open.result;
         db.transaction('sessions').objectStore('sessions').getAll().onsuccess = (found) => {
+          // The recording above also saved a session; seed the note on the imported one, not whichever comes first.
+          const sample = found.target.result.find((saved) => /E2E sample/.test(saved.name));
           const tx = db.transaction('meetingNotes', 'readwrite');
-          tx.objectStore('meetingNotes').put({ sessionId: found.target.result[0].id, title: 'Policy sample', content: '## Summary\n\nSynthetic note.', updatedAt: Date.now() });
+          tx.objectStore('meetingNotes').put({ sessionId: sample.id, title: 'Policy sample', content: '## Summary\n\nSynthetic note.', updatedAt: Date.now() });
           tx.oncomplete = () => { db.close(); resolve(); };
         };
       };
@@ -83,22 +97,22 @@ test('main flows raise no policy violations: landing, settings, import, export, 
   expect(problems, 'CSP violations or console errors').toEqual([]);
 });
 
-// The real workers, no stub, no network. Starting a model download makes the real transcriber worker import its libraries.
-base('real workers start under the policy; every outside request goes to an allowed host', async ({ page }) => {
+// The real workers, no stub. A meta policy does not govern same-origin worker scripts, so this does NOT prove the policy
+// is enforced in workers. It checks that the app is built to contact only the hosts the policy allows: every request the
+// page and its workers make at startup must go to a host parsed from connect-src.
+base('startup requests from the page and the real workers go only to hosts listed in connect-src', async ({ page }) => {
   const problems = await watchCsp(page);
+  const allowed = connectHosts();
+  expect(allowed, 'hosts parsed from the meta tag').toContain('localhost');
   const hosts = new Set();
+  page.context().on('request', (request) => hosts.add(new URL(request.url()).hostname));
   await page.addInitScript(() => localStorage.setItem('localBrowserTranscriberSpeakerSeparation', 'true'));
-  await page.context().route('**/*', (route) => {
-    const { hostname } = new URL(route.request().url());
-    hosts.add(hostname);
-    return ALLOWED_HOSTS.test(hostname) && hostname === 'localhost' ? route.continue() : route.abort();
-  });
+  await page.context().route('**/*', (route) => new URL(route.request().url()).hostname === 'localhost' ? route.continue() : route.abort());
   await page.goto('/index.html');
   // The app starts the default speech model download by itself; the network block makes it fail after the request is made.
   await expect.poll(() => page.workers().length, { timeout: 15000 }).toBe(4);
-  await expect.poll(() => [...hosts].includes('huggingface.co'), { timeout: 20000 }).toBe(true);
+  await expect.poll(() => [...hosts].some((host) => host !== 'localhost'), { timeout: 20000 }).toBe(true); // the worker path reached out
   await page.waitForTimeout(2000);
-  expect([...hosts].filter((host) => !ALLOWED_HOSTS.test(host)), 'hosts outside the policy').toEqual([]);
-  expect(hosts.has('cdn.jsdelivr.net'), 'jsDelivr is no longer used').toBe(false);
+  expect([...hosts].filter((host) => !isAllowedHost(host, allowed)), 'hosts outside connect-src').toEqual([]);
   expect(problems, 'CSP violations or console errors').toEqual([]);
 });

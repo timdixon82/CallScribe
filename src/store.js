@@ -100,3 +100,36 @@ export const deleteMeetingNotes = (sessionId) => run('meetingNotes', 'readwrite'
 export const getMinutesRun = (sessionId) => run('minutesRuns', 'readonly', (store) => store.get(sessionId));
 export const putMinutesRun = (value) => run('minutesRuns', 'readwrite', (store) => store.put(value));
 export const deleteMinutesRun = (sessionId) => run('minutesRuns', 'readwrite', (store) => store.delete(sessionId));
+
+function transaction(storeNames, action) {
+  return openDb().then((db) => new Promise((resolve, reject) => {
+    const tx = db.transaction(storeNames, 'readwrite');
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+    tx.onabort = () => { db.close(); reject(tx.error || new Error('Transaction aborted.')); };
+    try { action(tx); } catch (error) { tx.abort(); reject(error); }
+  }));
+}
+
+/** Delete a session and everything that belongs to it in one transaction: all rows go or none do. */
+export const removeSessionCascade = (sessionId) => transaction(['sessions', 'segments', 'screenshots', 'meetingNotes', 'minutesRuns'], (tx) => {
+  for (const name of ['segments', 'screenshots']) {
+    const store = tx.objectStore(name);
+    store.index('sessionId').openKeyCursor(IDBKeyRange.only(sessionId)).onsuccess = (event) => {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      store.delete(cursor.primaryKey);
+      cursor.continue();
+    };
+  }
+  tx.objectStore('meetingNotes').delete(sessionId);
+  tx.objectStore('minutesRuns').delete(sessionId);
+  tx.objectStore('sessions').delete(sessionId);
+});
+
+/** Write an imported session, its segments and its screenshots in one transaction. */
+export const putSessionBundle = ({ session, segments, screenshots }) => transaction(['sessions', 'segments', 'screenshots'], (tx) => {
+  tx.objectStore('sessions').put(session);
+  for (const item of segments) tx.objectStore('segments').put(item);
+  for (const item of screenshots) tx.objectStore('screenshots').put(item);
+});

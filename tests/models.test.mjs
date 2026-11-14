@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { MODELS, findModel } from '../src/models.js';
 
+// Note: most tests below read source files and assert regular expressions. They show that a name or
+// attribute exists, not that the behaviour works. Behavioural coverage lives in tests/e2e (Playwright);
+// the two tests that were fully duplicated there (export, model picker) have been removed. Replace the
+// rest with behavioural tests when the code they cover is next changed.
+
 test('catalogue contains the required five distinct models', () => {
   assert.equal(MODELS.length, 5);
   assert.equal(new Set(MODELS.map((model) => model.id)).size, 5);
@@ -122,20 +127,6 @@ test('the single manual screenshot control has its capture action and reports it
   assert.match(app, /setSessionStatus\(message\)/);
 });
 
-test('exports include a self-contained Markdown transcript and individual screenshots', async () => {
-  const [app, page] = await Promise.all([
-    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
-    readFile(new URL('../index.html', import.meta.url), 'utf8'),
-  ]);
-  assert.match(page, /id="export-format"/);
-  assert.match(page, /id="export-transcript"/);
-  assert.match(page, /value="screenshots"/);
-  assert.match(app, /function exportMarkdown/);
-  assert.match(app, /blobToDataUrl/);
-  assert.match(app, /function downloadScreenshots/);
-  assert.match(app, /getScreenshots/);
-});
-
 test('transcript uses source filters rather than separate source sections', async () => {
   const [app, page] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
@@ -243,19 +234,6 @@ test('automatic speaker separation is optional, local, timestamp-aligned, and ma
   assert.match(diarizer, /numThreads = 1/);
   assert.match(frontend, /export class Diarizer/);
   assert.match(frontend, /frames \* CFG\.nSpk/);
-});
-
-test('model controls keep stable selection, expose languages, and list downloaded assets separately', async () => {
-  const [app, page] = await Promise.all([
-    readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
-    readFile(new URL('../index.html', import.meta.url), 'utf8'),
-  ]);
-  assert.match(app, /renderModels\(\{ rebuild = false \} = \{\}\)/);
-  assert.match(app, /Multilingual/);
-  assert.match(app, /renderDownloadedModels/);
-  assert.match(app, /requestOcrDelete/);
-  assert.match(page, /id="downloaded-model-list"/);
-  assert.match(page, /id="ocr-download-status" hidden/);
 });
 
 test('compact transcript action icons retain accessible names without duplicating session controls', async () => {

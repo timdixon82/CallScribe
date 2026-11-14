@@ -11,6 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
     "lint": "find src scripts tests -type f \\( -name '*.js' -o -name '*.mjs' \\) -exec node --check {} +"
   },
   "dependencies": {
@@ -21,7 +22,9 @@
     "onnxruntime-web": "1.31.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@gutenye/ocr-models": "^1.4.2",
+    "@playwright/test": "^1.65.1",
     "fake-indexeddb": "^6.2.8",
     "vite": "^7.0.0"
   },

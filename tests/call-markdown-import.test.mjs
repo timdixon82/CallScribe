@@ -52,3 +52,42 @@ test('export then import keeps text, sources, speakers and screenshots', async (
   assert.equal(shot.blob.type, 'image/png');
   assert.equal(session.name, 'Weekly');
 });
+
+async function timed(text) {
+  const started = performance.now();
+  const result = await parseCallScribeMarkdown(file(text)).catch((error) => error);
+  return { result, ms: performance.now() - started };
+}
+
+test('adversarial headings and image markers are parsed in well under one second', async () => {
+  const good = '## 2026-01-01 10:00 — Mic\n\nhello\n';
+  for (const bad of [`## a${' '.repeat(80000)}b\n`, `## ${'a '.repeat(40000)}\n`, `## ${'— '.repeat(40000)}x\n`]) {
+    const { result, ms } = await timed(good + bad);
+    assert.ok(ms < 500, `heading took ${ms} ms`);
+    assert.ok(result.skipped.some((item) => /too long/.test(item)));
+  }
+  for (const bad of ['![', '![](', '![a]', '![a](b']) {
+    const { result, ms } = await timed(`${good}## 2026-01-01 10:01 — Mic\n\n${bad.repeat(80000)}\n`);
+    assert.ok(ms < 500, `${bad} took ${ms} ms`);
+    assert.ok(result.segments.length >= 1);
+  }
+  const { ms } = await timed(`## 2026-01-01 10:00 — Screenshot\n\n${'](data:'.repeat(80000)}\n`);
+  assert.ok(ms < 500, `data url took ${ms} ms`);
+});
+
+test('images are still stripped from passages', async () => {
+  const { segments } = await parseCallScribeMarkdown(file('## 2026-01-01 10:00 — Mic\n\nbefore ![x](data:y) after ![z] kept\n'));
+  assert.equal(segments[0].text, 'before  after ![z] kept');
+});
+
+test('too many passages and oversized text are skipped and reported', async () => {
+  const { MAX_IMPORT_SEGMENTS, MAX_IMPORT_TEXT_CHARS } = await import('../src/call-markdown-import.js');
+  const many = Array.from({ length: MAX_IMPORT_SEGMENTS + 3 }, (_, i) => `## 2026-01-01 10:00 — Mic\n\nline ${i}\n`).join('');
+  const capped = await parseCallScribeMarkdown(file(many));
+  assert.equal(capped.segments.length, MAX_IMPORT_SEGMENTS);
+  assert.equal(capped.skipped.length, 3);
+  const big = await parseCallScribeMarkdown(file(`## 2026-01-01 10:00 — Mic\n\nok\n\n## 2026-01-01 10:01 — App\n\n${'x'.repeat(MAX_IMPORT_TEXT_CHARS + 1)}\n\n## 2026-01-01 10:02 — Screenshot\n\n![s](${PNG})\n\nScreenshot OCR: ${'y'.repeat(MAX_IMPORT_TEXT_CHARS + 1)}\n`));
+  assert.equal(big.segments.filter((s) => s.source === 'ocr').length, 0);
+  assert.equal(big.screenshots.length, 1);
+  assert.equal(big.skipped.length, 2);
+});

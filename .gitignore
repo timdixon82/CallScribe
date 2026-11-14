@@ -68,3 +68,7 @@ pa11y.ci.json
 # Status-rebuild debounce lock — per-repo ephemeral file written by post-tool-use.sh.
 # It is a local-only timing marker; never belongs in the repo.
 .claude/.status-rebuild.lock
+
+# Playwright output
+test-results/
+playwright-report/

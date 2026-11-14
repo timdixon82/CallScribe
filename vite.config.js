@@ -7,7 +7,9 @@ const stampServiceWorker = () => ({
   apply: 'build',
   async closeBundle() {
     const file = new URL('./dist/sw.js', import.meta.url);
-    await writeFile(file, (await readFile(file, 'utf8')).replace('__BUILD_ID__', Date.now().toString(36)));
+    const source = await readFile(file, 'utf8');
+    if (!source.includes('__BUILD_ID__')) throw new Error('dist/sw.js has no __BUILD_ID__ placeholder to stamp.');
+    await writeFile(file, source.replace('__BUILD_ID__', Date.now().toString(36)));
   },
 });
 

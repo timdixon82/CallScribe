@@ -14,6 +14,7 @@ test('service worker goes network first for pages, caches only ok responses, and
   const source = await read();
   assert.match(source, /request\.mode === 'navigate'/);
   assert.match(source, /fetch\(request\)\.then\(\(response\) => keep\(request, response\)\)\.catch/);
-  assert.match(source, /if \(response\.ok\)/);
+  assert.match(source, /response\.status === 200/);
+  assert.match(source, /cache\.put\(request, copy\)\)\.catch\(/);
   assert.match(source, /__BUILD_ID__/);
 });

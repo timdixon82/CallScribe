@@ -3,6 +3,7 @@ import { chunkEvidence, consolidateExtractions, conservativeRecovery, validateEx
 
 let engine;
 let cancelled = false;
+let checkpoint = { extractions: [], total: 0 };
 const send = (type, detail = {}) => postMessage({ type, ...detail });
 function jsonFrom(text) { const value = String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^```(?:json)?\s*|\s*```$/g, '').trim(); const first = value.indexOf('{'); const last = value.lastIndexOf('}'); if (first < 0 || last < first) return {}; try { return JSON.parse(value.slice(first, last + 1)); } catch { return {}; } }
 function summary(extraction) { const topics = extraction.discussion?.slice(0, 3).map((item) => item.text) || []; return topics.length ? `Key themes:\n\n${topics.map((topic) => `- ${topic}`).join('\n')}` : 'No explicit discussion points could be extracted from the transcript.'; }
@@ -63,20 +64,25 @@ async function prioritiseDiscussion(extraction, modelId, detail) {
 }
 
 async function load(model) {
+  cancelled = false;
+  checkpoint = { extractions: [], total: 0 };
   const startedAt = performance.now();
   engine = await CreateMLCEngine(model.webllmModel, { initProgressCallback: (report) => send('model-status', { status: report.text }) });
+  if (cancelled) return send('cancelled', checkpoint);
   send('model-ready', { modelId: model.id, device: 'webgpu', loadMs: Math.round(performance.now() - startedAt) });
 }
 
 async function generate(data) {
   const startedAt = performance.now();
-  const chunkMs = []; const extractions = []; const chunks = chunkEvidence(data.evidence, 450, 60); let structuredChunks = 0; let recoveryChunks = 0; cancelled = false;
-  for (let index = 0; index < chunks.length; index += 1) {
+  const chunkMs = []; const extractions = Array.isArray(data.extractions) ? [...data.extractions] : []; const chunks = chunkEvidence(data.evidence, 450, 60); let structuredChunks = extractions.length; let recoveryChunks = 0; cancelled = false;
+  checkpoint = { extractions, total: chunks.length };
+  for (let index = extractions.length; index < chunks.length; index += 1) {
     if (cancelled) return send('cancelled', { extractions, total: chunks.length });
     const began = performance.now(); const chunk = chunks[index]; const compact = compactChunk(chunk);
     send('generation-progress', { completed: index, total: chunks.length, detail: `Analysing part ${index + 1} of ${chunks.length}` });
     const response = await engine.chat.completions.create({ messages: messages(compact.evidence, data.model.id), temperature: 0, max_tokens: 700, extra_body: { enable_thinking: false } });
     const raw = response.choices[0]?.message?.content;
+    if (cancelled) return send('cancelled', checkpoint);
     let extraction; try { extraction = validateExtraction(restore(data.model.id === 'qwen3-0.6b' ? plainDiscussion(raw, compact) : jsonFrom(raw), compact), chunk); } catch { extraction = undefined; }
     const evidenceOnly = validateExtraction(conservativeRecovery(chunk), chunk);
     if (extraction?.discussion.length || extraction?.decisions.length || extraction?.actions.length || extraction?.questions.length || extraction?.risks.length) { structuredChunks += 1; for (const key of ['decisions', 'actions']) if (!extraction[key].length) extraction[key] = evidenceOnly[key]; }
@@ -90,7 +96,8 @@ async function generate(data) {
   let extraction = consolidateExtractions(extractions, outputDetail);
   send('generation-progress', { completed: chunks.length, total: chunks.length, detail: 'Consolidating distinct topics locally.' });
   extraction = await prioritiseDiscussion(extraction, data.model.id, outputDetail);
+  if (cancelled) return send('cancelled', checkpoint);
   send('complete', { extraction, summary: summary(extraction), chunks: chunks.length, generationMs: Math.round(performance.now() - startedAt), chunkMs, structuredChunks, recoveryChunks });
 }
 
-self.onmessage = async ({ data }) => { try { if (data.type === 'load') await load(data.model); else if (data.type === 'generate') await generate(data); else if (data.type === 'cancel') { cancelled = true; engine?.interruptGenerate(); } else if (data.type === 'dispose') { await engine?.unload?.(); engine = undefined; send('disposed'); } } catch (error) { send('error', { operation: data.type, message: error instanceof Error ? error.message : String(error) }); } };
+self.onmessage = async ({ data }) => { try { if (data.type === 'load') await load(data.model); else if (data.type === 'generate') await generate(data); else if (data.type === 'cancel') { cancelled = true; engine?.interruptGenerate(); } else if (data.type === 'dispose') { await engine?.unload?.(); engine = undefined; send('disposed'); } } catch (error) { if (cancelled) send('cancelled', checkpoint); else send('error', { operation: data.type, message: error instanceof Error ? error.message : String(error) }); } };

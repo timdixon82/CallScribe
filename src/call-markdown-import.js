@@ -1,3 +1,4 @@
+import { cleanTitle } from './safe-text.js';
 import { putSessionBundle } from './store.js';
 
 export const MAX_IMPORT_BYTES = 50 * 1024 * 1024;
@@ -112,7 +113,7 @@ export async function parseCallScribeMarkdown(file, now = Date.now(), measure = 
   const { blocks, skipped } = parseBlocks(await file.text());
   if (!blocks.length) throw new Error('No CallScribe Mic, App, or Screenshot headings were found. Choose an exported CallScribe Markdown file.');
   const id = crypto.randomUUID(); const startedAt = timestamp(blocks[0].timestamp, now);
-  const session = { id, name: file.name.replace(/\.md$/i, ''), startedAt, endedAt: timestamp(blocks.at(-1).timestamp, startedAt), status: 'stopped', imported: true, speakerAssignments: {} };
+  const session = { id, name: cleanTitle(file.name.replace(/\.md$/i, '')) || 'Imported transcript', startedAt, endedAt: timestamp(blocks.at(-1).timestamp, startedAt), status: 'stopped', imported: true, speakerAssignments: {} };
   const segments = []; const screenshots = [];
   for (const [index, entry] of blocks.entries()) {
     if (segments.length >= MAX_IMPORT_SEGMENTS) { skipped.push(`Over the limit of ${MAX_IMPORT_SEGMENTS} passages: ${entry.heading.slice(0, 60)}`); continue; }

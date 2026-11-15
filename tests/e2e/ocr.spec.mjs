@@ -249,3 +249,27 @@ test('the OCR switch works from the keyboard, keeps focus, is announced, and the
   await expect(toggle).not.toBeChecked();
   await expect(toggle).toBeFocused();
 });
+
+test('pressing Space twice quickly on the OCR switch while it starts keeps it on and keeps focus', async ({ page }) => {
+  test.setTimeout(240000);
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getDisplayMedia = async () => { const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; canvas.getContext('2d').fillRect(0, 0, 64, 64); return canvas.captureStream(5); };
+  });
+  await openApp(page);
+  await page.getByRole('button', { name: 'Share screen and audio' }).first().click();
+  await expect(page.locator('#share-system-audio')).toBeChecked({ timeout: 15000 });
+  await page.getByRole('link', { name: 'Screenshot settings' }).click();
+  await page.locator('#screenshot-mode').selectOption('manual');
+  const toggle = page.locator('#toggle-ocr');
+  await expect(toggle).toBeEnabled();
+  await toggle.focus();
+  await expect(toggle).toBeFocused();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Space'); // the second press arrives while start-up is still running
+  await expect(toggle).toBeChecked();
+  await expect(toggle).toBeFocused();
+  await expect(page.locator('#ocr-status')).toContainText(/Local OCR is ready/, { timeout: 120000 });
+  await expect(toggle).toBeChecked();
+  await expect(toggle).toBeFocused();
+  await expect(toggle).not.toHaveAttribute('aria-disabled', 'true');
+});

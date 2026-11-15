@@ -26,5 +26,7 @@
       await module.start(port, { wasm: data.wasm, det: data.det, rec: data.rec, dict: data.dict }, URL.createObjectURL(new Blob([data.glue], { type: 'text/javascript' })));
     } catch (error) { fail('Text recognition could not start.'); }
   });
+  // An opaque origin cannot be named as a target, and the hello holds only two version numbers.
+  // nosemgrep: javascript.browser.security.wildcard-postmessage-configuration.wildcard-postmessage-configuration
   window.parent.postMessage({ type: 'hello', v: PROTOCOL_VERSION, bootstrap: BOOTSTRAP_VERSION }, '*');
 })();

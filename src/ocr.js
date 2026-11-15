@@ -84,6 +84,8 @@ export function createOcrClient(env, timeouts = {}) {
         env.clearTimeout(current.timer);
         current.timer = env.setTimeout(() => dispose(new OcrError(MESSAGES.setup)), limit.init);
         // The start message holds only public program files. No user data, setting or token is ever put in it.
+        // '*' is required: an opaque origin cannot be named as a target. The target is the frame window this page created, and the message holds public files only.
+        // nosemgrep: javascript.browser.security.wildcard-postmessage-configuration.wildcard-postmessage-configuration
         frame.window.postMessage({ type: 'init', v: PROTOCOL_VERSION, ...files }, '*', [channel.port2, ...Object.values(files)]);
       });
       current.port.onmessage = (event) => {

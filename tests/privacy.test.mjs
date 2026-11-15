@@ -21,3 +21,8 @@ test('every page carries the same policy, with no eval and no inline styles or s
   assert.ok(policies.every((policy) => policy && policy === policies[0]));
   assert.doesNotMatch(policies[0], /'unsafe-(eval|inline)'/);
 });
+
+test('the page policy allows frames only from its own site, with no blob or data frames', async () => {
+  const policy = (await read('../index.html')).match(/Content-Security-Policy" content="([^"]+)"/)[1];
+  assert.match(policy, /(^|; )frame-src 'self'(;|$)/);
+});

@@ -10,9 +10,10 @@ export const SETTINGS_PREFIX = 'localBrowserTranscriber';
  * The github.io host is shared with other sites, so only this app's own caches (named in cache-names.js) and
  * service workers whose scope is inside this app's base URL are touched. Foreign ones are left alone.
  */
-export async function eraseAllData({ storage = globalThis.localStorage, cacheStorage = globalThis.caches, serviceWorker = globalThis.navigator?.serviceWorker, base = globalThis.document?.baseURI ? new URL('./', globalThis.document.baseURI).href : undefined } = {}) {
+export async function eraseAllData({ storage = globalThis.localStorage, cacheStorage = globalThis.caches, serviceWorker = globalThis.navigator?.serviceWorker, base = globalThis.document?.baseURI ? new URL('./', globalThis.document.baseURI).href : undefined, disposeOcr = async () => {} } = {}) {
   const failed = [];
   const step = async (name, action) => { try { await action(); } catch { failed.push(name); } };
+  await step('the text recognition frame', disposeOcr); // removes the isolated frame and the model memory it holds
   // Order matters: stop the service worker first so it cannot refill a cache that is cleared after it.
   await step('the offline copy of the app', async () => { for (const registration of await serviceWorker?.getRegistrations?.() ?? []) if (base && registration.scope.startsWith(base)) await registration.unregister(); });
   await step('saved transcripts, screenshots, summaries, people and models', clearAllStores);

@@ -25,6 +25,7 @@
     "@axe-core/playwright": "^4.14.0",
     "@gutenye/ocr-models": "^1.4.2",
     "@playwright/test": "^1.65.1",
+    "esbuild": "0.28.2",
     "fake-indexeddb": "^6.2.8",
     "vite": "^7.0.0"
   },

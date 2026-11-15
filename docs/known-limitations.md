@@ -39,3 +39,23 @@ The Content Security Policy is set in a meta tag in each page, not in a response
 
 A policy sent as a response header would remove these limits. It needs a proxy or a host that can set headers. Tim chose not to add one for now.
 
+## Text recognition (OCR) runs in an isolated frame
+
+Reading text from screenshots needs code that uses `eval`, which the page policy forbids. The page policy stays strict. The engine runs in a hidden frame instead, with its own policy.
+
+How it works:
+
+- The service worker builds the frame page from a constant and serves it only at one exact path, only to an iframe, with the header `Content-Security-Policy: sandbox allow-scripts`. No frame page file exists in the built site. Without the worker (first visit, hard reload, a worker that is not in control) there is no page and OCR says so.
+- The sandbox gives the frame, and its worker, an opaque origin. It cannot read the page's IndexedDB, local storage, caches or cookies, and its policy sets `connect-src 'none'`. The page checks the SHA-256 of the engine, the runtime and every model before it sends anything, and then sends only public program files and, per job, image pixels.
+- The frame page has one inline script, hashed in its policy. That script does nothing unless the origin is opaque, a parent window exists, and storage access is denied.
+
+Limits and residual risks:
+
+- First visit: OCR needs the service worker to be in control. On the very first load, after a hard reload, or with developer tools bypassing the worker, the app asks the user to reload the page once.
+- The frame keeps `unsafe-eval` for as long as the OCR library needs it. Replacing OpenCV so that no `eval` is needed is still an option for later.
+- `connect-src` does not cover DNS prefetch or WebRTC in every browser. If the pinned OCR code were itself compromised it could try those channels. The defences are pinning, the hash check and dependency scanning, not the policy alone. `navigator.sendBeacon` returns true in Chromium and WebKit, but no request was seen leaving the frame.
+- The engine runs in a worker inside the frame, so a hung recognition cannot freeze the page: the job timeout fires and the page removes the frame. The frame's policy allows workers from a blob only (`worker-src blob:`). See decision 002.
+- OpenCV tries one fetch of a `data:` address that `connect-src 'none'` blocks. It then carries on and works. The tests allow this one message.
+- A header-sandboxed frame loses its sandbox if it navigates. The page removes the frame on a second load event and turns OCR off until the page is reloaded. The page policy's `frame-src 'self'` blocks navigation to other sites in Chromium. In Firefox and WebKit the block was only inferred (no request was seen), not confirmed by a message.
+- Browser status: the OCR end-to-end tests pass in Chromium, Firefox and WebKit (Playwright builds, run locally with `OCR_ALL_BROWSERS=1`). CI runs Chromium only. Offline OCR was tested in all three. WebGPU speed in the frame is not benchmarked.
+- The text recognition engine file is about 10 MB and is kept in the OCR cache with the models, so turning OCR on downloads about 55 MB in total.

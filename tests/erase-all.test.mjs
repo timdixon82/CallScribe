@@ -73,3 +73,13 @@ test('the cache names used elsewhere in the app match the shared constants', asy
   assert.ok(OCR_CACHE.startsWith('local-browser-transcriber-'));
   assert.match(await readFile(new URL('../public/sw.js', import.meta.url), 'utf8'), new RegExp(`'${SHELL_CACHE_PREFIX}`));
 });
+
+test('erase all removes the text recognition frame before anything else, and names it if that fails', async () => {
+  const order = [];
+  const serviceWorker = { getRegistrations: async () => { order.push('worker'); return []; } };
+  const failed = await eraseAllData({ storage: asStorage({}), cacheStorage: fakeCaches([]), serviceWorker, base: BASE, disposeOcr: async () => { order.push('ocr'); } });
+  assert.deepEqual(failed, []);
+  assert.deepEqual(order, ['ocr', 'worker']);
+  const broken = await eraseAllData({ storage: asStorage({}), cacheStorage: fakeCaches([]), serviceWorker: fakeWorker(0), base: BASE, disposeOcr: async () => { throw new Error('x'); } });
+  assert.deepEqual(broken, ['the text recognition frame']);
+});

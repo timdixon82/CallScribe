@@ -95,10 +95,11 @@ test('screen capture supports manual, periodic, and screen-change screenshots', 
 });
 
 test('OCR is explicitly enabled, cached locally, and used as screenshot alternative text', async () => {
-  const [app, page, ocr] = await Promise.all([
+  const [app, page, ocr, engine] = await Promise.all([
     readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../src/ocr.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/ocr-frame-core.js', import.meta.url), 'utf8'),
   ]);
   assert.match(app, /OCR_CACHE/);
   assert.match(app, /cacheOcrAssets/);
@@ -113,10 +114,10 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
   assert.match(page, /id="toggle-ocr" type="checkbox" switch disabled/);
   assert.match(app, /closest\('\.toggle-slider'\)\.after\(ocrDetailField\)/);
   assert.match(ocr, /recogniseImage/);
-  assert.match(ocr, /recognitionQueue/);
-  assert.match(ocr, /Array\.isArray\(result\?\.texts\)/);
-  assert.match(ocr, /hasWebGpu/);
-  assert.match(ocr, /appleMobile/);
+  assert.match(ocr, /queue = job\.catch/);
+  assert.match(engine, /Array\.isArray\(result\?\.texts\)/);
+  assert.match(engine, /hasWebGpu/);
+  assert.match(engine, /appleMobile/);
 });
 
 test('the single manual screenshot control has its capture action and reports its outcome in the transcript', async () => {

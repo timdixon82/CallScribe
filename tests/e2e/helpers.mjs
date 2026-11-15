@@ -8,6 +8,7 @@ export const test = base.extend({
     const external = [];
     await page.context().route('**/*', (route) => {
       const url = new URL(route.request().url());
+      if (url.protocol === 'blob:' || url.protocol === 'data:') return route.continue(); // in-memory, not network (WebKit reports them)
       if (url.hostname !== 'localhost') { external.push(url.href); return route.abort(); }
       if (/transcriber\.worker/.test(url.pathname)) return route.fulfill({ contentType: 'text/javascript', body: STUB_WORKER });
       return route.continue();

@@ -18,7 +18,10 @@ export default defineConfig({
       permissions: ['microphone'],
       launchOptions: { args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] },
     },
-  }],
+  },
+  // The text recognition specs also run in Firefox and WebKit when asked: OCR_ALL_BROWSERS=1 npx playwright test (needs npx playwright install firefox webkit).
+  ...(process.env.OCR_ALL_BROWSERS ? [{ name: 'firefox', testMatch: /ocr\.spec/, use: { ...devices['Desktop Firefox'] } }, { name: 'webkit', testMatch: /ocr\.spec/, use: { ...devices['Desktop Safari'] } }] : []),
+  ],
   webServer: {
     command: `npm run build && npx vite preview --port ${port} --strictPort`,
     url: `http://localhost:${port}/index.html`,

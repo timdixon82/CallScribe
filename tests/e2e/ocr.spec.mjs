@@ -220,25 +220,32 @@ test('a job that never finishes cannot freeze the page: its timers keep firing a
   await context.close();
 });
 
-test('the OCR switch works from the keyboard, is announced, and the page has no axe violations with OCR on', async ({ page }) => {
-  test.setTimeout(180000);
-  await openApp(page);
-  const reveal = () => page.evaluate(() => { // show the switch the way a connected screen does; the keyboard then does the rest
-    const toggle = document.getElementById('toggle-ocr');
-    toggle.disabled = false;
-    for (let node = toggle.parentElement; node; node = node.parentElement) { node.hidden = false; if (node.tagName === 'DETAILS') node.open = true; }
+test('the OCR switch works from the keyboard, keeps focus, is announced, and the page has no axe violations with OCR on', async ({ page }) => {
+  test.setTimeout(240000);
+  // A stand-in screen share (a canvas stream) so the app reveals and enables the switch through its own code path.
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getDisplayMedia = async () => { const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; canvas.getContext('2d').fillRect(0, 0, 64, 64); return canvas.captureStream(5); };
   });
-  const focusSwitch = () => expect(async () => { await reveal(); await page.locator('#toggle-ocr').focus(); await expect(page.locator('#toggle-ocr')).toBeFocused({ timeout: 500 }); }).toPass({ timeout: 10000 }); // the app may hide the section again just after load
-  await focusSwitch();
-  await page.keyboard.press('Space');
-  await expect(page.locator('#toggle-ocr')).toBeChecked();
+  await openApp(page);
+  await page.getByRole('button', { name: 'Share screen and audio' }).first().click();
+  await expect(page.locator('#share-system-audio')).toBeChecked({ timeout: 15000 });
+  await page.getByRole('link', { name: 'Screenshot settings' }).click();
+  await page.locator('#screenshot-mode').selectOption('manual');
+  await expect(page.locator('#toggle-ocr')).toBeVisible();
+  const toggle = page.locator('#toggle-ocr');
+  await expect(toggle).toBeEnabled();
+  // Focus and press Space as a pair so a late re-render between them cannot drop the keypress.
+  await expect(async () => { await toggle.focus(); await expect(toggle).toBeFocused({ timeout: 500 }); await page.keyboard.press('Space'); await expect(toggle).toBeChecked({ timeout: 2000 }); }).toPass({ timeout: 15000 });
+  await expect(toggle).toBeFocused();
+  await expect(toggle).toHaveAttribute('aria-disabled', 'true');
   await expect(page.locator('#ocr-status')).toContainText(/Local OCR is ready/, { timeout: 120000 });
+  await expect(toggle).toBeFocused();
+  await expect(toggle).not.toHaveAttribute('aria-disabled', 'true');
   expect(await page.locator('#ocr-status').getAttribute('role')).toBe('status');
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'wcag2aaa', 'wcag22aaa']).analyze();
   expect(violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);
-  // The app disables the switch while it turns OCR on and hides the capture section again, so the reveal is repeated before the second keypress.
-  await expect(page.locator('#toggle-ocr')).toBeEnabled();
-  await focusSwitch();
+  await toggle.focus();
   await page.keyboard.press('Space');
-  await expect(page.locator('#toggle-ocr')).not.toBeChecked();
+  await expect(toggle).not.toBeChecked();
+  await expect(toggle).toBeFocused();
 });

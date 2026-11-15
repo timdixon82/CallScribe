@@ -18,6 +18,7 @@ The text recognition engine (Guten OCR with ONNX Runtime and OpenCV) needs `eval
 ## Decision
 
 - The engine runs in a hidden iframe. The service worker builds the frame page from a build-time constant and serves it at one exact path, only to an iframe, with the header `Content-Security-Policy: sandbox allow-scripts`. The frame has an opaque origin. There is no `allow-same-origin`, ever.
+- The frame `script-src` also includes `blob:`, so the bootstrap can start the blob worker.
 - The frame policy is `connect-src 'none'`, `frame-src 'none'`, `eval` allowed, one hashed inline script, and `worker-src blob:`. The page policy only gains `frame-src 'self'`.
 - The page checks the SHA-256 of the engine, the runtime and every model before it sends them over a private message port. Messages are validated by exact keys in both directions. The first `hello` only, then the first `init` only.
 - The frame's one inline script (the bootstrap) starts a classic blob worker from the verified engine bytes. The engine and the models then run in that worker. The port is moved to the worker.

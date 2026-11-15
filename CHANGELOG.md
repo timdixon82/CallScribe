@@ -2,6 +2,37 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.7.0](https://github.com/timdixon82/CallScribe/compare/v0.6.0...v0.7.0) (2026-11-15)
+
+
+### Features
+
+* Content Security Policy and hardening (batch 4) ([4642671](https://github.com/timdixon82/CallScribe/commit/4642671076115bd8cbebfcc7ca4e0e0d03170c30))
+* Content Security Policy, diarizer cache re-verification, privacy page update ([094e19d](https://github.com/timdixon82/CallScribe/commit/094e19d6c65920050eed83c114468b881357286d))
+* delete-all-data control, export title cleaning, subtitle fixes, export and OCR e2e tests, release permissions ([51b2157](https://github.com/timdixon82/CallScribe/commit/51b21573ad0a1fa3f8e157922d1c24eec0eccc07))
+* run text recognition in an isolated frame built by the service worker ([b162a74](https://github.com/timdixon82/CallScribe/commit/b162a7431f48bf7424a3213860ef6520aa47942a))
+* run text recognition in an isolated frame built by the service worker ([eb6c741](https://github.com/timdixon82/CallScribe/commit/eb6c7416feaf34275b2a3bf35439713b17a0e662))
+* run the OCR engine in a blob worker inside the sandboxed frame so a hung job cannot freeze the page ([e264d90](https://github.com/timdixon82/CallScribe/commit/e264d90cc3bc02172e18cce06e34cfa6ffef067a))
+
+
+### Bug Fixes
+
+* annotate the two required wildcard postMessage targets for semgrep ([75f2ef0](https://github.com/timdixon82/CallScribe/commit/75f2ef064345cd740c29198aee4ffe8c1272fc6e))
+* atomic session delete and import, print via sandboxed iframe ([277b18d](https://github.com/timdixon82/CallScribe/commit/277b18dfb1cee63b3e624ccf1e63d552d5f8f6aa))
+* atomic session delete and import, print via sandboxed iframe ([210f7b6](https://github.com/timdixon82/CallScribe/commit/210f7b67cf5047f2f5220eb03dace315f87be221))
+* batch 6 final fixes (erase all, export cleaning, subtitle fixes, release permissions, export tests) ([d3f1839](https://github.com/timdixon82/CallScribe/commit/d3f18398a0d0a1698900e5189e705ec6cdf9991c))
+* cache closing bracket in findDataUrl so import scan is linear ([122c704](https://github.com/timdixon82/CallScribe/commit/122c704f47b79d3dbdaaa2be24e3e96f2af18290))
+* cap decoded image size on import, catch service worker cache.put rejections, guard build id placeholder ([d8bf5a3](https://github.com/timdixon82/CallScribe/commit/d8bf5a36d91b123e8ca0f98f89a724b20d5e4c48))
+* erase-all touches only this app's caches and service workers, reserved file names, focus and screen reader fixes, orphan screenshot import, privacy wording ([088d6e6](https://github.com/timdixon82/CallScribe/commit/088d6e6f4307d964360fad60d7f54de81c785dc9))
+* give the hidden import file input an accessible name ([85d571b](https://github.com/timdixon82/CallScribe/commit/85d571bd58bd882e50997d5e0e7aaba61b6057fc))
+* keep keyboard focus on the OCR switch while OCR starts, use the real reveal path in the e2e test, use PROTOCOL_VERSION in the worker, note blob: in the frame script-src ([d594bbf](https://github.com/timdixon82/CallScribe/commit/d594bbfe58ff095cc456c24ba1eaceb1af48e2da))
+* keyboard-operable import button, remove Playwright start race, CI timeout ([fdcc33e](https://github.com/timdixon82/CallScribe/commit/fdcc33e4718f8fa01524454d2887108c2b445d1b))
+* linear-time Markdown import, import size caps, safer print frame ([b07326a](https://github.com/timdixon82/CallScribe/commit/b07326a59cee3ade63c45acf79409dba56227061))
+* pin model downloads, verify diarizer hashes, serve runtime locally ([9217921](https://github.com/timdixon82/CallScribe/commit/921792190051b413bbfbbc33a11f7e211e389529))
+* pin model downloads, verify diarizer hashes, serve Transformers.js runtime locally ([7c4cc0b](https://github.com/timdixon82/CallScribe/commit/7c4cc0b7178dd7136bc01987d44c580e5a90f61f))
+* stable CSP e2e, honest worker host test, privacy wording, meta tag limits ([b472111](https://github.com/timdixon82/CallScribe/commit/b4721118335504bcb1c7a493541a96dc15917368))
+* WebGPU adapter check and wasm fallback, network-first service worker, CSP trim, screenshot size on import ([c8b93f5](https://github.com/timdixon82/CallScribe/commit/c8b93f5810525c9ec77baedc1191c346a1470f19))
+
 ## [0.6.0](https://github.com/timdixon82/CallScribe/compare/v0.5.0...v0.6.0) (2026-11-14)
 
 

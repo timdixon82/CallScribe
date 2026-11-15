@@ -20,6 +20,18 @@ test('fileSafeName keeps only safe characters, never starts with a dot and is ca
   assert.equal(fileSafeName('a'.repeat(300)).length, 100);
 });
 
+test('cleanTitle removes direction overrides and zero-width characters', () => {
+  assert.equal(cleanTitle('a\u202Eb\u200Bc\uFEFFd'), 'abcd');
+});
+
+test('fileSafeName avoids Windows reserved names and drops format characters', () => {
+  for (const name of ['CON', 'nul', 'COM1', 'lpt9', 'aux.txt', 'PRN.tar.gz']) assert.equal(fileSafeName(name), `transcript-${name}`);
+  assert.equal(fileSafeName('COM10'), 'COM10');
+  assert.equal(fileSafeName('console'), 'console');
+  assert.equal(fileSafeName('re\u202Eport\u200B'), 'report');
+  assert.equal(fileSafeName('\u200B\u202E'), 'transcript');
+});
+
 test('a crafted title cannot add a heading line to the Markdown export', async () => {
   const markdown = await transcriptMarkdown({ title: CRAFTED, provenance: 'p', exportedAt: 'now', segments: [], screenshots: [], formatDateTime: String, sourceName: String, speakerText: () => '', toDataUrl: async () => '' });
   const [first] = markdown.split('\n');

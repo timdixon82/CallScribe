@@ -100,7 +100,7 @@ test('OCR is explicitly enabled, cached locally, and used as screenshot alternat
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../src/ocr.js', import.meta.url), 'utf8'),
   ]);
-  assert.match(app, /local-browser-transcriber-ocr-v1/);
+  assert.match(app, /OCR_CACHE/);
   assert.match(app, /cacheOcrAssets/);
   assert.match(app, /processScreenshotOcr/);
   assert.match(app, /OCR_PROCESSING_DETAILS/);

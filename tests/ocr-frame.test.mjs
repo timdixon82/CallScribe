@@ -18,7 +18,7 @@ test('the frame page carries its own policy: eval allowed, no network, one hashe
   assert.match(policy, /connect-src 'none'/);
   assert.doesNotMatch(policy, /https?:|\*/);
   assert.match(policy, /default-src 'none'/);
-  assert.match(policy, /worker-src 'none'/);
+  assert.match(policy, /worker-src blob:(;|$)/); // the narrowest change: workers only from a blob, which inherits this policy (no network)
   assert.equal(html.match(/<script/g).length, 1, 'exactly one script element');
   assert.doesNotMatch(html.replace(/<script>[\s\S]*<\/script>/, ''), /<script|<style|<link|<img|<iframe|\son[a-z]+=/i);
   const inline = html.match(/<script>([\s\S]*)<\/script>/)[1];
@@ -38,6 +38,12 @@ test('the bootstrap source has no unreplaced token, no closing script tag, and r
 
 // ---- the bootstrap, run against fake sandbox globals -------------------------------------------------------------
 
+const workers = [];
+class FakeWorker {
+  constructor(url, options) { this.url = url; this.options = options; this.sent = []; workers.push(this); }
+  postMessage(data, transfer) { this.sent.push({ data, transfer }); }
+}
+
 function runBootstrap({ origin = 'null', framed = true, storageThrows = true, cookieThrows = true } = {}) {
   const parent = { posted: [], postMessage(data, target) { this.posted.push({ data, target }); } };
   const win = { parent };
@@ -45,7 +51,7 @@ function runBootstrap({ origin = 'null', framed = true, storageThrows = true, co
   const handlers = [];
   const throwing = (name) => { throw new DOMException(`${name} is denied`, 'SecurityError'); };
   const context = {
-    self: { origin }, window: win, addEventListener: (type, handler) => handlers.push({ type, handler }), URL, Blob,
+    self: { origin }, window: win, Worker: FakeWorker, ArrayBuffer, addEventListener: (type, handler) => handlers.push({ type, handler }), URL, Blob,
     document: Object.defineProperty({}, 'cookie', { get: () => (cookieThrows ? throwing('cookie') : '') }),
   };
   Object.defineProperty(context, 'localStorage', { get: () => (storageThrows ? throwing('localStorage') : { getItem: () => null }) });
@@ -89,6 +95,23 @@ test('the bootstrap considers only the first init from its parent, and needs exa
   await second.message({ source: second.win.parent, data: init, ports: [port()] });
   assert.equal(bad.posted.length, 1);
   assert.equal(bad.posted[0].code, 'engine');
+});
+
+test('a valid init starts one classic blob worker and moves the port and the public files to it', async () => {
+  const names = ['core', 'glue', 'wasm', 'det', 'rec', 'dict'];
+  const buffers = Object.fromEntries(names.map((name) => [name, new ArrayBuffer(4)]));
+  const port = { postMessage() {} };
+  const run = runBootstrap();
+  workers.length = 0;
+  await run.message({ source: run.win.parent, data: { type: 'init', v: PROTOCOL_VERSION, ...buffers }, ports: [port] });
+  assert.equal(workers.length, 1);
+  assert.match(workers[0].url, /^blob:/);
+  assert.equal(workers[0].options, undefined); // classic: Chromium refuses a module worker from an opaque origin
+  const { data, transfer } = workers[0].sent[0];
+  assert.deepEqual(Object.keys(data).sort(), ['det', 'dict', 'glue', 'rec', 'type', 'wasm']); // the engine bytes themselves are not forwarded
+  assert.equal(data.type, 'start');
+  assert.equal(transfer[0], port);
+  assert.equal(transfer.length, 6);
 });
 
 // ---- the service worker ------------------------------------------------------------------------------------------

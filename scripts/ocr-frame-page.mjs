@@ -15,7 +15,7 @@ export function bootstrapSource(raw = readFileSync(BOOTSTRAP_PATH, 'utf8')) {
 export const sha256Source = (source) => `'sha256-${createHash('sha256').update(source, 'utf8').digest('base64')}'`;
 
 export function framePolicy(hash) {
-  return `default-src 'none'; script-src ${hash} blob: 'unsafe-eval' 'wasm-unsafe-eval'; connect-src 'none'; img-src data: blob:; worker-src 'none'; frame-src 'none'; style-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'`;
+  return `default-src 'none'; script-src ${hash} blob: 'unsafe-eval' 'wasm-unsafe-eval'; connect-src 'none'; img-src data: blob:; worker-src blob:; frame-src 'none'; style-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'`;
 }
 
 export function buildFramePage(source = bootstrapSource()) {

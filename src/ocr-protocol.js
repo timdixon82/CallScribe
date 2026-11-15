@@ -3,7 +3,7 @@
 // The frame holds no user data except the pixels of the image being read.
 
 export const PROTOCOL_VERSION = 1;
-export const BOOTSTRAP_VERSION = 1; // bumped whenever src/ocr-frame-bootstrap.js changes in a way the page must know about
+export const BOOTSTRAP_VERSION = 2; // bumped whenever src/ocr-frame-bootstrap.js changes in a way the page must know about
 export const FRAME_PATH = 'ocr-frame.html'; // served by public/sw.js only, never a file on disk or in dist
 export const LIMITS = Object.freeze({
   maxEdge: 2048,

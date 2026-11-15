@@ -22,8 +22,12 @@
     const buffers = ['core', 'glue', 'wasm', 'det', 'rec', 'dict'];
     if (!port || data.v !== PROTOCOL_VERSION || keys !== ['type', 'v', ...buffers].sort().join() || !buffers.every((name) => data[name] instanceof ArrayBuffer)) return fail('The text recognition frame received an invalid start message.');
     try {
-      const module = await import(URL.createObjectURL(new Blob([data.core], { type: 'text/javascript' })));
-      await module.start(port, { wasm: data.wasm, det: data.det, rec: data.rec, dict: data.dict }, URL.createObjectURL(new Blob([data.glue], { type: 'text/javascript' })));
+      // The engine runs in a worker made from the verified bytes, so a job that never ends cannot block the page's timers.
+      // A classic worker: Chromium refuses a module worker from an opaque origin. It is a blob worker: it inherits this frame's policy (no network) and has the same opaque origin.
+      const worker = new Worker(URL.createObjectURL(new Blob([data.core], { type: 'text/javascript' })));
+      const { wasm, glue, det, rec, dict } = data;
+      // shortcut: once the port moves to the worker, a worker that dies cannot report it; the page's start timeout then removes the frame.
+      worker.postMessage({ type: 'start', wasm, glue, det, rec, dict }, [port, wasm, glue, det, rec, dict]);
     } catch (error) { fail('Text recognition could not start.'); }
   });
   // An opaque origin cannot be named as a target, and the hello holds only two version numbers.

@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test';
 import { test, expect } from './helpers.mjs';
+import AxeBuilder from '@axe-core/playwright';
 import { buildFramePage } from '../../scripts/ocr-frame-page.mjs';
 
 // Text recognition runs in an isolated frame that the service worker builds. These tests use the real built app, the real
@@ -105,7 +106,8 @@ test('the frame is isolated: opaque origin, no network, no access to the page st
   expect(attempted.filter((request) => !request.failure()).map((request) => request.url()), 'requests from the frame that were not blocked').toEqual([]);
 });
 
-// Uses the plain test, without the network-blocking route: in Firefox this one test fails with the route in place and passes without it (cause not investigated).
+// Uses the plain test, without the network-blocking route. Cause found: in Firefox this test fails only when the route (request interception) and offline emulation are combined;
+// the frame never greets and the app answers with its reload-once message. It passes online with the route, and offline without it. See docs/decisions/002.
 // Offline, any outside request fails anyway.
 base('offline: after one online load, OCR still works and the frame loads from the service worker', async ({ page, context }) => {
   test.setTimeout(240000);
@@ -188,4 +190,55 @@ test.describe('first visit, with no service worker in control', () => {
     expect(page.frames().length).toBe(1);
     await expect(page.locator('#toggle-ocr')).not.toBeChecked();
   });
+});
+
+test('a job that never finishes cannot freeze the page: its timers keep firing and the timeout can remove the frame', async ({ browser }) => {
+  // The real frame page and bootstrap, with a hostile engine that spins forever the moment it is started. The page plays
+  // the part of the client: it greets, sends init, then counts its own timer ticks while the engine is stuck.
+  const context = await browser.newContext({ serviceWorkers: 'block', baseURL: 'http://localhost:4173' });
+  const page = await context.newPage();
+  await page.route('**/sandboxed.html', (route) => route.fulfill({ contentType: 'text/html', headers: { 'content-security-policy': 'sandbox allow-scripts' }, body: buildFramePage().html }));
+  await page.goto('/index.html');
+  const outcome = await page.evaluate(() => new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.src = '/sandboxed.html';
+    window.addEventListener('message', (event) => {
+      if (event.source !== frame.contentWindow || event.data?.type !== 'hello') return;
+      const spin = new TextEncoder().encode('self.onmessage = () => { for (;;) {} };').buffer;
+      const files = { core: spin, glue: new ArrayBuffer(1), wasm: new ArrayBuffer(1), det: new ArrayBuffer(1), rec: new ArrayBuffer(1), dict: new ArrayBuffer(1) };
+      const channel = new MessageChannel();
+      frame.contentWindow.postMessage({ type: 'init', v: event.data.v, ...files }, '*', [channel.port2, ...Object.values(files)]);
+      let ticks = 0;
+      const ticker = setInterval(() => { ticks += 1; }, 100);
+      setTimeout(() => { clearInterval(ticker); const before = document.querySelectorAll('iframe').length; frame.remove(); resolve({ ticks, before, after: document.querySelectorAll('iframe').length }); }, 2000); // the stand-in for the job timeout
+    });
+    document.body.append(frame);
+  }));
+  expect(outcome.ticks, 'page timers kept firing while the engine spun').toBeGreaterThanOrEqual(12);
+  expect(outcome).toMatchObject({ before: 1, after: 0 });
+  expect(await page.evaluate(() => 1 + 1), 'the page still answers').toBe(2);
+  await context.close();
+});
+
+test('the OCR switch works from the keyboard, is announced, and the page has no axe violations with OCR on', async ({ page }) => {
+  test.setTimeout(180000);
+  await openApp(page);
+  const reveal = () => page.evaluate(() => { // show the switch the way a connected screen does; the keyboard then does the rest
+    const toggle = document.getElementById('toggle-ocr');
+    toggle.disabled = false;
+    for (let node = toggle.parentElement; node; node = node.parentElement) { node.hidden = false; if (node.tagName === 'DETAILS') node.open = true; }
+  });
+  const focusSwitch = () => expect(async () => { await reveal(); await page.locator('#toggle-ocr').focus(); await expect(page.locator('#toggle-ocr')).toBeFocused({ timeout: 500 }); }).toPass({ timeout: 10000 }); // the app may hide the section again just after load
+  await focusSwitch();
+  await page.keyboard.press('Space');
+  await expect(page.locator('#toggle-ocr')).toBeChecked();
+  await expect(page.locator('#ocr-status')).toContainText(/Local OCR is ready/, { timeout: 120000 });
+  expect(await page.locator('#ocr-status').getAttribute('role')).toBe('status');
+  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'wcag2aaa', 'wcag22aaa']).analyze();
+  expect(violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);
+  // The app disables the switch while it turns OCR on and hides the capture section again, so the reveal is repeated before the second keypress.
+  await expect(page.locator('#toggle-ocr')).toBeEnabled();
+  await focusSwitch();
+  await page.keyboard.press('Space');
+  await expect(page.locator('#toggle-ocr')).not.toBeChecked();
 });

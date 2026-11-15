@@ -41,3 +41,5 @@
 /index.html
 /scripts/
 require /index.html
+require /sw.js
+require /ocr/core.js

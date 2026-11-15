@@ -60,7 +60,54 @@ export function parseBlocks(markdown) {
  * Parse and validate everything, with no writes. Returns the records to store and the skipped blocks.
  * Throws before anything is stored if the file is too large or holds no usable passage.
  */
-export async function parseCallScribeMarkdown(file, now = Date.now()) {
+export const MAX_IMPORT_IMAGE_PIXELS = 40_000_000;
+const HEADER_BYTES = 1024 * 1024;
+const u16 = (b, i) => (b[i] << 8) | b[i + 1];
+const ascii = (b, i, text) => { for (let k = 0; k < text.length; k += 1) if (b[i + k] !== text.charCodeAt(k)) return false; return true; };
+
+/** Read the declared width and height from PNG, JPEG or WebP header bytes without decoding. Returns null if unknown or malformed. Linear and bounds-checked. */
+export function declaredImageSize(b) {
+  if (b.length >= 24 && ascii(b, 1, 'PNG') && b[0] === 0x89 && ascii(b, 12, 'IHDR')) return { width: u16(b, 16) * 65536 + u16(b, 18), height: u16(b, 20) * 65536 + u16(b, 22) };
+  if (b.length >= 30 && ascii(b, 0, 'RIFF') && ascii(b, 8, 'WEBP')) {
+    if (ascii(b, 12, 'VP8 ') && b[23] === 0x9d && b[24] === 0x01 && b[25] === 0x2a) return { width: (b[26] | (b[27] << 8)) & 0x3fff, height: (b[28] | (b[29] << 8)) & 0x3fff };
+    if (ascii(b, 12, 'VP8L') && b[20] === 0x2f) return { width: 1 + (b[21] | ((b[22] & 0x3f) << 8)), height: 1 + ((b[22] >> 6) | (b[23] << 2) | ((b[24] & 0x0f) << 10)) };
+    if (ascii(b, 12, 'VP8X')) return { width: 1 + (b[24] | (b[25] << 8) | (b[26] << 16)), height: 1 + (b[27] | (b[28] << 8) | (b[29] << 16)) };
+    return null;
+  }
+  if (b.length >= 4 && b[0] === 0xff && b[1] === 0xd8) {
+    let i = 2;
+    while (i + 4 <= b.length) {
+      if (b[i] !== 0xff) return null;
+      const marker = b[i + 1];
+      if (marker === 0xff) { i += 1; continue; }
+      if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) { i += 2; continue; }
+      const length = u16(b, i + 2);
+      if (length < 2) return null;
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) return i + 9 <= b.length ? { width: u16(b, i + 7), height: u16(b, i + 5) } : null;
+      i += 2 + length;
+    }
+  }
+  return null;
+}
+
+const browserDecode = async (blob) => {
+  const bitmap = await createImageBitmap(blob); const size = { width: bitmap.width, height: bitmap.height }; bitmap.close?.(); return size;
+};
+
+// Reads the declared size from the header first, and decodes only when it is within MAX_IMPORT_IMAGE_PIXELS, so a tiny file cannot force a huge decode.
+// Returns zeros where the size is unknown, too large or cannot be decoded, so import never fails on it. `tooLarge` is set when the cap applied.
+export async function measureImage(blob, decode = browserDecode) {
+  const none = { width: 0, height: 0 };
+  try {
+    if (decode === browserDecode && typeof createImageBitmap !== 'function') return none;
+    const declared = declaredImageSize(new Uint8Array(await blob.slice(0, HEADER_BYTES).arrayBuffer()));
+    if (!declared || !declared.width || !declared.height) return none;
+    if (declared.width * declared.height > MAX_IMPORT_IMAGE_PIXELS) return { ...none, tooLarge: true };
+    return await decode(blob);
+  } catch { return none; }
+}
+
+export async function parseCallScribeMarkdown(file, now = Date.now(), measure = measureImage) {
   if (file.size > MAX_IMPORT_BYTES) throw new Error(`The file is larger than the ${MAX_IMPORT_BYTES / 1024 / 1024} megabyte limit.`);
   const { blocks, skipped } = parseBlocks(await file.text());
   if (!blocks.length) throw new Error('No CallScribe Mic, App, or Screenshot headings were found. Choose an exported CallScribe Markdown file.');
@@ -79,7 +126,9 @@ export async function parseCallScribeMarkdown(file, now = Date.now()) {
       let blob; try { blob = await (await fetch(dataUrl.url)).blob(); } catch { skipped.push(`Screenshot image could not be read: ${entry.heading.slice(0, 60)}`); continue; }
       const screenshotId = crypto.randomUUID(); let ocrText = textFromBlock(entry.body.replace(/^\[[^\]\n]*\]$/gm, '').replace(/^Screenshot OCR:\s*/m, ''));
       if (ocrText.length > MAX_IMPORT_TEXT_CHARS) { skipped.push(`Screenshot text too long, kept the image only: ${entry.heading.slice(0, 60)}`); ocrText = ''; }
-      screenshots.push({ id: screenshotId, sessionId: id, capturedAt, reason: 'Imported screenshot', width: 0, height: 0, blob, ocrState: ocrText ? 'ready' : 'off', ocrText });
+      const { tooLarge, ...size } = await measure(blob);
+      if (tooLarge) skipped.push(`Screenshot too large to measure, kept without its size: ${entry.heading.slice(0, 60)}`);
+      screenshots.push({ id: screenshotId, sessionId: id, capturedAt, reason: 'Imported screenshot', ...size, blob, ocrState: ocrText ? 'ready' : 'off', ocrText });
       segments.push({ ...base, id: crypto.randomUUID(), source: 'screen', text: '[Imported screenshot]', screenshotId });
       if (ocrText) segments.push({ ...base, id: crypto.randomUUID(), source: 'ocr', text: ocrText, screenshotId });
     } else {

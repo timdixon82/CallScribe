@@ -1,4 +1,5 @@
 import { env, pipeline } from '@huggingface/transformers';
+import { loadTranscriber } from './transcriber-load.js';
 
 // Cache Storage is checked before a remote request. Do not also probe Vite's
 // SPA fallback as a local `/models/` directory: it returns index.html with a
@@ -13,17 +14,8 @@ const send = (type, detail = {}) => postMessage({ type, ...detail });
 function progress(data) { send('progress', { data }); }
 async function load(model, localOnly, preferredDevice) {
   send('model-status', { status: localOnly ? 'Verifying cached model' : 'Preparing download', modelId: model.id });
-  let device = preferredDevice || (self.navigator.gpu ? 'webgpu' : 'wasm');
-  try {
-    transcriber = await pipeline('automatic-speech-recognition', model.repo, { revision: model.revision, device, dtype: device === 'webgpu' ? 'q4' : 'q8', progress_callback: progress });
-  } catch (error) {
-    if (device !== 'webgpu') throw error;
-    // Some published ONNX model variants do not provide WebGPU's requested dtype.
-    // Fall back to the widely supported local WASM q8 route before reporting failure.
-    device = 'wasm';
-    send('model-status', { status: 'WebGPU was unavailable for this model; retrying locally with WebAssembly', modelId: model.id });
-    transcriber = await pipeline('automatic-speech-recognition', model.repo, { revision: model.revision, device, dtype: 'q8', progress_callback: progress });
-  }
+  const result = await loadTranscriber({ createPipeline: pipeline, nav: self.navigator, model, preferredDevice, progress, status: (text) => send('model-status', { status: text, modelId: model.id }) });
+  transcriber = result.transcriber; const { device } = result;
   activeId = model.id;
   send('model-ready', { modelId: model.id, device });
 }

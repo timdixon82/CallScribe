@@ -34,7 +34,7 @@ test('diarizer worker verifies bytes before caching and uses no unpinned URL', a
 
 test('every Transformers.js model has a 40-character revision and the workers pass it', async () => {
   for (const model of [...MODELS, ...MINUTES_MODELS.filter((item) => item.repo)]) assert.match(model.revision, COMMIT, model.id);
-  for (const file of ['transcriber.worker.js', 'minutes.worker.v2.js']) assert.match(await read(`../src/${file}`), /revision: model\.revision/);
+  for (const file of ['transcriber-load.js', 'minutes.worker.v2.js']) assert.match(await read(`../src/${file}`), /revision: model\.revision/);
 });
 
 test('both Transformers.js workers use the local ONNX Runtime folder, not a CDN', async () => {

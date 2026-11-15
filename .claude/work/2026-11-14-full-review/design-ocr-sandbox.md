@@ -1,5 +1,7 @@
 # Design: OCR in a sandboxed frame (N1, option B)
 
+Status: Superseded. The built design differs: the frame page is built by the service worker, not a static file, and the engine runs in a blob worker inside the frame. See `docs/decisions/002-ocr-isolated-frame-and-worker.md`.
+
 Tier 2. Design only. Author: Jacob. Date: 2026-11-15. Based on main at d3f1839.
 
 ## 1. Summary and recommendation

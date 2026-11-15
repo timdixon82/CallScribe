@@ -1,3 +1,4 @@
+import { cleanTitle } from './safe-text.js';
 import { putSessionBundle } from './store.js';
 
 export const MAX_IMPORT_BYTES = 50 * 1024 * 1024;
@@ -7,7 +8,7 @@ export const MAX_IMPORT_TEXT_CHARS = 100000;
 const MAX_HEADING_CHARS = 300;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 // Headings the exporter writes that carry no importable passage of their own.
-const QUIET_HEADINGS = /^(Generated with|Screenshot\s+[—-]|.+\s+[—-]\s+OCR\b)/i;
+const QUIET_HEADINGS = /^(Generated with|.+\s+[—-]\s+OCR\b)/i;
 
 function timestamp(value, fallback) { const parsed = Date.parse(value); return Number.isFinite(parsed) ? parsed : fallback; }
 // Removes ![alt](url) with indexOf scans, so the cost stays linear however many "![" the input repeats.
@@ -47,6 +48,7 @@ export function parseBlocks(markdown) {
     if (title.length > MAX_HEADING_CHARS) { skipped.push(`Heading too long to read: ${title.slice(0, 60)}`); return; }
     const match = title.match(/^(.+?)\s+[—-]\s+(Mic|App|Screenshot)(?:\s*[|(].*)?$/i);
     if (match) blocks.push({ timestamp: match[1], kind: match[2].toLowerCase(), body: lines.join('\n').trim(), heading: title });
+    else if (/^Screenshot\s+[—-]\s+\S/i.test(title)) blocks.push({ timestamp: title.replace(/^Screenshot\s+[—-]\s+/i, ''), kind: 'screenshot', body: lines.join('\n').trim(), heading: title }); // an exported screenshot with no linked passage
     else if (!QUIET_HEADINGS.test(title)) skipped.push(`Heading not recognised: ${title.slice(0, 60)}`);
   };
   for (const line of markdown.split('\n')) {
@@ -112,7 +114,7 @@ export async function parseCallScribeMarkdown(file, now = Date.now(), measure = 
   const { blocks, skipped } = parseBlocks(await file.text());
   if (!blocks.length) throw new Error('No CallScribe Mic, App, or Screenshot headings were found. Choose an exported CallScribe Markdown file.');
   const id = crypto.randomUUID(); const startedAt = timestamp(blocks[0].timestamp, now);
-  const session = { id, name: file.name.replace(/\.md$/i, ''), startedAt, endedAt: timestamp(blocks.at(-1).timestamp, startedAt), status: 'stopped', imported: true, speakerAssignments: {} };
+  const session = { id, name: cleanTitle(file.name.replace(/\.md$/i, '')) || 'Imported transcript', startedAt, endedAt: timestamp(blocks.at(-1).timestamp, startedAt), status: 'stopped', imported: true, speakerAssignments: {} };
   const segments = []; const screenshots = [];
   for (const [index, entry] of blocks.entries()) {
     if (segments.length >= MAX_IMPORT_SEGMENTS) { skipped.push(`Over the limit of ${MAX_IMPORT_SEGMENTS} passages: ${entry.heading.slice(0, 60)}`); continue; }
@@ -129,7 +131,7 @@ export async function parseCallScribeMarkdown(file, now = Date.now(), measure = 
       const { tooLarge, ...size } = await measure(blob);
       if (tooLarge) skipped.push(`Screenshot too large to measure, kept without its size: ${entry.heading.slice(0, 60)}`);
       screenshots.push({ id: screenshotId, sessionId: id, capturedAt, reason: 'Imported screenshot', ...size, blob, ocrState: ocrText ? 'ready' : 'off', ocrText });
-      segments.push({ ...base, id: crypto.randomUUID(), source: 'screen', text: '[Imported screenshot]', screenshotId });
+      segments.push({ ...base, id: crypto.randomUUID(), source: 'screen', text: '[Imported screenshot]', screenshotId }); // a screenshot with no linked passage in the file still gets one, so it shows in the transcript
       if (ocrText) segments.push({ ...base, id: crypto.randomUUID(), source: 'ocr', text: ocrText, screenshotId });
     } else {
       const text = textFromBlock(entry.body);

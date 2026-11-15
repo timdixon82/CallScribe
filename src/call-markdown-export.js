@@ -1,8 +1,10 @@
+import { cleanTitle } from './safe-text.js';
+
 /** Build the CallScribe Markdown transcript lines. Pure: callers supply formatting and data URL helpers. */
 export async function transcriptMarkdown({ title, provenance, exportedAt, segments, screenshots, formatDateTime, sourceName, speakerText, toDataUrl }) {
   const byId = new Map(screenshots.map((shot) => [shot.id, shot]));
   const exported = new Set();
-  const lines = [`# ${title}`, '', '## Generated with', '', provenance, '', `Exported: ${exportedAt}`, ''];
+  const lines = [`# ${cleanTitle(title) || 'Transcript'}`, '', '## Generated with', '', provenance, '', `Exported: ${exportedAt}`, ''];
   const picture = async (shot) => {
     lines.push(`![Screenshot captured ${formatDateTime(shot.capturedAt)}](${await toDataUrl(shot.blob)})`, '');
     if (shot.ocrText) lines.push(`Screenshot OCR: ${shot.ocrText}`, '');

@@ -123,3 +123,10 @@ export const putSessionBundle = ({ session, segments, screenshots }) => transact
   for (const item of segments) tx.objectStore('segments').put(item);
   for (const item of screenshots) tx.objectStore('screenshots').put(item);
 });
+
+/** Empty every object store in one transaction: everything is cleared or nothing is. */
+export const clearAllStores = () => openDb().then((db) => {
+  const names = [...db.objectStoreNames];
+  db.close();
+  return transaction(names, (tx) => names.forEach((name) => tx.objectStore(name).clear()));
+});

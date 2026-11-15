@@ -149,3 +149,22 @@ test('an oversized screenshot is kept without a size and reported in plain langu
   assert.equal(result.screenshots[0].tooLarge, undefined);
   assert.match(result.skipped[0], /too large to measure/);
 });
+
+test('a screenshot with no linked passage survives an export and import round trip', async () => {
+  const t = Date.UTC(2026, 10, 14, 10, 0, 0);
+  const segments = [{ id: 'g1', start: t, source: 'microphone', text: 'Hello there' }];
+  const screenshots = [{ id: 'orphan', capturedAt: t + 5000, blob: new Blob(['x'], { type: 'image/png' }) }];
+  const md = await transcriptMarkdown({ title: 'Round trip', provenance: 'p', exportedAt: 'now', segments, screenshots, formatDateTime: fmt, sourceName: (s) => (s === 'microphone' ? 'Mic' : sourceName(s)), speakerText: () => '', toDataUrl: async () => PNG });
+  assert.match(md, /## Screenshot — /);
+  const parsed = await parseCallScribeMarkdown(file(md));
+  assert.equal(parsed.screenshots.length, 1);
+  assert.equal(parsed.skipped.length, 0);
+  assert.ok(parsed.segments.some((s) => s.source === 'screen' && s.screenshotId === parsed.screenshots[0].id));
+});
+
+test('an orphan screenshot block that cannot be read is listed as skipped', async () => {
+  const parsed = await parseCallScribeMarkdown(file(`## 14 Nov 2026, 10:00:00 — Mic\n\nHello\n\n## Screenshot — 14 Nov 2026, 10:00:05\n\nno image here\n`));
+  assert.equal(parsed.screenshots.length, 0);
+  assert.equal(parsed.skipped.length, 1);
+  assert.match(parsed.skipped[0], /Screenshot without an image/);
+});

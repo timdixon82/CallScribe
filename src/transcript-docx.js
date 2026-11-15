@@ -1,8 +1,10 @@
+import { cleanTitle } from './safe-text.js';
+
 /** Create a local Word transcript from all entries, independently of display filters. */
 export async function createTranscriptDocx({ title, provenance = '', entries = [], screenshots = [] }) {
   const { Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } = await import('docx');
   const paragraphs = (text) => String(text || '').split(/\r?\n/).map((line) => new Paragraph({ children: [new TextRun(line)] }));
-  const children = [new Paragraph({ text: title || 'Transcript', heading: HeadingLevel.TITLE }), ...paragraphs(provenance)];
+  const children = [new Paragraph({ text: cleanTitle(title) || 'Transcript', heading: HeadingLevel.TITLE }), ...paragraphs(provenance)];
   const shots = new Map(screenshots.map((shot) => [shot.id, shot]));
   const used = new Set();
   function appendScreenshot(shot) {
@@ -30,7 +32,7 @@ export async function createTranscriptDocx({ title, provenance = '', entries = [
     remaining.forEach(appendScreenshot);
   }
   return Packer.toBlob(new Document({
-    creator: 'CallScribe', title: title || 'Transcript',
+    creator: 'CallScribe', title: cleanTitle(title) || 'Transcript',
     styles: {
       default: { document: { run: { font: 'Arial', size: 22, color: '111111' }, paragraph: { spacing: { after: 120, line: 276 } } } },
       paragraphStyles: [

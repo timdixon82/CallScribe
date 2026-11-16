@@ -22,7 +22,7 @@ Moonshine Base has a browser implementation using ONNX Runtime Web through Trans
 
 ### Browser-managed model caching
 
-The MVP stores downloaded model responses in Cache Storage and requests persistent storage where the browser supports it. The selected model is recorded locally, while transcripts and sessions use IndexedDB. Cache Storage is browser-managed: clearing site data or browser quota eviction can remove models, so the interface must make this clear. The model loader verifies a model-file manifest before declaring a model ready.
+The MVP stores downloaded model responses in Cache Storage, in caches named callscribe-transformers-v1, callscribe-webllm-model-v1, callscribe-webllm-wasm-v1 and callscribe-webllm-config-v1 (see Decision 003), and requests persistent storage where the browser supports it. The selected model is recorded locally, while transcripts and sessions use IndexedDB. Cache Storage is browser-managed: clearing site data or browser quota eviction can remove models, so the interface must make this clear. The model loader verifies a model-file manifest before declaring a model ready.
 
 ### Accurate model-download progress
 

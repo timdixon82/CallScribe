@@ -1,7 +1,9 @@
 import { env, pipeline } from '@huggingface/transformers';
+import { TRANSFORMERS_CACHE } from './cache-names.js';
+import { scopedCache } from './scoped-cache.js';
 import { chunkEvidence, consolidateExtractions, conservativeRecovery, validateExtraction } from './minutes.js';
 
-env.useBrowserCache = true; env.allowLocalModels = false;
+env.useCustomCache = true; env.customCache = scopedCache(TRANSFORMERS_CACHE); env.useBrowserCache = false; env.allowLocalModels = false; // app-specific cache name, not the shared default
 // ONNX Runtime files for Transformers.js are served from this site, not a CDN (see scripts/copy-ocr-assets.mjs).
 env.backends.onnx.wasm.wasmPaths = new URL('../ort-tfjs/', self.location.href).href;
 let generator; let loadedModel; let cancelled = false;

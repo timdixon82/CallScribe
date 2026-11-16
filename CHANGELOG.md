@@ -2,6 +2,14 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.7.1](https://github.com/timdixon82/CallScribe/compare/v0.7.0...v0.7.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* store model files under app-specific cache names ([d46e71c](https://github.com/timdixon82/CallScribe/commit/d46e71c7e46dc3582e92219f815cef989ee6a33d))
+* store model files under app-specific cache names ([bad4dea](https://github.com/timdixon82/CallScribe/commit/bad4dea6b87c78b91d8efe929a42498564cee7cc))
+
 ## [0.7.0](https://github.com/timdixon82/CallScribe/compare/v0.6.0...v0.7.0) (2026-11-15)
 
 

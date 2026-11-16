@@ -165,7 +165,7 @@ test('the resumable-run fingerprint changes when source evidence changes without
 
 test('the active worker creates a conservative evidence-based result after chunk extraction', async () => {
   const worker = await readFile(new URL('../src/minutes.worker.v2.js', import.meta.url), 'utf8');
-  assert.match(worker, /env\.useBrowserCache\s*=\s*true/);
+  assert.match(worker, /env\.useCustomCache\s*=\s*true; env\.customCache\s*=\s*scopedCache\(TRANSFORMERS_CACHE\); env\.useBrowserCache\s*=\s*false/);
   assert.match(worker, /env\.allowLocalModels\s*=\s*false/);
   assert.doesNotMatch(worker, /local_files_only/);
   assert.match(worker, /Use an empty array whenever there is no explicit evidence/);

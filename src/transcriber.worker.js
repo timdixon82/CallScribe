@@ -1,10 +1,12 @@
 import { env, pipeline } from '@huggingface/transformers';
 import { loadTranscriber } from './transcriber-load.js';
+import { TRANSFORMERS_CACHE } from './cache-names.js';
+import { scopedCache } from './scoped-cache.js';
 
-// Cache Storage is checked before a remote request. Do not also probe Vite's
-// SPA fallback as a local `/models/` directory: it returns index.html with a
-// 200 response, which otherwise gets mistaken for a model asset.
-env.useBrowserCache = true;
+// Cache Storage is checked before a remote request, under this app's own cache name (the library's default name is shared
+// with other sites on this web address). Do not also probe Vite's SPA fallback as a local `/models/` directory: it returns
+// index.html with a 200 response, which otherwise gets mistaken for a model asset.
+env.useCustomCache = true; env.customCache = scopedCache(TRANSFORMERS_CACHE); env.useBrowserCache = false;
 env.allowLocalModels = false;
 // ONNX Runtime files for Transformers.js are served from this site, not a CDN (see scripts/copy-ocr-assets.mjs).
 env.backends.onnx.wasm.wasmPaths = new URL('../ort-tfjs/', self.location.href).href;

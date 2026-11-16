@@ -1,5 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, importSample, openPriorSessions, storedCounts } from './helpers.mjs';
+import { HF_REVISIONS } from '../../src/model-manifest.js';
+
+const PINNED = `https://huggingface.co/onnx-community/whisper-tiny/resolve/${HF_REVISIONS['onnx-community/whisper-tiny']}/onnx/model.onnx`;
+const FOREIGN = 'https://huggingface.co/someone-else/their-model/resolve/main/model.onnx';
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'wcag2aaa', 'wcag22aaa'];
 
@@ -9,9 +13,12 @@ async function prepare(page) {
   await openPriorSessions(page);
   await importSample(page);
   await expect(page.locator('#saved-session-list tr', { hasText: 'E2E sample' })).toBeVisible();
-  await page.evaluate(async () => {
+  await page.evaluate(async ({ pinned, foreign }) => {
     await navigator.serviceWorker.ready;
-    await (await caches.open('transformers-cache')).put('https://localhost/synthetic', new Response('x'));
+    await (await caches.open('callscribe-transformers-v1')).put('https://localhost/synthetic', new Response('x'));
+    // The library's old default name is shared with other sites: this app's pinned entry goes, the foreign entry and the cache stay.
+    const legacy = await caches.open('transformers-cache');
+    await legacy.put(pinned, new Response('x')); await legacy.put(foreign, new Response('x'));
     await (await caches.open('other-site-cache')).put('https://localhost/foreign', new Response('x')); // not this app's, must survive
     localStorage.setItem('localBrowserTranscriberTheme', 'dark');
     // Put one record in every IndexedDB store, so a store that erase-all skipped cannot look empty by accident.
@@ -24,12 +31,13 @@ async function prepare(page) {
       tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
     });
     db.close();
-  });
+  }, { pinned: PINNED, foreign: FOREIGN });
 }
 const remaining = (page) => page.evaluate(async () => ({
-  caches: await caches.keys(),
+  caches: (await caches.keys()).sort(),
   keys: Object.keys(localStorage).filter((key) => key.startsWith('localBrowserTranscriber')),
   workers: (await navigator.serviceWorker.getRegistrations()).length,
+  legacyEntries: (await (await caches.open('transformers-cache')).keys()).map((request) => request.url),
 }));
 
 test('cancel and Escape keep the data and return focus to the button', async ({ page }) => {
@@ -53,7 +61,7 @@ test('cancel and Escape keep the data and return focus to the button', async ({ 
   await expect(dialog).toBeHidden();
   await expect(button).toBeFocused();
   expect((await storedCounts(page)).sessions).toBe(sessionsBefore);
-  expect((await remaining(page)).caches).toContain('transformers-cache');
+  expect((await remaining(page)).caches).toContain('callscribe-transformers-v1');
   await expect(page.locator('#erase-all-status')).toHaveText('');
 });
 
@@ -89,5 +97,5 @@ test('confirming deletes everything, announces it and moves focus to the status 
   const counts = await storedCounts(page);
   expect(Object.keys(counts).sort(), 'every store still exists').toEqual(Object.keys(before).sort());
   expect(Object.values(counts).every((n) => n === 0), `every IndexedDB store is empty: ${JSON.stringify(counts)}`).toBe(true);
-  expect(await remaining(page)).toEqual({ caches: ['other-site-cache'], keys: [], workers: 0 });
+  expect(await remaining(page)).toEqual({ caches: ['other-site-cache', 'transformers-cache'], keys: [], workers: 0, legacyEntries: [FOREIGN] });
 });

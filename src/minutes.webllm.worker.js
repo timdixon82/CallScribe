@@ -1,8 +1,11 @@
 import { CreateMLCEngine, prebuiltAppConfig } from '@mlc-ai/web-llm';
 import { pinnedAppConfig } from './model-manifest.js';
+import { WEBLLM_CACHE_RENAMES } from './cache-names.js';
+import { assertCachesRenamed, installCachesRename } from './scoped-cache.js';
 import { chunkEvidence, consolidateExtractions, conservativeRecovery, validateExtraction } from './minutes.js';
 
 let engine;
+let renamed; // the caches wrapper, installed once
 let cancelled = false;
 let checkpoint = { extractions: [], total: 0 };
 const send = (type, detail = {}) => postMessage({ type, ...detail });
@@ -68,6 +71,9 @@ async function load(model) {
   cancelled = false;
   checkpoint = { extractions: [], total: 0 };
   const startedAt = performance.now();
+  // WebLLM has no cache-name option and uses names other sites can share. Rename them for this worker, and fail closed:
+  // if the override is not in force, report an error and never create the engine.
+  if (renamed) assertCachesRenamed(self, renamed, WEBLLM_CACHE_RENAMES); else renamed = installCachesRename(self, WEBLLM_CACHE_RENAMES);
   engine = await CreateMLCEngine(model.webllmModel, { appConfig: pinnedAppConfig(prebuiltAppConfig), initProgressCallback: (report) => send('model-status', { status: report.text }) });
   if (cancelled) return send('cancelled', checkpoint);
   send('model-ready', { modelId: model.id, device: 'webgpu', loadMs: Math.round(performance.now() - startedAt) });

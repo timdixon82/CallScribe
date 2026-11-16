@@ -26,3 +26,11 @@ test('the page policy allows frames only from its own site, with no blob or data
   const policy = (await read('../index.html')).match(/Content-Security-Policy" content="([^"]+)"/)[1];
   assert.match(policy, /(^|; )frame-src 'self'(;|$)/);
 });
+
+test('the privacy page says where models are stored, what delete-all cannot remove, and that the web address may be shared', async () => {
+  const privacy = await read('../public/docs/privacy.html');
+  assert.match(privacy, /Model files are now stored under names starting with callscribe-\. If you used an earlier version, some older model files may remain under the default names that other sites can also use\. Delete all my data removes the ones it can recognise as this app's\. These are public model files, not your recordings\. To remove the rest, clear this site's data in your browser settings, which also clears other pages on the same web address\./);
+  assert.match(privacy, /scoped to this web address, which other pages on the same host may share/);
+  assert.doesNotMatch(privacy, /scoped to this site/);
+  assert.doesNotMatch(privacy, /a few (older )?(model )?files/i);
+});

@@ -65,7 +65,18 @@ test('settings tabs work with arrow keys', async ({ page }) => {
   await page.getByRole('tab', { name: 'Controls' }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Settings' })).toHaveAttribute('aria-selected', 'true');
-  await expect(page.getByRole('tab', { name: 'Settings' })).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Settings', level: 2 })).toBeFocused();
+  await page.getByRole('tab', { name: 'Settings' }).focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('tab', { name: 'Controls' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('heading', { name: 'Controls', level: 2 })).toBeFocused();
+});
+
+test('quick start lists the three sources with their actions and no Back button', async ({ page }) => {
+  await page.goto('/index.html');
+  for (const name of ['Microphone', 'App audio', 'Screenshots']) await expect(page.locator('.capture-summary dt', { hasText: name })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Share screen and audio' }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Back to transcript' })).toHaveCount(0);
 });
 
 test('import control is a keyboard-operable button that opens the file chooser', async ({ page }) => {

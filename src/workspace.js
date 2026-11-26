@@ -28,7 +28,7 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   capture.id = 'capture-panel';
   capture.setAttribute('aria-labelledby', 'session-heading');
   capture.tabIndex = -1;
-  document.getElementById('session-heading').textContent = 'Capture and controls';
+  document.getElementById('session-heading').textContent = 'Controls';
   document.querySelector('main > header h1')?.remove();
   // Keep a genuine page heading in addition to the two workspace headings.
   const pageHeading = document.createElement('h1');
@@ -43,12 +43,14 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   summary.className = 'capture-summary';
   summary.innerHTML = `<p id="capture-state" class="capture-state"></p><p id="capture-elapsed" hidden></p>
     <dl>
-      <div><dt>Microphone</dt><dd><span id="capture-microphone"></span><label class="sr-only" for="quick-microphone-select">Select microphone</label><select id="quick-microphone-select" aria-label="Select microphone"></select><a class="capture-source-link" href="#microphone-select">Microphone settings</a></dd></div>
-      <div><dt>App audio</dt><dd><span id="capture-app-audio"></span><button id="summary-share-screen" class="capture-source-action" type="button">Share screen and audio</button></dd></div>
-      <div><dt>Screenshots</dt><dd><span id="capture-screenshots"></span><a id="summary-screenshot-settings" class="capture-source-link" href="#connect-app-audio">Set up screenshots</a></dd></div>
+      <div id="source-microphone"><dt>Microphone</dt><dd><span id="capture-microphone"></span><label class="sr-only" for="quick-microphone-select">Select microphone</label><select id="quick-microphone-select" aria-label="Select microphone"></select><a class="capture-source-link" href="#microphone-select">Microphone settings</a></dd></div>
+      <div id="source-app-audio"><dt>App audio</dt><dd><span id="capture-app-audio"></span><button id="summary-share-screen" class="capture-source-action" type="button"><span aria-hidden="true" class="source-icon">&#9635;</span><span id="summary-share-label">Share screen and audio</span></button></dd></div>
+      <div id="source-screenshots"><dt>Screenshots</dt><dd><span id="capture-screenshots"></span><a id="summary-screenshot-settings" class="capture-source-link" href="#connect-app-audio">Set up screenshots</a></dd></div>
     </dl>
     <p id="capture-announcement" class="sr-only" role="status" aria-atomic="true"></p>`;
-  capture.querySelector('h2').after(summary, sessionActions, ui['app-status'], ui['session-status']);
+  // Option 2 (Source rows): Record and New transcript on top, then one row per source.
+  capture.querySelector('h2').after(summary);
+  summary.querySelector('dl').before(sessionActions, ui['app-status'], ui['session-status']);
   capture.querySelector('h2').before(summary.querySelector('#capture-state'));
   document.getElementById('capture-state').hidden = true;
   const quickHeading = document.createElement('h3'); quickHeading.textContent = 'Quick start';
@@ -63,6 +65,9 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   ui['pause-session'].setAttribute('aria-label', 'Pause transcription. Shortcut: Space');
   ui['new-session'].querySelector('.button-label').textContent = 'New transcript';
   sessionActions.append(ui['new-session']);
+  // The existing Capture screen now button moves into the Screenshots row; no duplicate is made.
+  const screenshotNow = sessionActions.querySelector('[data-capture-screen]');
+  summary.querySelector('#capture-screenshots').after(screenshotNow);
 
   const modelPicker = document.querySelector('.model-picker');
   const language = document.getElementById('language-control');
@@ -104,7 +109,7 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   previewContent.id = 'screen-preview-content';
   preview.append(previewHeading, previewContent);
   screenSettings.append(screenshotSettings);
-  capture.append(preview);
+  document.getElementById('transcript-heading').after(preview);
   function setupTabs() {
   const tabList = document.createElement('div');
   tabList.className = 'capture-tabs';
@@ -117,29 +122,35 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   const fixed = [document.getElementById('capture-state'), document.getElementById('session-heading')];
   controlsPanel.append(...[...capture.children].filter(node => !fixed.includes(node) && node !== settingsNavigation));
   settingsPanel.append(settingsNavigation);
+  const heading = document.getElementById('session-heading');
   const tabs = [];
-  function selectTab(index, focus = false) {
+  function selectTab(index, userSwitch = false) {
     tabs.forEach((tab, tabIndex) => {
       const selected = tabIndex === index;
       tab.setAttribute('aria-selected', String(selected));
       tab.tabIndex = selected ? 0 : -1;
       document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
     });
-    if (focus) tabs[index].focus();
+    heading.textContent = index === 0 ? 'Controls' : 'Settings';
+    if (userSwitch) {
+      // With no Back button, choosing Controls returns the main pane from a settings page to the transcript.
+      if (index === 0 && currentPane !== transcriptPanel && currentPane !== notes) showPane(transcriptPanel, false);
+      heading.tabIndex = -1; heading.focus();
+    }
   }
   for (const [index, [label, panel]] of [['Controls', controlsPanel], ['Settings', settingsPanel]].entries()) {
     const tab = document.createElement('button'); tab.type = 'button';
     tab.id = `capture-tab-${index}`; tab.textContent = label;
     tab.setAttribute('role', 'tab'); tab.setAttribute('aria-controls', panel.id);
     panel.setAttribute('role', 'tabpanel'); panel.setAttribute('aria-labelledby', tab.id);
-    tab.addEventListener('click', () => selectTab(index));
+    tab.addEventListener('click', () => selectTab(index, true));
     tab.addEventListener('keydown', event => {
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? 1 : event.key === 'ArrowRight' || event.key === 'ArrowLeft' ? 1 - index : null;
       if (next !== null) { event.preventDefault(); selectTab(next, true); }
     });
     tabs.push(tab); tabList.append(tab);
   }
-  capture.append(tabList, controlsPanel, settingsPanel);
+  capture.append(tabList, heading, controlsPanel, settingsPanel);
   capture.addEventListener('recording-started', () => { selectTab(0); showPane(transcriptPanel, false); });
   selectTab(0);
   return selectTab;
@@ -223,7 +234,7 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   const diagnostics = expandPage('diagnostics-panel', 'Diagnostics');
   const views = [transcriptPanel, settings, captureSettings, notes, people, history, diagnostics];
   rightPane.append(...views);
-  workspace.append(capture, rightPane);
+  workspace.append(rightPane, capture);
   const documentTabs = document.createElement('div');
   documentTabs.className = 'capture-tabs'; documentTabs.setAttribute('role', 'tablist');
   documentTabs.setAttribute('aria-label', 'Meeting documents');
@@ -243,7 +254,9 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
     documentButtons.push(tab); documentTabs.append(tab);
   }
   rightPane.prepend(documentTabs);
+  let currentPane = transcriptPanel;
   function showPane(pane, focus = true) {
+    currentPane = pane;
     for (const view of views) view.hidden = view !== pane;
     documentTabs.hidden = pane !== transcriptPanel && pane !== notes;
     documentButtons.forEach((tab, index) => { const selected = pane === (index === 0 ? transcriptPanel : notes); tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1; });
@@ -270,12 +283,6 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
   notes.addEventListener('click', event => {
     if (event.target.closest('#minutes-evidence button')) showPane(transcriptPanel, false);
   }, true);
-  for (const pane of views.filter(view => view !== transcriptPanel && view !== notes)) {
-    const back = document.createElement('button');
-    back.type = 'button'; back.textContent = 'Back to transcript';
-    back.addEventListener('click', () => showPane(transcriptPanel));
-    pane.prepend(back);
-  }
   const settingsButton = document.createElement('button');
   settingsButton.id = 'open-workspace-settings'; settingsButton.type = 'button';
   settingsButton.textContent = 'Transcription Settings';
@@ -293,7 +300,6 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
     const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
     button.addEventListener('click', () => showPane(pane)); settingsNavigation.append(button);
   }
-  capture.append(preview);
   const selectTab = setupTabs();
   showPane(transcriptPanel, false);
   summary.querySelector('a[href="#microphone-select"]').addEventListener('click', (event) => { event.preventDefault(); showPane(captureSettings); focusCaptureControl(ui['microphone-select']); });
@@ -346,7 +352,7 @@ export function updateWorkspace(state, { session, ui, screenshotMode, ocrEnabled
   const shareButton = document.getElementById('connect-app-audio');
   shareButton.disabled = ui['share-system-audio'].disabled;
   document.getElementById('summary-share-screen').disabled = shareButton.disabled;
-  setText('summary-share-screen', sharing ? 'Stop sharing screen and audio' : 'Share screen and audio');
+  setText('summary-share-label', sharing ? 'Stop sharing screen and audio' : 'Share screen and audio');
   const quickMicrophone = document.getElementById('quick-microphone-select');
   const options = [...ui['microphone-select'].options];
   if (quickMicrophone.innerHTML !== ui['microphone-select'].innerHTML) quickMicrophone.replaceChildren(...options.map(option => option.cloneNode(true)));

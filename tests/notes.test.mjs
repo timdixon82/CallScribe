@@ -22,6 +22,15 @@ test('noteCueText mentions screenshots for subtitle cues', () => {
   assert.equal(noteCueText({ ...note, screenshotIds: [] }), 'Agree <b>budget</b>');
 });
 
+test('noteCueText keeps SRT and VTT cues free of blank lines', () => {
+  const multi = { ...note, text: 'Line one\nline two\r\n\r\n\nline three', screenshotIds: [] };
+  assert.equal(noteCueText(multi), 'Line one line two line three');
+  for (const header of ['1\n00:00:01,000 --> 00:00:02,000\n', 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\n']) {
+    const cue = `${header}[Note] ${noteCueText(multi)}\n`;
+    assert.ok(!/\n\s*\n./.test(cue.replace(/^WEBVTT\n\n/, '')), 'no blank line inside the cue');
+  }
+});
+
 test('Markdown export carries the note and its screenshot, and import reads them back', async () => {
   const shot = { id: 's1', capturedAt: 26000, blob: {}, ocrText: '' };
   const markdown = await transcriptMarkdown({ title: 'T', provenance: 'p', exportedAt: 'now', segments: [note], screenshots: [shot], formatDateTime: (t) => `t${t}`, sourceName: () => 'x', speakerText: () => '', toDataUrl: async () => 'data:image/png;base64,AAAA' });

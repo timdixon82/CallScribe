@@ -24,5 +24,7 @@ export function noteLines(segment) {
 /** Caption text for subtitle cues. */
 export function noteCueText(segment) {
   const count = noteScreenshotIds(segment).length;
-  return count ? `${segment.text} (${count} screenshot${count === 1 ? '' : 's'} attached)` : segment.text;
+  // A blank line would end an SRT or VTT cue, so collapse every newline run to one space.
+  const text = String(segment.text).replace(/\s*[\r\n]+\s*/g, ' ');
+  return count ? `${text} (${count} screenshot${count === 1 ? '' : 's'} attached)` : text;
 }

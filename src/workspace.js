@@ -262,6 +262,8 @@ export function buildWorkspace({ ui, transcriptPanel, sessionActions, onShare })
     documentButtons.forEach((tab, index) => { const selected = pane === (index === 0 ? transcriptPanel : notes); tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1; });
     if (focus) { const title = pane.querySelector('h2'); title.tabIndex = -1; title.focus(); }
   }
+  // Live note shortcuts work from any view: bring the transcript back so the note form is visible.
+  document.addEventListener('show-transcript-pane', () => { if (currentPane !== transcriptPanel) showPane(transcriptPanel, false); });
   let wasGenerating = false;
   new MutationObserver(() => {
     const busy = notes.getAttribute('aria-busy') === 'true';

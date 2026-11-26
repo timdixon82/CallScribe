@@ -46,7 +46,7 @@ export function parseBlocks(markdown) {
   const finish = () => {
     if (!current) return; const { title, lines } = current; current = null;
     if (title.length > MAX_HEADING_CHARS) { skipped.push(`Heading too long to read: ${title.slice(0, 60)}`); return; }
-    const match = title.match(/^(.+?)\s+[—-]\s+(Mic|App|Screenshot)(?:\s*[|(].*)?$/i);
+    const match = title.match(/^(.+?)\s+[—-]\s+(Mic|App|Note|Screenshot)(?:\s*[|(].*)?$/i);
     if (match) blocks.push({ timestamp: match[1], kind: match[2].toLowerCase(), body: lines.join('\n').trim(), heading: title });
     else if (/^Screenshot\s+[—-]\s+\S/i.test(title)) blocks.push({ timestamp: title.replace(/^Screenshot\s+[—-]\s+/i, ''), kind: 'screenshot', body: lines.join('\n').trim(), heading: title }); // an exported screenshot with no linked passage
     else if (!QUIET_HEADINGS.test(title)) skipped.push(`Heading not recognised: ${title.slice(0, 60)}`);
@@ -134,10 +134,10 @@ export async function parseCallScribeMarkdown(file, now = Date.now(), measure = 
       segments.push({ ...base, id: crypto.randomUUID(), source: 'screen', text: '[Imported screenshot]', screenshotId }); // a screenshot with no linked passage in the file still gets one, so it shows in the transcript
       if (ocrText) segments.push({ ...base, id: crypto.randomUUID(), source: 'ocr', text: ocrText, screenshotId });
     } else {
-      const text = textFromBlock(entry.body);
+      const text = textFromBlock(entry.kind === 'note' ? entry.body.replace(/^\[[^\]\n]*\]\s*Note:\s*/, '') : entry.body);
       if (!text) { skipped.push(`Empty passage: ${entry.heading.slice(0, 60)}`); continue; }
       if (text.length > MAX_IMPORT_TEXT_CHARS) { skipped.push(`Passage too long: ${entry.heading.slice(0, 60)}`); continue; }
-      segments.push({ ...base, id: crypto.randomUUID(), source: entry.kind === 'mic' ? 'microphone' : 'system', text, imported: true });
+      segments.push({ ...base, id: crypto.randomUUID(), source: entry.kind === 'mic' ? 'microphone' : entry.kind === 'note' ? 'note' : 'system', text, imported: true });
     }
   }
   if (!segments.length) throw new Error('The file had headings but no usable passages or screenshots, so nothing was imported.');

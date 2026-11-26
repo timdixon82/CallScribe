@@ -23,8 +23,9 @@ export async function createTranscriptDocx({ title, provenance = '', entries = [
     if (shot.ocrText) children.push(...paragraphs(`Screenshot text: ${shot.ocrText}`));
   }
   for (const entry of entries) {
-    children.push(new Paragraph({ text: entry.heading, heading: HeadingLevel.HEADING_1 }), ...paragraphs(entry.text));
+    children.push(new Paragraph({ text: entry.heading, heading: HeadingLevel.HEADING_1 }), ...paragraphs(entry.source === 'note' ? `[${entry.stamp}] Note: ${entry.text}` : entry.text));
     if (entry.source === 'screen') appendScreenshot(shots.get(entry.screenshotId));
+    if (entry.source === 'note') (entry.screenshotIds || []).forEach((id) => appendScreenshot(shots.get(id)));
   }
   const remaining = screenshots.filter((shot) => !used.has(shot.id));
   if (remaining.length) {

@@ -1,5 +1,5 @@
 /* Both columns remain in document flow: no floating controls or nested scrolling. */
-.capture-workspace { display: grid; grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.capture-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(21rem, 25rem); gap: 1.25rem; align-items: start; }
 .capture-workspace > section { min-width: 0; margin: 0; }
 .workspace-navigation { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin: .5rem 0 1rem; }
 a { color: var(--focus); }
@@ -38,7 +38,7 @@ a { color: var(--focus); }
 .workspace-details > summary { padding: .5rem 0; cursor: pointer; font-weight: 700; }
 #capture-panel .collapsible-section { padding: .75rem; }
 #capture-panel .collapsible-section summary { font-size: 1rem; }
-#capture-panel .live-screen-preview { width: 100%; }
+#capture-panel .live-screen-preview, #screen-preview .live-screen-preview { width: 100%; }
 #microphone-status, #system-audio-status { font-size: .9rem; font-weight: 400; overflow-wrap: anywhere; }
 #transcript-panel .transcript-controls, #transcript-panel .transcript-option-groups, #transcript-panel .meeting-notes-controls { grid-template-columns: minmax(0, 1fr); }
 #transcript-panel .session-start { margin-top: 0; }
@@ -97,3 +97,14 @@ a { color: var(--focus); }
 .capture-source-link { display: block; width: fit-content; padding-block: .35rem; margin-top: .15rem; font-size: .9rem; }
 .capture-source-action { display: block; width: auto; min-height: 2.5rem; margin: .35rem 0 0; padding: .35rem .5rem; font-size: .9rem; text-align: left; }
 .capture-source-link:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; }
+
+/* Quick start, Source rows: actions on top, then one row per source. Targets are at least 44px. */
+.capture-summary .capture-actions { margin-top: .5rem; }
+.capture-summary dl { border-top: 1px solid var(--border); }
+.capture-summary dl > div { padding-block: .5rem; border-bottom: 1px solid var(--border); }
+.capture-summary dd > span:first-child { display: block; }
+.capture-summary select, .capture-summary .capture-source-action, .capture-summary .capture-actions button, .capture-summary .capture-source-link { min-height: 44px; min-width: 44px; }
+.capture-summary .capture-source-link { display: inline-flex; align-items: center; margin-top: 0; }
+.capture-summary dd button { width: auto; margin: .25rem .5rem .25rem 0; }
+.capture-summary .source-icon, .capture-summary .icon-action [aria-hidden="true"] { margin-right: .4em; }
+#screen-preview { margin-block: .75rem; }

@@ -19,7 +19,8 @@ test('settings open', async ({ page }) => {
   await page.getByRole('button', { name: 'Transcription Settings' }).click();
   await expect(page.locator('#workspace-settings')).toBeVisible();
   await scan(page, 'transcription settings');
-  await page.getByRole('button', { name: 'Back to transcript' }).first().click();
+  await expect(page.getByRole('button', { name: 'Back to transcript' })).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Controls' }).click();
   await page.getByRole('tab', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Capture Settings' }).click();
   await scan(page, 'capture settings');

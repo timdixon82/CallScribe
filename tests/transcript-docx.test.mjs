@@ -49,3 +49,14 @@ test('an empty transcript remains a valid Word document', async () => {
   const files = zipEntries(Buffer.from(await blob.arrayBuffer()));
   assert.match(files.get('word/document.xml').toString(), /Empty transcript/);
 });
+
+test('Word export places a note, its time label and its screenshots in order', async () => {
+  const blob = await createTranscriptDocx({ title: 'Notes', entries: [
+    { source: 'note', heading: '09:00 — Note', stamp: '00:24', text: 'Agree <budget>', screenshotIds: ['a'] },
+    { source: 'system', heading: '09:02 — App', text: 'After the note' },
+  ], screenshots: [{ id: 'a', data: png, width: 100, height: 100, timestamp: '09:00', ocrText: '' }] });
+  const xml = zipEntries(Buffer.from(await blob.arrayBuffer())).get('word/document.xml').toString();
+  assert.match(xml, /\[00:24\] Note: Agree &lt;budget&gt;/);
+  assert.ok(xml.indexOf('Note: Agree') < xml.indexOf('<w:drawing>'));
+  assert.ok(xml.indexOf('<w:drawing>') < xml.indexOf('After the note'));
+});

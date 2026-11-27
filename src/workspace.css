@@ -108,3 +108,20 @@ a { color: var(--focus); }
 .capture-summary dd button { width: auto; margin: .25rem .5rem .25rem 0; }
 .capture-summary .source-icon, .capture-summary .icon-action [aria-hidden="true"] { margin-right: .4em; }
 #screen-preview { margin-block: .75rem; }
+
+/* Live notes: buttons under the screen preview, form expanding in place. Targets are at least 44px. */
+.note-area { margin-block: .75rem; }
+.note-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.note-area button { min-height: 44px; min-width: 44px; margin: 0; display: inline-flex; align-items: center; gap: .4em; }
+.note-icon { width: 1.2em; height: 1.2em; fill: none; stroke: currentColor; stroke-width: 2; }
+.note-area button[aria-disabled="true"] { border-style: dashed; cursor: not-allowed; opacity: 1; background: var(--panel); color: var(--muted); }
+.note-hint { color: var(--muted); margin: .25rem 0; }
+.note-form { margin-top: .75rem; }
+.note-form[hidden], .note-area [hidden] { display: none; }
+.note-form textarea { width: 100%; min-height: 5rem; margin: .25rem 0 .5rem; }
+.note-keep { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; }
+.note-keep input { margin: 0; width: 1.5rem; height: 1.5rem; }
+.note-thumbs { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-wrap: wrap; gap: .75rem; }
+.note-thumbs li { display: flex; flex-direction: column; gap: .25rem; align-items: flex-start; }
+.note-thumb { width: 8rem; max-height: 6rem; object-fit: contain; border: 2px solid var(--border); background: var(--bg); }
+.transcript-note { border-left: 6px solid var(--heading); padding-left: .75rem; }

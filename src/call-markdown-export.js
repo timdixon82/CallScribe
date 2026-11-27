@@ -1,4 +1,5 @@
 import { cleanTitle } from './safe-text.js';
+import { noteScreenshotIds, noteStamp } from './notes.js';
 
 /** Build the CallScribe Markdown transcript lines. Pure: callers supply formatting and data URL helpers. */
 export async function transcriptMarkdown({ title, provenance, exportedAt, segments, screenshots, formatDateTime, sourceName, speakerText, toDataUrl }) {
@@ -10,6 +11,19 @@ export async function transcriptMarkdown({ title, provenance, exportedAt, segmen
     if (shot.ocrText) lines.push(`Screenshot OCR: ${shot.ocrText}`, '');
   };
   for (const segment of segments) {
+    if (segment.source === 'note') {
+      // "[00:24] Note: text", then each attached screenshot as an ordinary Screenshot block so import reads it back.
+      const stamp = noteStamp(segment);
+      lines.push(`## ${formatDateTime(segment.start)} — Note`, '', `[${stamp}] Note: ${segment.text || ''}`, '');
+      for (const id of noteScreenshotIds(segment)) {
+        const shot = byId.get(id);
+        if (!shot || exported.has(id)) continue;
+        exported.add(id);
+        lines.push(`## ${formatDateTime(shot.capturedAt)} — Screenshot`, '', `[Screenshot attached to note at ${stamp}]`, '');
+        await picture(shot);
+      }
+      continue;
+    }
     lines.push(`## ${formatDateTime(segment.start)} — ${sourceName(segment.source)}${speakerText(segment)}`, '', segment.text || '', '');
     if (segment.source !== 'screen' || !segment.screenshotId || exported.has(segment.screenshotId)) continue;
     const shot = byId.get(segment.screenshotId);

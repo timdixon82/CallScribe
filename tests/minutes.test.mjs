@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Document, Packer, Paragraph } from 'docx';
 import { readFile } from 'node:fs/promises';
-import { chunkEvidence, consolidateExtractions, conservativeRecovery, DEFAULT_MINUTES_SETTINGS, evidenceFingerprint, evidenceReferences, MINUTES_MODELS, minutesMarkdown, perceptualDifference, prepareMinutesEvidence, selectRelevantScreenshots, summaryHeadline, validateExtraction } from '../src/minutes.js';
+import { chunkEvidence, consolidateExtractions, reduceToLimit, spreadPick, conservativeRecovery, DEFAULT_MINUTES_SETTINGS, evidenceFingerprint, evidenceReferences, MINUTES_MODELS, minutesMarkdown, perceptualDifference, prepareMinutesEvidence, selectRelevantScreenshots, summaryHeadline, validateExtraction } from '../src/minutes.js';
 
 const session = { id: 'session-1', name: 'Planning', startedAt: 1000 };
 const segments = [
@@ -274,4 +274,62 @@ test('HTML minutes export groups bullet items in semantic lists', async () => {
   assert.doesNotMatch(source, /safe\.startsWith\('- '\) \? `<li>/);
   assert.match(source, /element\.textContent = String\(value \?\? ''\)/);
   assert.doesNotMatch(source, /replaceAll\('&', '&amp;'\)/);
+});
+
+// Reference: the original uncached reduction, rescoring every pair on every pass.
+function reduceUncached(items, limit) {
+  const normal = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const kept = items.map((item) => ({ item, words: new Set(normal(item.text).split(' ').filter((w) => w.length > 2)) }));
+  while (kept.length > limit) {
+    let best = 0.7; let from = -1;
+    for (let a = 0; a < kept.length; a += 1) for (let b = a + 1; b < kept.length; b += 1) {
+      let shared = 0; for (const w of kept[a].words) if (kept[b].words.has(w)) shared += 1;
+      const score = shared / (kept[a].words.size + kept[b].words.size - shared);
+      if (score > best) { best = score; from = b; }
+    }
+    if (from < 0) break;
+    kept.splice(from, 1);
+  }
+  return spreadPick(kept.map((e) => e.item), limit);
+}
+
+test('reduceToLimit merges true paraphrases but keeps distinct topics that share a theme', () => {
+  const merges = [
+    ['Migration to the new database is planned for May', 'The migration to the new database is planned for May'],
+    ['Sam will send the revised contract to the client', 'Sam to send the revised contract to the client'],
+    ['Concern about vendor delivery timelines', 'Concern about the vendor delivery timelines'],
+    ['Team agreed to ship the beta on Friday', 'The team agreed to ship the beta on Friday'],
+  ];
+  const distinct = [
+    ['Hiring two engineers for the platform team', 'Hiring a designer for the platform team'],
+    ['Launch moved to March', 'Launch moved to April'],
+    ['Budget for marketing was approved', 'Budget for engineering was approved'],
+    ['Migrate the billing database in May', 'Migrate the billing database in June'],
+    ['Security review of the payment service', 'Security review of the login service'],
+  ];
+  // Four items reduced to three: a merge drops b and keeps [x, a, y]; no merge leaves the even spread [x, b, y].
+  const merged = (a, b) => !reduceToLimit([{ text: 'Unrelated opening topic' }, { text: a }, { text: b }, { text: 'Unrelated closing topic' }], 3).some((item) => item.text === b);
+  for (const [a, b] of merges) assert.ok(merged(a, b), a);
+  for (const [a, b] of distinct) assert.ok(!merged(a, b), a);
+  // Known limit: a pure word-overlap score cannot separate every case. Short paraphrases padded with
+  // filler words ("has been") score about 0.5, below the threshold, so they are kept rather than merged.
+  assert.ok(!merged('Launch moved to March', 'The launch has been moved to March'));
+});
+
+function fixedItems(count) {
+  const topics = ['budget', 'hiring', 'launch', 'security', 'billing', 'roadmap', 'support', 'pricing'];
+  const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun'];
+  return Array.from({ length: count }, (_, i) => ({ id: i, text: `${topics[i % 8]} review ${months[i % 6]} owner${i % 13} item${i % 5} notes${i % 3}` }));
+}
+
+test('reduceToLimit gives the same result as the uncached version', () => {
+  const items = fixedItems(150);
+  for (const limit of [5, 12, 40]) assert.deepEqual(reduceToLimit(items, limit), reduceUncached(items, limit));
+});
+
+test('reduceToLimit handles 500 items in well under one second', () => {
+  const items = fixedItems(500);
+  const started = performance.now();
+  reduceToLimit(items, 12);
+  assert.ok(performance.now() - started < 1000);
 });

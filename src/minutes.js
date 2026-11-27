@@ -133,19 +133,21 @@ export function spreadPick(items, limit) {
 }
 function wordSet(text) { return new Set(normal(text).split(' ').filter((word) => word.length > 2)); }
 function wordSimilarity(left, right) { if (!left.size || !right.size) return 0; let shared = 0; for (const word of left) if (right.has(word)) shared += 1; return shared / (left.size + right.size - shared); }
-const CLUSTER_SIMILARITY = 0.5;
-// Reduce a time-ordered list to `limit`: merge the most similar pairs (word overlap, Jaccard >= 0.5)
+export const CLUSTER_SIMILARITY = 0.7;
+// Reduce a time-ordered list to `limit`: merge the most similar pairs (word overlap, Jaccard > 0.7)
 // keeping the earlier item as the representative, then spread what is left across the whole call.
 // Items keep their own text, source segment ids and screenshot ids; nothing is rewritten.
-function reduceToLimit(items, limit, key = (item) => item.text) {
-  const kept = items.map((item) => ({ item, words: wordSet(key(item)) }));
-  while (kept.length > limit) {
-    let best = CLUSTER_SIMILARITY; let from = -1; let into = -1;
-    for (let a = 0; a < kept.length; a += 1) for (let b = a + 1; b < kept.length; b += 1) { const score = wordSimilarity(kept[a].words, kept[b].words); if (score > best) { best = score; into = a; from = b; } }
-    if (from < 0) break;
-    kept.splice(from, 1);
-  }
-  return spreadPick(kept.map((entry) => entry.item), limit);
+// Each pair is scored once (scores never change as items drop out), then pairs are applied best first,
+// ties in original order, skipping pairs whose later item is already gone.
+export function reduceToLimit(items, limit, key = (item) => item.text) {
+  if (items.length <= limit) return items;
+  const sets = items.map((item) => wordSet(key(item)));
+  const pairs = [];
+  for (let a = 0; a < items.length; a += 1) for (let b = a + 1; b < items.length; b += 1) { const score = wordSimilarity(sets[a], sets[b]); if (score > CLUSTER_SIMILARITY) pairs.push({ score, a, b }); }
+  pairs.sort((x, y) => y.score - x.score || x.a - y.a || x.b - y.b);
+  const dropped = new Set(); let count = items.length;
+  for (const { a, b } of pairs) { if (count <= limit) break; if (dropped.has(a) || dropped.has(b)) continue; dropped.add(b); count -= 1; }
+  return spreadPick(items.filter((_, index) => !dropped.has(index)), limit);
 }
 export function consolidateExtractions(extractions, detail = 'standard') {
   const all = (key) => extractions.flatMap((item) => item[key] || []);

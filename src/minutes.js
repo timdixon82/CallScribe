@@ -126,17 +126,46 @@ function unique(items, key) { const seen = new Set(); return items.filter((item)
 function isNearDuplicate(left, right) { const leftWords = new Set(normal(left).split(' ').filter((word) => word.length > 2)); const rightWords = new Set(normal(right).split(' ').filter((word) => word.length > 2)); if (!leftWords.size || !rightWords.size) return false; let overlap = 0; for (const word of leftWords) if (rightWords.has(word)) overlap += 1; return overlap / Math.min(leftWords.size, rightWords.size) >= 0.92; }
 function distinct(items, key = (item) => item.text) { const kept = []; for (const item of items) if (!kept.some((prior) => isNearDuplicate(key(prior), key(item)))) kept.push(item); return kept; }
 const DETAIL_LIMITS = { concise: { discussion: 6, decisions: 4, actions: 5, questions: 4, risks: 4 }, standard: { discussion: 12, decisions: 8, actions: 8, questions: 6, risks: 6 }, detailed: { discussion: 24, decisions: 14, actions: 14, questions: 10, risks: 10 } };
+// Keep `limit` items spread evenly across a time-ordered list (centre of each equal slice).
+export function spreadPick(items, limit) {
+  if (items.length <= limit) return items;
+  return Array.from({ length: limit }, (_, slot) => items[Math.floor(((slot + 0.5) * items.length) / limit)]);
+}
+function wordSet(text) { return new Set(normal(text).split(' ').filter((word) => word.length > 2)); }
+function wordSimilarity(left, right) { if (!left.size || !right.size) return 0; let shared = 0; for (const word of left) if (right.has(word)) shared += 1; return shared / (left.size + right.size - shared); }
+export const CLUSTER_SIMILARITY = 0.7;
+// Reduce a time-ordered list to `limit`: merge the most similar pairs (word overlap, Jaccard > 0.7)
+// keeping the earlier item as the representative, then spread what is left across the whole call.
+// Items keep their own text, source segment ids and screenshot ids; nothing is rewritten.
+// Each pair is scored once (scores never change as items drop out), then pairs are applied best first,
+// ties in original order, skipping pairs whose later item is already gone.
+export function reduceToLimit(items, limit, key = (item) => item.text) {
+  if (items.length <= limit) return items;
+  const sets = items.map((item) => wordSet(key(item)));
+  const pairs = [];
+  for (let a = 0; a < items.length; a += 1) for (let b = a + 1; b < items.length; b += 1) { const score = wordSimilarity(sets[a], sets[b]); if (score > CLUSTER_SIMILARITY) pairs.push({ score, a, b }); }
+  pairs.sort((x, y) => y.score - x.score || x.a - y.a || x.b - y.b);
+  const dropped = new Set(); let count = items.length;
+  for (const { a, b } of pairs) { if (count <= limit) break; if (dropped.has(a) || dropped.has(b)) continue; dropped.add(b); count -= 1; }
+  return spreadPick(items.filter((_, index) => !dropped.has(index)), limit);
+}
 export function consolidateExtractions(extractions, detail = 'standard') {
   const all = (key) => extractions.flatMap((item) => item[key] || []);
   const itemScreenshotIds = ['discussion', 'decisions', 'actions', 'questions', 'risks'].flatMap((key) => all(key).flatMap((item) => item.screenshotIds || []));
   const limits = DETAIL_LIMITS[detail] || DETAIL_LIMITS.standard;
   return {
-    discussion: distinct(unique(all('discussion'), (item) => normal(item.text))).slice(0, limits.discussion),
-    decisions: distinct(unique(all('decisions'), (item) => `${item.status}|${normal(item.text)}`), (item) => `${item.status} ${item.text}`).slice(0, limits.decisions),
-    actions: distinct(unique(all('actions'), (item) => `${item.status}|${normal(item.text)}|${normal(item.owner)}|${normal(item.dueDate)}`), (item) => `${item.status} ${item.text} ${item.owner || ''} ${item.dueDate || ''}`).slice(0, limits.actions),
-    questions: distinct(unique(all('questions'), (item) => normal(item.text))).slice(0, limits.questions), risks: distinct(unique(all('risks'), (item) => normal(item.text))).slice(0, limits.risks),
+    discussion: reduceToLimit(distinct(unique(all('discussion'), (item) => normal(item.text))), limits.discussion),
+    decisions: reduceToLimit(distinct(unique(all('decisions'), (item) => `${item.status}|${normal(item.text)}`), (item) => `${item.status} ${item.text}`), limits.decisions),
+    actions: reduceToLimit(distinct(unique(all('actions'), (item) => `${item.status}|${normal(item.text)}|${normal(item.owner)}|${normal(item.dueDate)}`), (item) => `${item.status} ${item.text} ${item.owner || ''} ${item.dueDate || ''}`), limits.actions),
+    questions: reduceToLimit(distinct(unique(all('questions'), (item) => normal(item.text))), limits.questions), risks: reduceToLimit(distinct(unique(all('risks'), (item) => normal(item.text))), limits.risks),
     screenshotIds: [...new Set([...all('screenshotIds'), ...itemScreenshotIds])],
   };
+}
+
+// The one headline used by both workers: three topics spread across the start, middle and end.
+export function summaryHeadline(extraction) {
+  const topics = spreadPick(extraction?.discussion || [], 3).map((item) => item.text);
+  return topics.length ? `Key themes:\n\n${topics.map((topic) => `- ${topic}`).join('\n')}` : 'No explicit discussion points could be extracted from the transcript.';
 }
 
 export function selectRelevantScreenshots(screenshots, ids, mode = 'relevant') {

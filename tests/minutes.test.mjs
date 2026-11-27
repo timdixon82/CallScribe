@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Document, Packer, Paragraph } from 'docx';
 import { readFile } from 'node:fs/promises';
-import { chunkEvidence, consolidateExtractions, conservativeRecovery, DEFAULT_MINUTES_SETTINGS, evidenceFingerprint, evidenceReferences, MINUTES_MODELS, minutesMarkdown, perceptualDifference, prepareMinutesEvidence, selectRelevantScreenshots, validateExtraction } from '../src/minutes.js';
+import { chunkEvidence, consolidateExtractions, reduceToLimit, spreadPick, conservativeRecovery, DEFAULT_MINUTES_SETTINGS, evidenceFingerprint, evidenceReferences, MINUTES_MODELS, minutesMarkdown, perceptualDifference, prepareMinutesEvidence, selectRelevantScreenshots, summaryHeadline, validateExtraction } from '../src/minutes.js';
 
 const session = { id: 'session-1', name: 'Planning', startedAt: 1000 };
 const segments = [
@@ -96,6 +96,51 @@ test('consolidation removes near-duplicate discussion and honours output detail 
   assert.equal(consolidateExtractions(distinct, 'detailed').discussion.length, 10);
 });
 
+const longCall = () => Array.from({ length: 38 }, (_, part) => ({
+  discussion: [0, 1, 2].map((k) => ({ text: `Part ${part} topic ${k} covers alpha${part}x${k} beta${part}x${k} gamma${part}x${k}`, sourceSegmentIds: [`s${part}-${k}`], screenshotIds: [] })),
+  decisions: [{ text: `Decision ${part} on delta${part} epsilon${part} zeta${part}`, status: 'confirmed', sourceSegmentIds: [`d${part}`], screenshotIds: [] }],
+  actions: [{ text: `Action ${part} for eta${part} theta${part} iota${part}`, owner: null, dueDate: null, status: 'proposed', sourceSegmentIds: [`a${part}`], screenshotIds: [] }],
+}));
+const partOf = (item) => Number(/(?:Part|Decision|Action) (\d+)/.exec(item.text)[1]);
+
+test('a long call is summarised from start, middle and end at every length', () => {
+  for (const [detail, limit] of [['concise', 6], ['standard', 12], ['detailed', 24]]) {
+    const result = consolidateExtractions(longCall(), detail);
+    assert.equal(result.discussion.length, limit);
+    const parts = result.discussion.map(partOf);
+    assert.deepEqual(parts, [...parts].sort((a, b) => a - b), 'chronological order');
+    for (const third of [0, 1, 2]) assert.ok(parts.some((part) => Math.floor((part * 3) / 38) === third), `${detail} covers third ${third}`);
+    assert.ok(result.discussion.every((item) => item.sourceSegmentIds.length === 1), 'source ids kept');
+  }
+});
+
+test('late decisions and actions are kept, not dropped for early ones', () => {
+  const result = consolidateExtractions(longCall(), 'concise');
+  assert.ok(result.decisions.map(partOf).some((part) => part >= 26));
+  assert.ok(result.actions.map(partOf).some((part) => part >= 26));
+  assert.ok(result.decisions.every((item) => item.sourceSegmentIds.length === 1));
+});
+
+test('similar topics are merged before coverage is spread', () => {
+  const repeats = Array.from({ length: 10 }, (_, i) => ({ discussion: [{ text: `Budget forecast review for the quarter ${i}`, sourceSegmentIds: [`b${i}`], screenshotIds: [] }] }));
+  const late = { discussion: [{ text: 'Hiring plan for engineers', sourceSegmentIds: ['late'], screenshotIds: [] }] };
+  const result = consolidateExtractions([...repeats, late], 'concise');
+  assert.ok(result.discussion.some((item) => item.sourceSegmentIds[0] === 'late'));
+});
+
+test('the shared headline draws on start, middle and end', () => {
+  const lines = summaryHeadline(consolidateExtractions(longCall(), 'standard')).split('\n').filter((line) => line.startsWith('- '));
+  assert.equal(lines.length, 3);
+  const parts = lines.map((line) => Number(/Part (\d+)/.exec(line)[1]));
+  assert.ok(parts[0] < 13 && parts[1] >= 13 && parts[1] < 26 && parts[2] >= 26);
+  assert.match(summaryHeadline({ discussion: [] }), /No explicit discussion points/);
+});
+
+test('both workers share the headline and the 0.6B model follows the chosen length', async () => {
+  for (const file of ['minutes.worker.v2.js', 'minutes.webllm.worker.js']) assert.match(await readFile(new URL(`../src/${file}`, import.meta.url), 'utf8'), /summaryHeadline/);
+  assert.doesNotMatch(await readFile(new URL('../src/minutes.webllm.worker.js', import.meta.url), 'utf8'), /qwen3-0\.6b' && data\.settings/);
+});
+
 test('relevant screenshot selection removes close OCR duplicates without removing distinct evidence', () => {
   const chosen = selectRelevantScreenshots([{ id: 'one', capturedAt: 1000, ocrText: 'Plan A' }, { id: 'two', capturedAt: 2000, ocrText: 'Plan A' }, { id: 'three', capturedAt: 3000, ocrText: 'Plan B' }], ['one', 'two', 'three']);
   assert.deepEqual(chosen.map((item) => item.id), ['one', 'three']);
@@ -186,7 +231,7 @@ test('the WebLLM detailed path performs a local distinct-topic consolidation pas
   assert.match(worker, /preserve the original[\s\S]*extracted records/);
   assert.match(worker, /comma-separated candidate IDs/);
   assert.match(worker, /Never invent a decision, owner, deadline, action, attendee, speaker/);
-  assert.match(worker, /Key themes:/);
+  assert.match(worker, /summaryHeadline/);
 });
 
 test('the interface explains offline first-download requirements before inference', async () => {
@@ -229,4 +274,62 @@ test('HTML minutes export groups bullet items in semantic lists', async () => {
   assert.doesNotMatch(source, /safe\.startsWith\('- '\) \? `<li>/);
   assert.match(source, /element\.textContent = String\(value \?\? ''\)/);
   assert.doesNotMatch(source, /replaceAll\('&', '&amp;'\)/);
+});
+
+// Reference: the original uncached reduction, rescoring every pair on every pass.
+function reduceUncached(items, limit) {
+  const normal = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const kept = items.map((item) => ({ item, words: new Set(normal(item.text).split(' ').filter((w) => w.length > 2)) }));
+  while (kept.length > limit) {
+    let best = 0.7; let from = -1;
+    for (let a = 0; a < kept.length; a += 1) for (let b = a + 1; b < kept.length; b += 1) {
+      let shared = 0; for (const w of kept[a].words) if (kept[b].words.has(w)) shared += 1;
+      const score = shared / (kept[a].words.size + kept[b].words.size - shared);
+      if (score > best) { best = score; from = b; }
+    }
+    if (from < 0) break;
+    kept.splice(from, 1);
+  }
+  return spreadPick(kept.map((e) => e.item), limit);
+}
+
+test('reduceToLimit merges true paraphrases but keeps distinct topics that share a theme', () => {
+  const merges = [
+    ['Migration to the new database is planned for May', 'The migration to the new database is planned for May'],
+    ['Sam will send the revised contract to the client', 'Sam to send the revised contract to the client'],
+    ['Concern about vendor delivery timelines', 'Concern about the vendor delivery timelines'],
+    ['Team agreed to ship the beta on Friday', 'The team agreed to ship the beta on Friday'],
+  ];
+  const distinct = [
+    ['Hiring two engineers for the platform team', 'Hiring a designer for the platform team'],
+    ['Launch moved to March', 'Launch moved to April'],
+    ['Budget for marketing was approved', 'Budget for engineering was approved'],
+    ['Migrate the billing database in May', 'Migrate the billing database in June'],
+    ['Security review of the payment service', 'Security review of the login service'],
+  ];
+  // Four items reduced to three: a merge drops b and keeps [x, a, y]; no merge leaves the even spread [x, b, y].
+  const merged = (a, b) => !reduceToLimit([{ text: 'Unrelated opening topic' }, { text: a }, { text: b }, { text: 'Unrelated closing topic' }], 3).some((item) => item.text === b);
+  for (const [a, b] of merges) assert.ok(merged(a, b), a);
+  for (const [a, b] of distinct) assert.ok(!merged(a, b), a);
+  // Known limit: a pure word-overlap score cannot separate every case. Short paraphrases padded with
+  // filler words ("has been") score about 0.5, below the threshold, so they are kept rather than merged.
+  assert.ok(!merged('Launch moved to March', 'The launch has been moved to March'));
+});
+
+function fixedItems(count) {
+  const topics = ['budget', 'hiring', 'launch', 'security', 'billing', 'roadmap', 'support', 'pricing'];
+  const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun'];
+  return Array.from({ length: count }, (_, i) => ({ id: i, text: `${topics[i % 8]} review ${months[i % 6]} owner${i % 13} item${i % 5} notes${i % 3}` }));
+}
+
+test('reduceToLimit gives the same result as the uncached version', () => {
+  const items = fixedItems(150);
+  for (const limit of [5, 12, 40]) assert.deepEqual(reduceToLimit(items, limit), reduceUncached(items, limit));
+});
+
+test('reduceToLimit handles 500 items in well under one second', () => {
+  const items = fixedItems(500);
+  const started = performance.now();
+  reduceToLimit(items, 12);
+  assert.ok(performance.now() - started < 1000);
 });

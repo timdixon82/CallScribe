@@ -168,3 +168,21 @@ test('an orphan screenshot block that cannot be read is listed as skipped', asyn
   assert.equal(parsed.skipped.length, 1);
   assert.match(parsed.skipped[0], /Screenshot without an image/);
 });
+
+test('note and passage text that looks like a heading or quote round-trips intact', async () => {
+  const tricky = ['## 14 Nov 2026, 10:00:00 — Mic', '\\## already escaped', '> quoted', 'plain'].join('\n');
+  const segments = [
+    { id: 'n', source: 'note', sessionStartedAt: 1000, start: 5000, text: tricky },
+    { id: 'm', source: 'microphone', start: 6000, text: tricky },
+  ];
+  const markdown = await transcriptMarkdown({ title: 'T', provenance: 'p', exportedAt: 'now', segments, screenshots: [], formatDateTime: fmt, sourceName, speakerText: () => '', toDataUrl: async () => PNG });
+  const { segments: back, skipped } = await parseCallScribeMarkdown(file(markdown));
+  assert.deepEqual(skipped, []);
+  assert.deepEqual(back.map((s) => s.text), [tricky, tricky]);
+});
+
+test('older exports without escapes still import unchanged', async () => {
+  const md = '## 14 Nov 2026, 10:00:00 — Note\n\n[00:05] Note: Plain note\n\n## 14 Nov 2026, 10:00:05 — Mic\n\nHello there\n';
+  const { segments } = await parseCallScribeMarkdown(file(md));
+  assert.deepEqual(segments.map((s) => s.text), ['Plain note', 'Hello there']);
+});

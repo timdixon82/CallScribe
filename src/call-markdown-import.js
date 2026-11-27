@@ -26,6 +26,11 @@ function stripImages(value) {
   }
   return out + value.slice(from);
 }
+// Export puts one backslash before any line that starts like a heading ("## ") or a quote (">"), and before such lines that already start with backslashes, so import can undo it exactly. Files written before this existed are read as before, except that a line which began with "\## " now reads as "## ".
+const ESCAPE_LINE = /^(\\*(?:##\s|>))/gm;
+const UNESCAPE_LINE = /^\\(\\*(?:##\s|>))/gm;
+export const escapeMarkdownText = (value) => String(value).replace(ESCAPE_LINE, '\\$1');
+export const unescapeMarkdownText = (value) => value.replace(UNESCAPE_LINE, '$1');
 function textFromBlock(value) { return stripImages(value).replace(/^>\s?/gm, '').replace(/\n{2,}/g, '\n').trim(); }
 /** First data: image link in a block, found without backtracking: { url, type } or null. */
 function findDataUrl(body) {
@@ -134,7 +139,7 @@ export async function parseCallScribeMarkdown(file, now = Date.now(), measure = 
       segments.push({ ...base, id: crypto.randomUUID(), source: 'screen', text: '[Imported screenshot]', screenshotId }); // a screenshot with no linked passage in the file still gets one, so it shows in the transcript
       if (ocrText) segments.push({ ...base, id: crypto.randomUUID(), source: 'ocr', text: ocrText, screenshotId });
     } else {
-      const text = textFromBlock(entry.kind === 'note' ? entry.body.replace(/^\[[^\]\n]*\]\s*Note:\s*/, '') : entry.body);
+      const text = unescapeMarkdownText(textFromBlock(entry.kind === 'note' ? entry.body.replace(/^\[[^\]\n]*\]\s*Note:\s*/, '') : entry.body));
       if (!text) { skipped.push(`Empty passage: ${entry.heading.slice(0, 60)}`); continue; }
       if (text.length > MAX_IMPORT_TEXT_CHARS) { skipped.push(`Passage too long: ${entry.heading.slice(0, 60)}`); continue; }
       segments.push({ ...base, id: crypto.randomUUID(), source: entry.kind === 'mic' ? 'microphone' : entry.kind === 'note' ? 'note' : 'system', text, imported: true });

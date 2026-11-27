@@ -10,8 +10,8 @@ async function harness({ blockCaches = false } = {}) {
   const source = (await readFile(new URL('../src/minutes.webllm.worker.js', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '');
   const messages = []; const realCaches = fakeCacheStorage(); const self = {}; let release; let created = 0; Object.defineProperty(self, 'caches', { get: () => realCaches, configurable: !blockCaches });
   const engine = { chat: { completions: { create: () => new Promise(resolve => { release = resolve; }) } }, interruptGenerate() {} };
-  const make = new Function('CreateMLCEngine', 'chunkEvidence', 'consolidateExtractions', 'conservativeRecovery', 'validateExtraction', 'prebuiltAppConfig', 'pinnedAppConfig', 'postMessage', 'self', 'WEBLLM_CACHE_RENAMES', 'assertCachesRenamed', 'installCachesRename', source);
-  make(async () => { created += 1; return engine; }, () => [{ entries: [{ id: 's1', text: 'Synthetic release planning.', speaker: [] }], screenshots: [] }], () => ({ discussion: [] }), () => ({}), value => value, {}, () => ({}), message => messages.push(message), self, WEBLLM_CACHE_RENAMES, assertCachesRenamed, installCachesRename);
+  const make = new Function('CreateMLCEngine', 'chunkEvidence', 'consolidateExtractions', 'conservativeRecovery', 'spreadPick', 'summaryHeadline', 'validateExtraction', 'prebuiltAppConfig', 'pinnedAppConfig', 'postMessage', 'self', 'WEBLLM_CACHE_RENAMES', 'assertCachesRenamed', 'installCachesRename', source);
+  make(async () => { created += 1; return engine; }, () => [{ entries: [{ id: 's1', text: 'Synthetic release planning.', speaker: [] }], screenshots: [] }], () => ({ discussion: [] }), () => ({}), (items) => items, () => 'Key themes', value => value, {}, () => ({}), message => messages.push(message), self, WEBLLM_CACHE_RENAMES, assertCachesRenamed, installCachesRename);
   await self.onmessage({ data: { type: 'load', model: { webllmModel: 'test' } } });
   return { messages, self, realCaches, created: () => created, send: data => self.onmessage({ data }), release: () => release({ choices: [{ message: { content: 'Synthetic release planning.' } }] }) };
 }

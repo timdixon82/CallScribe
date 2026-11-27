@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Document, Packer, Paragraph } from 'docx';
 import { readFile } from 'node:fs/promises';
-import { chunkEvidence, consolidateExtractions, conservativeRecovery, DEFAULT_MINUTES_SETTINGS, evidenceFingerprint, evidenceReferences, MINUTES_MODELS, minutesMarkdown, perceptualDifference, prepareMinutesEvidence, selectRelevantScreenshots, validateExtraction } from '../src/minutes.js';
+import { chunkEvidence, consolidateExtractions, conservativeRecovery, DEFAULT_MINUTES_SETTINGS, evidenceFingerprint, evidenceReferences, MINUTES_MODELS, minutesMarkdown, perceptualDifference, prepareMinutesEvidence, selectRelevantScreenshots, summaryHeadline, validateExtraction } from '../src/minutes.js';
 
 const session = { id: 'session-1', name: 'Planning', startedAt: 1000 };
 const segments = [
@@ -96,6 +96,51 @@ test('consolidation removes near-duplicate discussion and honours output detail 
   assert.equal(consolidateExtractions(distinct, 'detailed').discussion.length, 10);
 });
 
+const longCall = () => Array.from({ length: 38 }, (_, part) => ({
+  discussion: [0, 1, 2].map((k) => ({ text: `Part ${part} topic ${k} covers alpha${part}x${k} beta${part}x${k} gamma${part}x${k}`, sourceSegmentIds: [`s${part}-${k}`], screenshotIds: [] })),
+  decisions: [{ text: `Decision ${part} on delta${part} epsilon${part} zeta${part}`, status: 'confirmed', sourceSegmentIds: [`d${part}`], screenshotIds: [] }],
+  actions: [{ text: `Action ${part} for eta${part} theta${part} iota${part}`, owner: null, dueDate: null, status: 'proposed', sourceSegmentIds: [`a${part}`], screenshotIds: [] }],
+}));
+const partOf = (item) => Number(/(?:Part|Decision|Action) (\d+)/.exec(item.text)[1]);
+
+test('a long call is summarised from start, middle and end at every length', () => {
+  for (const [detail, limit] of [['concise', 6], ['standard', 12], ['detailed', 24]]) {
+    const result = consolidateExtractions(longCall(), detail);
+    assert.equal(result.discussion.length, limit);
+    const parts = result.discussion.map(partOf);
+    assert.deepEqual(parts, [...parts].sort((a, b) => a - b), 'chronological order');
+    for (const third of [0, 1, 2]) assert.ok(parts.some((part) => Math.floor((part * 3) / 38) === third), `${detail} covers third ${third}`);
+    assert.ok(result.discussion.every((item) => item.sourceSegmentIds.length === 1), 'source ids kept');
+  }
+});
+
+test('late decisions and actions are kept, not dropped for early ones', () => {
+  const result = consolidateExtractions(longCall(), 'concise');
+  assert.ok(result.decisions.map(partOf).some((part) => part >= 26));
+  assert.ok(result.actions.map(partOf).some((part) => part >= 26));
+  assert.ok(result.decisions.every((item) => item.sourceSegmentIds.length === 1));
+});
+
+test('similar topics are merged before coverage is spread', () => {
+  const repeats = Array.from({ length: 10 }, (_, i) => ({ discussion: [{ text: `Budget forecast review for the quarter ${i}`, sourceSegmentIds: [`b${i}`], screenshotIds: [] }] }));
+  const late = { discussion: [{ text: 'Hiring plan for engineers', sourceSegmentIds: ['late'], screenshotIds: [] }] };
+  const result = consolidateExtractions([...repeats, late], 'concise');
+  assert.ok(result.discussion.some((item) => item.sourceSegmentIds[0] === 'late'));
+});
+
+test('the shared headline draws on start, middle and end', () => {
+  const lines = summaryHeadline(consolidateExtractions(longCall(), 'standard')).split('\n').filter((line) => line.startsWith('- '));
+  assert.equal(lines.length, 3);
+  const parts = lines.map((line) => Number(/Part (\d+)/.exec(line)[1]));
+  assert.ok(parts[0] < 13 && parts[1] >= 13 && parts[1] < 26 && parts[2] >= 26);
+  assert.match(summaryHeadline({ discussion: [] }), /No explicit discussion points/);
+});
+
+test('both workers share the headline and the 0.6B model follows the chosen length', async () => {
+  for (const file of ['minutes.worker.v2.js', 'minutes.webllm.worker.js']) assert.match(await readFile(new URL(`../src/${file}`, import.meta.url), 'utf8'), /summaryHeadline/);
+  assert.doesNotMatch(await readFile(new URL('../src/minutes.webllm.worker.js', import.meta.url), 'utf8'), /qwen3-0\.6b' && data\.settings/);
+});
+
 test('relevant screenshot selection removes close OCR duplicates without removing distinct evidence', () => {
   const chosen = selectRelevantScreenshots([{ id: 'one', capturedAt: 1000, ocrText: 'Plan A' }, { id: 'two', capturedAt: 2000, ocrText: 'Plan A' }, { id: 'three', capturedAt: 3000, ocrText: 'Plan B' }], ['one', 'two', 'three']);
   assert.deepEqual(chosen.map((item) => item.id), ['one', 'three']);
@@ -186,7 +231,7 @@ test('the WebLLM detailed path performs a local distinct-topic consolidation pas
   assert.match(worker, /preserve the original[\s\S]*extracted records/);
   assert.match(worker, /comma-separated candidate IDs/);
   assert.match(worker, /Never invent a decision, owner, deadline, action, attendee, speaker/);
-  assert.match(worker, /Key themes:/);
+  assert.match(worker, /summaryHeadline/);
 });
 
 test('the interface explains offline first-download requirements before inference', async () => {

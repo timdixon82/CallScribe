@@ -2,7 +2,7 @@ import { CreateMLCEngine, prebuiltAppConfig } from '@mlc-ai/web-llm';
 import { pinnedAppConfig } from './model-manifest.js';
 import { WEBLLM_CACHE_RENAMES } from './cache-names.js';
 import { assertCachesRenamed, installCachesRename } from './scoped-cache.js';
-import { chunkEvidence, consolidateExtractions, conservativeRecovery, validateExtraction } from './minutes.js';
+import { chunkEvidence, consolidateExtractions, conservativeRecovery, spreadPick, summaryHeadline, validateExtraction } from './minutes.js';
 
 let engine;
 let renamed; // the caches wrapper, installed once
@@ -10,7 +10,7 @@ let cancelled = false;
 let checkpoint = { extractions: [], total: 0 };
 const send = (type, detail = {}) => postMessage({ type, ...detail });
 function jsonFrom(text) { const value = String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^```(?:json)?\s*|\s*```$/g, '').trim(); const first = value.indexOf('{'); const last = value.lastIndexOf('}'); if (first < 0 || last < first) return {}; try { return JSON.parse(value.slice(first, last + 1)); } catch { return {}; } }
-function summary(extraction) { const topics = extraction.discussion?.slice(0, 3).map((item) => item.text) || []; return topics.length ? `Key themes:\n\n${topics.map((topic) => `- ${topic}`).join('\n')}` : 'No explicit discussion points could be extracted from the transcript.'; }
+const summary = summaryHeadline;
 
 function compactChunk(chunk) {
   const segmentIds = new Map(chunk.entries.map((entry, index) => [`s${index + 1}`, entry.id]));
@@ -64,7 +64,7 @@ async function prioritiseDiscussion(extraction, modelId, detail) {
   const selected = Array.isArray(jsonSelected) ? jsonSelected : String(raw || '').match(/\bd(?:[1-9]|1[0-2])\b/gi) || [];
   const byId = new Map(candidates.map((candidate, index) => [candidate.id, extraction.discussion[index]]));
   const discussion = [...new Set(selected)].map((id) => byId.get(id)).filter(Boolean).slice(0, maximum);
-  return discussion.length >= 2 ? { ...extraction, discussion } : { ...extraction, discussion: extraction.discussion.slice(0, maximum) };
+  return discussion.length >= 2 ? { ...extraction, discussion } : { ...extraction, discussion: spreadPick(extraction.discussion, maximum) };
 }
 
 async function load(model) {
@@ -96,10 +96,7 @@ async function generate(data) {
     else { extraction = evidenceOnly; recoveryChunks += 1; }
     extractions.push(extraction); chunkMs.push(Math.round(performance.now() - began)); send('checkpoint', { extractions, total: chunks.length });
   }
-  // The 0.6B model is intentionally a quick brief. Its smaller context and
-  // lower confidence make a shorter standard output more useful than filling
-  // every possible topic slot with marginal transcript fragments.
-  const outputDetail = data.model.id === 'qwen3-0.6b' && data.settings?.detail === 'standard' ? 'concise' : data.settings?.detail;
+  const outputDetail = data.settings?.detail;
   let extraction = consolidateExtractions(extractions, outputDetail);
   send('generation-progress', { completed: chunks.length, total: chunks.length, detail: 'Consolidating distinct topics locally.' });
   extraction = await prioritiseDiscussion(extraction, data.model.id, outputDetail);

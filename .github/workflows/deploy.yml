@@ -151,8 +151,6 @@ jobs:
 
       - name: Install dependencies
         if: steps.archetype.outputs.is_browser_extension != 'true' && steps.archetype.outputs.is_wordpress_theme != 'true'
-        env:
-          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
         run: npm ci
 
       - name: Build

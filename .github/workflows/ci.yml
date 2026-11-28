@@ -74,8 +74,6 @@ jobs:
 
       - name: Install dependencies (npm)
         if: hashFiles('package.json') != ''
-        env:
-          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
         run: npm ci
 
       - name: Install Playwright browsers

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Option 4: Add note button under the preview - Notes mockup</title>
+<style>
+:root{--bg:#fff;--text:#333;--muted:#405166;--border:#cbd5e1;--focus:#0c3b64;--panel:#f8fafc;--selected:#e4f1f7;--heading:#0c3b64}
+*{box-sizing:border-box}body{margin:0;font:1.125rem/1.5 system-ui,sans-serif;background:var(--bg);color:var(--text);letter-spacing:.01em}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;box-shadow:0 0 0 6px #fff}
+h1,h2,h3{color:var(--heading);margin:.2em 0}h2{font-size:1.35rem}h3{font-size:1.1rem}
+.mock-note{background:var(--selected);padding:.5rem 1rem;border-bottom:1px solid var(--border)}
+.mock-note fieldset{border:0;padding:0;margin:.5rem 0 0;display:flex;gap:1.5rem;flex-wrap:wrap}
+.mock-note label{display:inline-flex;align-items:center;gap:.5rem;min-height:44px}
+input[type=checkbox]{width:1.5rem;height:1.5rem}
+.workspace{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:1rem;padding:1rem}
+@media(max-width:60rem){.workspace{grid-template-columns:1fr}}
+.card{border:1px solid var(--border);background:var(--panel);border-radius:8px;padding:1rem;margin-bottom:1rem}
+.shot{height:6rem;border:2px dashed var(--muted);display:grid;place-items:center;color:var(--muted);background:#fff;text-align:center}
+button,select{font:inherit;min-height:44px;min-width:44px;border:2px solid var(--heading);border-radius:6px;background:#fff;color:var(--heading);padding:.25rem .8rem;cursor:pointer}
+button.primary{background:var(--heading);color:#fff}
+button[aria-disabled=true]{background:#eef1f5;color:var(--muted);border-style:dashed;cursor:not-allowed}
+button svg{width:1.2em;height:1.2em;vertical-align:-.2em;margin-right:.4em;fill:none;stroke:currentColor;stroke-width:2}
+[role=tablist]{display:flex;gap:.5rem;margin-bottom:.75rem}
+[role=tab][aria-selected=true]{background:var(--heading);color:#fff}
+textarea{display:block;width:100%;font:inherit;min-height:5rem;padding:.5rem;border:2px solid var(--heading);border-radius:6px;margin:.25rem 0 .5rem}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.entry{border-left:6px solid var(--heading);background:#fff;padding:.5rem .75rem;margin:.5rem 0}
+.entry .tag{display:inline-block;background:var(--heading);color:#fff;padding:0 .5rem;border-radius:4px;font-weight:700;margin-right:.5rem}
+.hint{color:var(--muted);margin:.25rem 0}
+.noteform{border:2px solid var(--heading);border-radius:8px;background:#fff;padding:.75rem;margin-top:.75rem}
+.noteform[hidden]{display:none}
+.thumb{width:8rem;height:4.5rem;border:2px solid var(--muted);background:#fff;display:grid;place-items:center;color:var(--muted);font-size:.9rem;text-align:center}
+#thumbs li{display:flex;flex-direction:column;gap:.25rem;align-items:flex-start}
+.keep{display:inline-flex;align-items:center;gap:.5rem;min-height:44px}
+</style></head><body>
+<div class="mock-note"><p style="margin:0">Mockup option 4: Add note button directly under the screen preview, expanding in place. Static prototype. Keys: Alt+Shift+N opens the form, Alt+Shift+S is Screenshot with note, Control or Command+Enter adds, Escape cancels.</p>
+<fieldset><legend class="sr-only">Mockup controls (not part of the design)</legend>
+<label><input type="checkbox" id="sim-share" checked> Simulate: a screen is being shared</label>
+<label><input type="checkbox" id="sim-prev"> Simulate: preview hidden (Settings page open)</label></fieldset></div>
+<main><h1 class="sr-only">CallScribe</h1>
+<div class="workspace">
+<section aria-labelledby="t-h"><h2 id="t-h" tabindex="-1">Transcript</h2>
+<div class="card" id="preview"><h3>Shared screen preview</h3><div class="shot" role="img" aria-label="Placeholder for the shared screen image">Shared screen image</div></div>
+
+<div id="noteArea">
+<div class="row">
+<button id="open" type="button" aria-expanded="false" aria-controls="noteform" aria-keyshortcuts="Alt+Shift+N"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v12H9l-4 4zM12 7v6M9 10h6"/></svg>Add note</button>
+<button id="shot0" type="button" aria-disabled="false" aria-keyshortcuts="Alt+Shift+S" aria-describedby="shotwhy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-3h4l2 3h4v11H4z"/></svg>Screenshot with note</button>
+</div>
+<p id="shotwhy" class="hint" hidden>Screenshot with note is unavailable because no screen is being shared. Share a screen to turn it on.</p>
+
+<form id="noteform" class="noteform" hidden aria-labelledby="nf-h" novalidate>
+<h3 id="nf-h">New note</h3>
+<p class="hint" id="nf-hint">Added to the transcript at the time you press Add note. Control or Command plus Enter adds. Escape cancels.</p>
+<label for="note"><strong>Note text</strong></label>
+<textarea id="note" aria-describedby="nf-hint"></textarea>
+<div id="shots" hidden><h4 id="shots-h" style="margin:.25rem 0">Screenshots to add</h4>
+<ul id="thumbs" aria-labelledby="shots-h" style="list-style:none;margin:0 0 .5rem;padding:0;display:flex;gap:.75rem;flex-wrap:wrap"></ul></div>
+<div class="row">
+<button type="submit" class="primary" id="add">Add note</button>
+<button type="button" id="cancel">Cancel</button>
+<label class="keep"><input type="checkbox" id="keep"> Keep open for more notes</label>
+</div></form>
+</div>
+
+<div class="card" id="log" role="region" aria-label="Transcript entries" style="margin-top:1rem"><p><strong>00:04</strong> Hello, can everyone hear me?</p><p><strong>00:11</strong> Yes, loud and clear.</p></div></section>
+
+<section><div role="tablist" aria-label="Right pane"><button role="tab" id="tab-c" aria-selected="true" aria-controls="pane">Controls</button><button role="tab" id="tab-s" aria-selected="false" aria-controls="pane" tabindex="-1">Settings</button></div>
+<div id="pane" role="tabpanel" aria-labelledby="pane-h"><h2 id="pane-h" tabindex="-1">Controls</h2>
+<div id="controls"><div class="card"><h3>Quick start</h3><div class="row"><button class="primary">Record</button><button>New transcript</button></div></div></div>
+<div id="settings" hidden><div class="card"><p>Settings appear here. The Add note button stays under the Transcript heading, and the shortcuts still work.</p></div></div>
+</div></section></div></main>
+<p id="status" class="sr-only" role="status" aria-live="polite"></p>
+<script>
+const $=id=>document.getElementById(id),tabs=[...document.querySelectorAll('[role=tab]')],t0=Date.now();
+const stamp=()=>{const s=Math.floor((Date.now()-t0)/1000)+12;return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const say=m=>{$('status').textContent='';setTimeout(()=>$('status').textContent=m,50)};
+const shared=()=>$('sim-share').checked, isOpen=()=>$('open').getAttribute('aria-expanded')==='true';
+function show(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1});const c=t.id==='tab-c';$('controls').hidden=!c;$('settings').hidden=c;$('pane-h').textContent=t.textContent;$('pane-h').focus();
+ $('sim-prev').checked=!c;syncPrev()}
+tabs.forEach(t=>{t.onclick=()=>show(t);t.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const o=tabs[1-tabs.indexOf(t)];o.focus();show(o)}}});
+function syncPrev(){$('preview').hidden=$('sim-prev').checked}
+function syncShare(){const ok=shared();['shot0'].forEach(i=>$(i).setAttribute('aria-disabled',!ok));$('shotwhy').hidden=ok;say(ok?'A screen is now shared. Screenshot with note is available.':'Screen sharing stopped. Screenshot with note is unavailable.')}
+$('sim-share').onchange=syncShare;$('sim-prev').onchange=syncPrev;
+function expand(){$('noteform').hidden=false;$('open').setAttribute('aria-expanded','true');$('note').focus()}
+let shots=[];
+function drawThumbs(){const ul=$('thumbs');ul.innerHTML='';$('shots').hidden=!shots.length;
+ shots.forEach((t,i)=>{const li=document.createElement('li'),n=i+1;
+  li.innerHTML='<div class="thumb" role="img"></div><button type="button"></button>';
+  const im=li.querySelector('.thumb');im.setAttribute('aria-label','Screenshot '+n+' of the shared screen, captured at '+t);im.textContent='Screenshot '+n;
+  const b=li.querySelector('button');b.textContent='Remove screenshot '+n;
+  b.onclick=()=>{shots.splice(i,1);drawThumbs();$('note').focus();say('Screenshot '+n+' removed. '+shots.length+' attached. Focus is on Note text.')};
+  ul.appendChild(li)})}
+function collapse(focusBtn=true){$('noteform').hidden=true;$('open').setAttribute('aria-expanded','false');$('note').value='';shots=[];drawThumbs();if(focusBtn)$('open').focus()}
+function capture(){if(!shared()){say('Screenshot with note is unavailable because no screen is being shared.');return}
+ if(!isOpen())expand();shots.push(stamp());drawThumbs();$('note').focus();
+ say('Screenshot captured. Add a note, or press Add note to save it without text.')}
+function addNote(){const v=$('note').value.trim();
+ if(!v&&!shots.length){say('Note is empty. Nothing added.');$('note').focus();return}
+ const t=stamp(),d=document.createElement('article'),k=shots.length;d.className='entry';d.setAttribute('aria-label','Note at '+t);
+ d.innerHTML='<p><span class="tag">Note</span><time></time></p><p class="body"></p>';
+ d.querySelector('time').textContent=t;d.querySelector('.body').textContent=v||'(No text)';
+ shots.forEach((st,i)=>{const s=document.createElement('div');s.className='thumb';s.setAttribute('role','img');s.setAttribute('aria-label','Screenshot '+(i+1)+' of the shared screen, captured at '+st);s.textContent='Screenshot '+(i+1);s.style.marginTop='.25rem';d.appendChild(s)});
+ $('log').appendChild(d);
+ const m='Note added at '+t+(k?' with '+k+(k>1?' screenshots':' screenshot'):'')+'.';
+ if($('keep').checked){$('note').value='';shots=[];drawThumbs();$('note').focus();say(m+' Form kept open.')}
+ else{collapse(true);say(m+' Form closed. Focus is on Add note.')}}
+function discard(){const k=shots.length;collapse(true);say('Note cancelled.'+(k?' Screenshot discarded.':'')+' Focus is on Add note.')}
+$('open').onclick=()=>{if(isOpen())discard();else{expand();say('Note form open.')}};
+$('noteform').onsubmit=e=>{e.preventDefault();addNote()};
+$('shot0').onclick=capture;
+$('cancel').onclick=discard;
+$('noteform').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();$('cancel').click()}if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();addNote()}});
+document.addEventListener('keydown',e=>{if(!(e.altKey&&e.shiftKey))return;
+ if(e.code==='KeyN'){e.preventDefault();if(isOpen())$('note').focus();else{expand();say('Note form open.')}}
+ if(e.code==='KeyS'){e.preventDefault();capture()}});
+</script></body></html>

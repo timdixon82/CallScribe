@@ -17,6 +17,8 @@ async function harness({ stored = {}, failV1Delete = false } = {}) {
   const make = new Function('ort', 'Diarizer', 'DIARIZER', 'diarizerUrl', 'verifySha256', 'caches', 'fetch', 'postMessage', 'self', source);
   make({ env: { wasm: {} } }, class {}, DIARIZER, diarizerUrl, verifySha256, caches, fetchFake, (message) => messages.push(message), self);
   await self.onmessage({ data: { type: 'load' } });
+  // The four files load in parallel and the first failure ends the load, so let the others finish deleting and refetching before the test looks.
+  await new Promise((resolve) => setTimeout(resolve, 50));
   return { messages, store, fetched };
 }
 const errorOf = (messages) => messages.find((message) => message.type === 'error')?.message;

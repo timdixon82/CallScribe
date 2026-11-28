@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Option 1: Notes card in Controls - Notes mockup</title>
+<style>
+:root{--bg:#fff;--text:#333;--muted:#405166;--border:#cbd5e1;--focus:#0c3b64;--panel:#f8fafc;--selected:#e4f1f7;--heading:#0c3b64}
+*{box-sizing:border-box}body{margin:0;font:1.125rem/1.5 system-ui,sans-serif;background:var(--bg);color:var(--text);letter-spacing:.01em}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;box-shadow:0 0 0 6px #fff}
+h1,h2,h3{color:var(--heading);margin:.2em 0}h2{font-size:1.35rem}h3{font-size:1.1rem}
+.mock-note{background:var(--selected);padding:.5rem 1rem;border-bottom:1px solid var(--border)}
+.workspace{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:1rem;padding:1rem}
+@media(max-width:60rem){.workspace{grid-template-columns:1fr}}
+.card{border:1px solid var(--border);background:var(--panel);border-radius:8px;padding:1rem;margin-bottom:1rem}
+.shot{height:6rem;border:2px dashed var(--muted);display:grid;place-items:center;color:var(--muted);background:#fff;text-align:center}
+button,select{font:inherit;min-height:44px;min-width:44px;border:2px solid var(--heading);border-radius:6px;background:#fff;color:var(--heading);padding:.25rem .8rem;cursor:pointer}
+button.primary{background:var(--heading);color:#fff}
+button svg{width:1.2em;height:1.2em;vertical-align:-.2em;margin-right:.4em;fill:none;stroke:currentColor;stroke-width:2}
+[role=tablist]{display:flex;gap:.5rem;margin-bottom:.75rem}
+[role=tab][aria-selected=true]{background:var(--heading);color:#fff}
+textarea{display:block;width:100%;font:inherit;min-height:6rem;padding:.5rem;border:2px solid var(--heading);border-radius:6px;margin:.25rem 0 .5rem}
+.row{display:flex;gap:.5rem;flex-wrap:wrap}
+.entry{border-left:6px solid var(--heading);background:#fff;padding:.5rem .75rem;margin:.5rem 0}
+.entry .tag{display:inline-block;background:var(--heading);color:#fff;padding:0 .5rem;border-radius:4px;font-weight:700;margin-right:.5rem}
+.hint{color:var(--muted);margin:.25rem 0}
+</style></head><body>
+<p class="mock-note">Mockup option 1: Notes card at the top of the Controls tab. Static prototype, no real recording. Try Alt+Shift+N, Alt+Shift+S, Control or Command+Enter to add, Escape to clear.</p>
+<main><h1 class="sr-only">CallScribe</h1>
+<div class="workspace">
+<section aria-labelledby="t-h"><h2 id="t-h" tabindex="-1">Transcript</h2>
+<div class="card"><h3>Shared screen preview</h3><div class="shot" role="img" aria-label="Placeholder for the shared screen image">Shared screen image</div></div>
+<div class="card" id="log" aria-label="Transcript entries" role="region"><p><strong>00:04</strong> Hello, can everyone hear me?</p><p><strong>00:11</strong> Yes, loud and clear.</p></div></section>
+<section><div role="tablist" aria-label="Right pane"><button role="tab" id="tab-c" aria-selected="true" aria-controls="pane">Controls</button><button role="tab" id="tab-s" aria-selected="false" aria-controls="pane" tabindex="-1">Settings</button></div>
+<div id="pane" role="tabpanel" aria-labelledby="pane-h"><h2 id="pane-h" tabindex="-1">Controls</h2>
+<div id="controls">
+<div class="card"><h3>Quick start</h3><div class="row"><button class="primary" aria-keyshortcuts="Space">Record</button><button>New transcript</button></div></div>
+<div class="card"><h3>Notes</h3>
+<label for="note"><strong>Note text</strong></label>
+<textarea id="note" aria-describedby="nh" aria-keyshortcuts="Alt+Shift+N"></textarea>
+<p class="hint" id="nh">Added to the transcript at the current time. Control or Command plus Enter adds the note. Escape clears the box.</p>
+<div class="row"><button class="primary" id="add" aria-keyshortcuts="Alt+Shift+N"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v12H9l-4 4zM12 7v6M9 10h6"/></svg>Add note</button>
+<button id="shot" aria-keyshortcuts="Alt+Shift+S"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-3h4l2 3h4v11H4z"/></svg>Screenshot with note</button></div>
+<p class="hint">Shortcuts: Alt+Shift+N focuses the note box. Alt+Shift+S takes a screenshot and opens the note box.</p></div>
+</div>
+<div id="settings" hidden><div class="card"><p>Settings appear here. Notes shortcuts still work: they switch back to Controls.</p></div></div>
+</div></section></div></main>
+<p id="status" class="sr-only" role="status" aria-live="polite"></p>
+<script>
+const $=id=>document.getElementById(id),tabs=[...document.querySelectorAll('[role=tab]')],t0=Date.now();
+const stamp=()=>{const s=Math.floor((Date.now()-t0)/1000)+12;return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+function show(t,f){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1});const c=t.id==='tab-c';$('controls').hidden=!c;$('settings').hidden=c;$('pane-h').textContent=t.textContent;if(f!==false)$('pane-h').focus()}
+tabs.forEach(t=>{t.onclick=()=>show(t);t.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const o=tabs[1-tabs.indexOf(t)];o.focus();show(o)}}});
+function openBox(){show($('tab-c'),false);$('note').focus()}
+let pending=false;
+function add(){const v=$('note').value.trim();if(!v){$('status').textContent='Note is empty. Nothing added.';$('note').focus();return}
+const d=document.createElement('article');d.className='entry';d.setAttribute('aria-label','Note at '+stamp());
+d.innerHTML='<p><span class="tag">Note</span><time></time></p><p class="body"></p>'+(pending?'<div class="shot" role="img" aria-label="Screenshot placeholder">Screenshot attached</div>':'');
+d.querySelector('time').textContent=stamp();d.querySelector('.body').textContent=v;$('log').appendChild(d);
+$('status').textContent='Note added at '+stamp()+(pending?' with screenshot':'')+'.';pending=false;$('note').value='';$('note').focus()}
+$('add').onclick=add;$('shot').onclick=()=>{pending=true;$('status').textContent='Screenshot taken. Note box open: type a caption.';openBox()};
+$('note').onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();add()}if(e.key==='Escape'){$('note').value='';$('status').textContent='Note cleared.'}};
+document.addEventListener('keydown',e=>{if(e.altKey&&e.shiftKey&&e.code==='KeyN'){e.preventDefault();openBox()}if(e.altKey&&e.shiftKey&&e.code==='KeyS'){e.preventDefault();$('shot').click()}});
+</script></body></html>

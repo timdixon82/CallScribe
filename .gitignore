@@ -72,3 +72,6 @@ pa11y.ci.json
 # Playwright output
 test-results/
 playwright-report/
+
+# Playwright MCP tool output
+.playwright-mcp/

@@ -2,6 +2,29 @@
 
 All notable changes to CallScribe are documented here.
 
+## [0.8.0](https://github.com/timdixon82/CallScribe/compare/v0.7.1...v0.8.0) (2026-11-28)
+
+
+### Features
+
+* live notes with optional screenshots ([ddf4628](https://github.com/timdixon82/CallScribe/commit/ddf46281b4dcfaf5941f058988e228524742a429))
+* live notes with optional screenshots under the screen preview ([f041659](https://github.com/timdixon82/CallScribe/commit/f041659046318b351389c029f28493ea8d0822a8))
+* switch right pane between Controls and Settings, Source rows quick start ([1ef235b](https://github.com/timdixon82/CallScribe/commit/1ef235b06ea632c9daff0bb5f44b754bf57583f2))
+
+
+### Bug Fixes
+
+* **ci:** skip the onnxruntime-node GPU download on install ([e0c00ff](https://github.com/timdixon82/CallScribe/commit/e0c00ff5477bf8c2c574b87148f0607d50150f11))
+* **ci:** skip the onnxruntime-node GPU download on npm ci ([940aa53](https://github.com/timdixon82/CallScribe/commit/940aa5338332bf091786af456f7cd8ce5d430675))
+* collapse newlines in note subtitle cues ([ae301b1](https://github.com/timdixon82/CallScribe/commit/ae301b1652e90435d73c3f7073de71d9fb0b30af))
+* cover the whole call in meeting-notes summaries ([56cad8e](https://github.com/timdixon82/CallScribe/commit/56cad8efbecf1472a43f09d5f4ffd3a7f46fb0a8))
+* meeting-notes summary covers the whole call ([0307a1d](https://github.com/timdixon82/CallScribe/commit/0307a1daba861097ff4ca21d73d1b4b0da66d15a))
+* move CUDA skip to CI env and escape heading-like note text in Markdown ([b39f77c](https://github.com/timdixon82/CallScribe/commit/b39f77c07f7a75b8a1924d4d5f8a1b634b3e75a0))
+* raise summary merge threshold to 0.7 and score each pair once ([b750b75](https://github.com/timdixon82/CallScribe/commit/b750b75219a94e962609e20b1ee8c6d86168efad))
+* set min-release-age in npmrc for semgrep rule ([27f0f90](https://github.com/timdixon82/CallScribe/commit/27f0f90e96475965247604e8dd9d940b010138e3))
+* skip onnxruntime-node CUDA binary download in npm ci ([f02e814](https://github.com/timdixon82/CallScribe/commit/f02e814e0a0808b9a4337ed6a448a10757deda6c))
+* skip onnxruntime-node CUDA download so npm ci passes in CI ([6b49714](https://github.com/timdixon82/CallScribe/commit/6b49714353d3505dc2a4068095c782d67ed86d34))
+
 ## [0.7.1](https://github.com/timdixon82/CallScribe/compare/v0.7.0...v0.7.1) (2026-11-16)
 
 
